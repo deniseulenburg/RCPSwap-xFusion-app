@@ -1,7 +1,7 @@
 import { MaxUint256 } from '@ethersproject/constants'
 import { TransactionResponse } from '@ethersproject/providers'
 import { Trade, TokenAmount, CurrencyAmount, DEFAULT_CURRENCIES } from '@venomswap/sdk'
-import { useCallback, useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTokenAllowance } from '../data/Allowances'
 import { getTradeVersion, useV1TradeExchangeAddress } from '../data/V1'
 import { Field } from '../state/swap/actions'
@@ -13,6 +13,7 @@ import { useActiveWeb3React } from './index'
 import { Version } from './useToggledVersion'
 import { useRouterContractAddress } from '../utils'
 import { FUSION_CONTRACT } from 'contracts'
+import { getAllDexes } from 'state/swap/hooks'
 
 export enum ApprovalState {
   UNKNOWN,
@@ -112,6 +113,24 @@ export function useApproveCallbackFromTrade(trade?: Trade, allowedSlippage = 0) 
   return useApproveCallback(amountToApprove, tradeIsV1 ? v1ExchangeAddress : v2RouterAddress)
 }
 
-export function useFusionApproveCallback(fusionSwap: any) {
-  return useApproveCallback(fusionSwap?.amountIn, FUSION_CONTRACT.address)
+export function useDexList() {
+  const [dexes, setDexes] = useState<any>()
+
+  useEffect(() => {
+    const getDexes = async () => {
+      const data = await getAllDexes()
+      setDexes(data)
+    }
+    getDexes()
+  }, [])
+  return dexes
+}
+
+export function useFusionApproveCallback(fusionSwap: any, dexes: any) {
+  return useApproveCallback(
+    fusionSwap?.amountIn,
+    fusionSwap?.type === 0
+      ? FUSION_CONTRACT.address
+      : dexes?.[fusionSwap?.dex ?? 0].addresses.router ?? FUSION_CONTRACT.address
+  )
 }

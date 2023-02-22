@@ -25,7 +25,12 @@ import { INITIAL_ALLOWED_SLIPPAGE } from '../../constants'
 import { getTradeVersion } from '../../data/V1'
 import { useActiveWeb3React } from '../../hooks'
 import { useCurrency, useAllTokens } from '../../hooks/Tokens'
-import { ApprovalState, useApproveCallbackFromTrade, useFusionApproveCallback } from '../../hooks/useApproveCallback'
+import {
+  ApprovalState,
+  useApproveCallbackFromTrade,
+  useDexList,
+  useFusionApproveCallback
+} from '../../hooks/useApproveCallback'
 import useENSAddress from '../../hooks/useENSAddress'
 import { useSwapCallback } from '../../hooks/useSwapCallback'
 import useToggledVersion, { DEFAULT_VERSION, Version } from '../../hooks/useToggledVersion'
@@ -33,6 +38,7 @@ import useWrapCallback, { WrapType } from '../../hooks/useWrapCallback'
 import { useToggleSettingsMenu, useWalletModalToggle } from '../../state/application/hooks'
 import { Field } from '../../state/swap/actions'
 import {
+  getAllDexes,
   getMixSwap,
   useBestPriceSwap,
   useDefaultsFromURLSearch,
@@ -52,7 +58,7 @@ import UnsupportedCurrencyFooter from 'components/swap/UnsupportedCurrencyFooter
 import { isTradeBetter } from 'utils/trades'
 import FusionPrice from 'components/swap/FusionPrice'
 import { ethers } from 'ethers'
-import { FUSION_CONTRACT } from 'contracts'
+import { FUSION_CONTRACT, SWAP_CONTRACT } from 'contracts'
 
 export default function Swap() {
   const loadedUrlParams = useDefaultsFromURLSearch()
@@ -146,7 +152,6 @@ export default function Swap() {
   // }, [onUserInput])
 
   const { bestSwap, loading: bestLoading } = useBestPriceSwap()
-  console.log(bestSwap)
 
   const handleTypeInput = useCallback(
     (value: string) => {
@@ -192,10 +197,10 @@ export default function Swap() {
     currencies[Field.INPUT] && currencies[Field.OUTPUT] && parsedAmounts[independentField]?.greaterThan(JSBI.BigInt(0))
   )
   const noRoute = !route
-
+  const dexes = useDexList()
   // check whether the user has approved the router on the input token
   const [approval, approveCallback] = useApproveCallbackFromTrade(trade, allowedSlippage)
-  const [fusionApproval, fusionApproveCallback] = useFusionApproveCallback(bestSwap)
+  const [fusionApproval, fusionApproveCallback] = useFusionApproveCallback(bestSwap, dexes)
 
   // check if user has gone through approval process, used to show two step buttons, reset on token change
   const [approvalSubmitted, setApprovalSubmitted] = useState<boolean>(false)
@@ -271,21 +276,19 @@ export default function Swap() {
           swapErrorMessage: undefined,
           txHash: undefined
         })
-        const fusionContract = new ethers.Contract(
-          FUSION_CONTRACT.address,
-          FUSION_CONTRACT.abi,
-          library?.getSigner(account ?? undefined)
-        )
         if (bestSwap?.type === 0) {
+          const fusionContract = new ethers.Contract(
+            FUSION_CONTRACT.address,
+            FUSION_CONTRACT.abi,
+            library?.getSigner(account ?? undefined)
+          )
           if (inputCurrencyId === 'ETH') {
             const tx = await fusionContract.swapExactETHForTokensWithMultiDex(
-              bestSwap.amounts?.map(amount =>
-                ethers.utils.parseUnits(amount.toString(), bestSwap.tokenOut?.decimals ?? 18)
-              ),
+              bestSwap.amounts?.map(amount => ethers.utils.parseUnits(amount.toFixed(18), 18)),
               outputCurrencyId,
               bestSwap.maxMultihop.index,
               bestSwap.maxMultihop.trade.route.path.map(path => path.address),
-              { value: ethers.utils.parseEther(typedValue) }
+              { value: ethers.utils.parseEther(parseFloat(typedValue).toFixed(18)) }
             )
             await tx.wait()
             setSwapState({
@@ -296,12 +299,18 @@ export default function Swap() {
               txHash: tx.hash
             })
           } else if (outputCurrencyId === 'ETH') {
-            const tx = await fusionContract.swapExactTokensForETHWithMultiDex(
+            const tx = await fusionContract.swapExactTokensforETHWithMultiDex(
               bestSwap.amounts?.map(amount =>
-                ethers.utils.parseUnits(amount.toString(), bestSwap.tokenOut?.decimals ?? 18)
+                ethers.utils.parseUnits(
+                  amount.toFixed(bestSwap.tokenIn?.decimals ?? 18),
+                  bestSwap.tokenIn?.decimals ?? 18
+                )
               ),
               inputCurrencyId,
-              ethers.utils.parseUnits(typedValue, bestSwap.tokenIn?.decimals ?? 18),
+              ethers.utils.parseUnits(
+                parseFloat(typedValue).toFixed(bestSwap.tokenIn?.decimals ?? 18),
+                bestSwap.tokenIn?.decimals ?? 18
+              ),
               bestSwap.maxMultihop.index,
               bestSwap.maxMultihop.trade.route.path.map(path => path.address)
             )
@@ -316,11 +325,17 @@ export default function Swap() {
           } else {
             const tx = await fusionContract.swapExactTokensForTokensWithMultiDex(
               bestSwap.amounts?.map(amount =>
-                ethers.utils.parseUnits(amount.toString(), bestSwap.tokenOut?.decimals ?? 18)
+                ethers.utils.parseUnits(
+                  amount.toFixed(bestSwap.tokenIn?.decimals ?? 18),
+                  bestSwap.tokenIn?.decimals ?? 18
+                )
               ),
               inputCurrencyId,
               outputCurrencyId,
-              ethers.utils.parseUnits(typedValue, bestSwap.tokenIn?.decimals ?? 18),
+              ethers.utils.parseUnits(
+                parseFloat(typedValue).toFixed(bestSwap.tokenIn?.decimals ?? 18),
+                bestSwap.tokenIn?.decimals ?? 18
+              ),
               bestSwap.maxMultihop.index,
               bestSwap.maxMultihop.trade.route.path.map(path => path.address)
             )
@@ -334,10 +349,21 @@ export default function Swap() {
             })
           }
         } else if (bestSwap?.type === 1) {
+          const dexContract = new ethers.Contract(
+            dexes?.[bestSwap?.dex ?? 0].addresses.router,
+            SWAP_CONTRACT.abi,
+            library?.getSigner(account ?? undefined)
+          )
           if (inputCurrencyId === 'ETH') {
-            const tx = await fusionContract.swapExactETHForTokensWithMultiHops(bestSwap.dex, bestSwap.trade, {
-              value: ethers.utils.parseEther(typedValue)
-            })
+            const tx = await dexContract.swapExactETHForTokens(
+              0,
+              bestSwap.trade,
+              account,
+              Math.floor(Date.now() / 1000) + 60 * 10,
+              {
+                value: ethers.utils.parseEther(typedValue)
+              }
+            )
             await tx.wait()
             setSwapState({
               attemptingTxn: false,
@@ -347,10 +373,12 @@ export default function Swap() {
               txHash: tx.hash
             })
           } else if (outputCurrencyId === 'ETH') {
-            const tx = await fusionContract.swapExactTokensForETHWithMultiHops(
-              bestSwap.dex,
+            const tx = await dexContract.swapExactTokensForETH(
+              ethers.utils.parseUnits(typedValue, bestSwap.tokenIn?.decimals ?? 18).toString(),
+              0,
               bestSwap.trade,
-              ethers.utils.parseUnits(typedValue, bestSwap.tokenIn?.decimals ?? 18).toString()
+              account,
+              Math.floor(Date.now() / 1000) + 60 * 10
             )
             await tx.wait()
             setSwapState({
@@ -361,10 +389,12 @@ export default function Swap() {
               txHash: tx.hash
             })
           } else {
-            const tx = await fusionContract.swapExactTokensForTokensWithMultiHops(
-              bestSwap.dex,
+            const tx = await dexContract.swapExactTokensForTokens(
+              ethers.utils.parseUnits(typedValue, bestSwap.tokenIn?.decimals ?? 18),
+              0,
               bestSwap.trade,
-              ethers.utils.parseUnits(typedValue, bestSwap.tokenIn?.decimals ?? 18)
+              account,
+              Math.floor(Date.now() / 1000) + 60 * 10
             )
             await tx.wait()
             setSwapState({
@@ -381,7 +411,7 @@ export default function Swap() {
           attemptingTxn: false,
           tradeToConfirm,
           showConfirm,
-          swapErrorMessage: JSON.stringify(err),
+          swapErrorMessage: (err as any)?.message ?? JSON.stringify(err),
           txHash: undefined
         })
       }
@@ -508,7 +538,7 @@ export default function Swap() {
             </AutoColumn>
             <CurrencyInputPanel
               value={
-                swapMode === 0 ? formattedAmounts[Field.OUTPUT] : bestLoading ? '0' : bestSwap?.price.toString() ?? '0'
+                swapMode === 0 ? formattedAmounts[Field.OUTPUT] : bestLoading ? '0' : bestSwap?.price?.toString() ?? '0'
               }
               onUserInput={handleTypeOutput}
               label={independentField === Field.INPUT && !showWrap && trade ? 'To (estimated)' : 'To'}

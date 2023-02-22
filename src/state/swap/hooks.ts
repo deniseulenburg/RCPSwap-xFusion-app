@@ -410,10 +410,8 @@ export async function getDexPair(pool: any, multiContract: Contract, tokens: any
 }
 
 export function useBestPriceSwap() {
-  const { account } = useActiveWeb3React()
   const multiContract = useMulticallContract()
 
-  const blockchain = useBlockchain()
   const [bestSwap, setBestSwap] = useState<{
     amountIn: CurrencyAmount | undefined
     type: number
@@ -428,28 +426,19 @@ export function useBestPriceSwap() {
   const [loading, setLoading] = useState(false)
   const {
     swapMode,
-    independentField,
     typedValue,
     [Field.INPUT]: { currencyId: inputCurrencyId },
-    [Field.OUTPUT]: { currencyId: outputCurrencyId },
-    recipient
+    [Field.OUTPUT]: { currencyId: outputCurrencyId }
   } = useSwapState()
 
   const inputCurrency = useCurrency(inputCurrencyId)
 
   const outputCurrency = useCurrency(outputCurrencyId)
-  const recipientLookup = useENS(recipient ?? undefined)
-  const to: string | null = (recipient === null ? account : recipientLookup.address) ?? null
-
-  const relevantTokenBalances = useCurrencyBalances(account ?? undefined, [
-    inputCurrency ?? undefined,
-    outputCurrency ?? undefined
-  ])
   const parsedAmount = tryParseAmount(typedValue, inputCurrency ?? undefined)
   useEffect(() => {
+    setLoading(true)
     async function getBestSwap() {
       if (inputCurrencyId && outputCurrencyId && parseFloat(typedValue) > 0 && swapMode === 1 && multiContract) {
-        setLoading(true)
         const mixSwap = await getMixSwap(
           inputCurrencyId === 'ETH' ? WETH[42170].address : inputCurrencyId,
           outputCurrencyId === 'ETH' ? WETH[42170].address : outputCurrencyId,

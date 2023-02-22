@@ -86,7 +86,6 @@ export function formatBlockchainAdjustedExecutionPrice(
   if (!trade || !tradeInputCurrency || !tradeOutputCurrency) {
     return ''
   }
-  console.log(fusionSwap.amountIn.toExact(), fusionSwap)
   return inverted
     ? `${
         swapMode === 0
