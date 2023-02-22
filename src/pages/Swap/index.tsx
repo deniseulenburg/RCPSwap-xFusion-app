@@ -146,9 +146,14 @@ export default function Swap() {
   // }, [onUserInput])
 
   const { bestSwap, loading: bestLoading } = useBestPriceSwap()
+  console.log(bestSwap)
 
   const handleTypeInput = useCallback(
     (value: string) => {
+      const index = value.indexOf('.')
+      if (index > -1 && value.length - index - 1 > (currencies[Field.INPUT]?.decimals ?? 10)) {
+        value = parseInt(value) + '.' + value.slice(index + 1, index + (currencies[Field.INPUT]?.decimals ?? 10) + 1)
+      }
       onUserInput(Field.INPUT, value)
     },
     [onUserInput]
@@ -258,7 +263,6 @@ export default function Swap() {
           })
         })
     } else {
-      console.log(bestSwap)
       try {
         setSwapState({
           attemptingTxn: true,
@@ -398,7 +402,7 @@ export default function Swap() {
   const [showInverted, setShowInverted] = useState<boolean>(false)
 
   // warnings on slippage
-  const priceImpactSeverity = warningSeverity(priceImpactWithoutFee)
+  const priceImpactSeverity = swapMode === 0 ? warningSeverity(priceImpactWithoutFee) : 0
 
   // show approve flow when: no error on inputs, not approved or pending, or approved in current session
   // never show if price impact is above threshold in non expert mode
@@ -547,7 +551,8 @@ export default function Swap() {
                       ) : (
                         <FusionPrice
                           loading={bestLoading}
-                          price={bestSwap?.price ?? 0}
+                          amountIn={parseFloat(typedValue)}
+                          amountOut={bestSwap?.price ?? 0}
                           showInverted={showInverted}
                           setShowInverted={setShowInverted}
                           tokenIn={bestSwap?.tokenIn}

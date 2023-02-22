@@ -6,7 +6,8 @@ import { ThemeContext } from 'styled-components'
 import { Currency } from '@venomswap/sdk'
 
 interface FusionPriceProps {
-  price: number
+  amountIn: number
+  amountOut: number
   showInverted: boolean
   setShowInverted: (s: boolean) => void
   tokenIn?: Currency
@@ -15,7 +16,8 @@ interface FusionPriceProps {
 }
 
 export default function FusionPrice({
-  price,
+  amountIn,
+  amountOut,
   showInverted,
   setShowInverted,
   tokenIn,
@@ -23,10 +25,11 @@ export default function FusionPrice({
   loading
 }: FusionPriceProps) {
   const theme = useContext(ThemeContext)
-  const formattedPrice = showInverted ? price.toFixed(6) : (1 / price).toFixed(6)
+  const formattedPrice = showInverted ? (amountIn / amountOut).toFixed(6) : (amountOut / amountIn).toFixed(6)
   const label = showInverted
     ? `${tokenOut?.symbol} per ${tokenIn?.symbol}`
     : `${tokenIn?.symbol} per ${tokenOut?.symbol}`
+  console.log('@@@@@@@', amountIn, amountOut)
   return (
     <Text
       fontWeight={500}
@@ -34,7 +37,7 @@ export default function FusionPrice({
       color={theme.text2}
       style={{ justifyContent: 'center', alignItems: 'center', display: 'flex' }}
     >
-      {price > 0 && !loading ? (
+      {amountIn > 0 && amountOut > 0 && !loading ? (
         <>
           {formattedPrice ?? '-'} {label}
           <StyledBalanceMaxMini onClick={() => setShowInverted(!showInverted)}>

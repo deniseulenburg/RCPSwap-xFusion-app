@@ -87,9 +87,11 @@ export function formatBlockchainAdjustedExecutionPrice(
     return ''
   }
   return inverted
-    ? `${swapMode === 0 ? trade.executionPrice.invert().toSignificant(6) : (1 / fusionSwap?.price ?? 0).toFixed(6)} ${
-        tradeInputCurrency.symbol
-      } / ${tradeOutputCurrency.symbol}`
+    ? `${
+        swapMode === 0
+          ? trade.executionPrice.invert().toSignificant(6)
+          : (parseFloat(fusionSwap.amountIn.toExact()) / fusionSwap?.price ?? 0).toFixed(6)
+      } ${tradeInputCurrency.symbol} / ${tradeOutputCurrency.symbol}`
     : `${swapMode === 0 ? trade.executionPrice.toSignificant(6) : (fusionSwap?.price ?? 0).toFixed(6)} ${
         tradeOutputCurrency.symbol
       } / ${tradeInputCurrency.symbol}`

@@ -1,10 +1,11 @@
 export const FUSION_CONTRACT = {
-  address: '0x0C29A0af4A8b05e000B66414C236F6570AFdD9cC',
+  address: '0xeC651281a8dC2d7aD3F060C2eCF1E8860b4d89B2',
   abi: [
     {
       inputs: [
         { internalType: 'address', name: '_weth', type: 'address' },
-        { internalType: 'address', name: '_feeAddress', type: 'address' }
+        { internalType: 'address', name: '_feeAddress', type: 'address' },
+        { internalType: 'uint256', name: '_fee', type: 'uint256' }
       ],
       stateMutability: 'nonpayable',
       type: 'constructor'
@@ -65,6 +66,13 @@ export const FUSION_CONTRACT = {
     },
     {
       inputs: [],
+      name: 'fee',
+      outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+      stateMutability: 'view',
+      type: 'function'
+    },
+    {
+      inputs: [],
       name: 'feeAddress',
       outputs: [{ internalType: 'address', name: '', type: 'address' }],
       stateMutability: 'view',
@@ -85,6 +93,13 @@ export const FUSION_CONTRACT = {
       type: 'function'
     },
     { inputs: [], name: 'renounceOwnership', outputs: [], stateMutability: 'nonpayable', type: 'function' },
+    {
+      inputs: [{ internalType: 'uint256', name: '_fee', type: 'uint256' }],
+      name: 'setFee',
+      outputs: [],
+      stateMutability: 'nonpayable',
+      type: 'function'
+    },
     {
       inputs: [{ internalType: 'address', name: '_feeAddress', type: 'address' }],
       name: 'setFeeAddress',
