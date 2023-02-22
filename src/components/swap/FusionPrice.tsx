@@ -25,7 +25,7 @@ export default function FusionPrice({
   loading
 }: FusionPriceProps) {
   const theme = useContext(ThemeContext)
-  const formattedPrice = showInverted ? (amountIn / amountOut).toFixed(6) : (amountOut / amountIn).toFixed(6)
+  const formattedPrice = !showInverted ? (amountIn / amountOut).toFixed(6) : (amountOut / amountIn).toFixed(6)
   const label = showInverted
     ? `${tokenOut?.symbol} per ${tokenIn?.symbol}`
     : `${tokenIn?.symbol} per ${tokenOut?.symbol}`

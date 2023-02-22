@@ -629,37 +629,35 @@ export default function Swap() {
                     'Approve ' + currencies[Field.INPUT]?.symbol
                   )}
                 </ButtonConfirmed>
-                {swapMode === 0 && (
-                  <ButtonError
-                    onClick={() => {
-                      if (isExpertMode) {
-                        handleSwap()
-                      } else {
-                        setSwapState({
-                          tradeToConfirm: trade,
-                          attemptingTxn: false,
-                          swapErrorMessage: undefined,
-                          showConfirm: true,
-                          txHash: undefined
-                        })
-                      }
-                    }}
-                    width="48%"
-                    id="swap-button"
-                    disabled={
-                      !isValid ||
-                      (swapMode === 0 && approval !== ApprovalState.APPROVED) ||
-                      (priceImpactSeverity > 3 && !isExpertMode)
+                <ButtonError
+                  onClick={() => {
+                    if (isExpertMode) {
+                      handleSwap()
+                    } else {
+                      setSwapState({
+                        tradeToConfirm: trade,
+                        attemptingTxn: false,
+                        swapErrorMessage: undefined,
+                        showConfirm: true,
+                        txHash: undefined
+                      })
                     }
-                    error={isValid && priceImpactSeverity > 2}
-                  >
-                    <Text fontSize={16} fontWeight={500}>
-                      {priceImpactSeverity > 3 && !isExpertMode
-                        ? `Price Impact High`
-                        : `Swap${priceImpactSeverity > 2 ? ' Anyway' : ''}`}
-                    </Text>
-                  </ButtonError>
-                )}
+                  }}
+                  width="48%"
+                  id="swap-button"
+                  disabled={
+                    !isValid ||
+                    (swapMode === 0 && approval !== ApprovalState.APPROVED) ||
+                    (priceImpactSeverity > 3 && !isExpertMode && swapMode === 0)
+                  }
+                  error={isValid && priceImpactSeverity > 2}
+                >
+                  <Text fontSize={16} fontWeight={500}>
+                    {priceImpactSeverity > 3 && swapMode === 0 && !isExpertMode
+                      ? `Price Impact High`
+                      : `Swap${priceImpactSeverity > 2 ? ' Anyway' : ''}`}
+                  </Text>
+                </ButtonError>
               </RowBetween>
             ) : (
               <ButtonError
