@@ -29,7 +29,6 @@ export default function FusionPrice({
   const label = showInverted
     ? `${tokenOut?.symbol} per ${tokenIn?.symbol}`
     : `${tokenIn?.symbol} per ${tokenOut?.symbol}`
-  console.log('@@@@@@@', amountIn, amountOut)
   return (
     <Text
       fontWeight={500}

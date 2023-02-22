@@ -470,7 +470,7 @@ export function useBestPriceSwap() {
 
         const bestTrades: { trade: Trade; index: number }[] = await Promise.all(
           pools.map(async (pool: any, index: number) => {
-            const pairs = await getDexPair(pools[0], multiContract, tokens)
+            const pairs = await getDexPair(pool, multiContract, tokens)
             const bestTrade = Trade.bestTradeExactIn(
               pairs,
               new TokenAmount(
@@ -493,6 +493,12 @@ export function useBestPriceSwap() {
             )
             return { trade: bestTrade[0], index }
           })
+        )
+        console.log(
+          bestTrades.map(trade => ({
+            amount: trade.trade.outputAmount.toExact(),
+            path: trade.trade.route.path.map(path => path.name)
+          }))
         )
         let maxTrade = 0,
           maxIndex = 0
