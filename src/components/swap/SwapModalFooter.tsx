@@ -19,6 +19,7 @@ import FormattedPriceImpact from './FormattedPriceImpact'
 import { StyledBalanceMaxMini, SwapCallbackError } from './styleds'
 import useBlockchain from '../../hooks/useBlockchain'
 import getBlockchainAdjustedCurrency from '../../utils/getBlockchainAdjustedCurrency'
+import useFusionFee from 'hooks/useFusionFee'
 
 export default function SwapModalFooter({
   trade,
@@ -27,7 +28,8 @@ export default function SwapModalFooter({
   swapErrorMessage,
   disabledConfirm,
   swapMode,
-  fusionSwap
+  fusionSwap,
+  fee
 }: {
   trade: Trade
   swapMode: number
@@ -36,6 +38,7 @@ export default function SwapModalFooter({
   onConfirm: () => void
   swapErrorMessage: string | undefined
   disabledConfirm: boolean
+  fee: number
 }) {
   const blockchain = useBlockchain()
 
@@ -53,7 +56,7 @@ export default function SwapModalFooter({
 
   const fusionFee =
     swapMode === 1 && fusionSwap.type === 0
-      ? fusionSwap?.price - parseFloat(fusionSwap?.maxMultihop?.trade?.outputAmount.toExact() ?? '0')
+      ? ((fusionSwap?.price - parseFloat(fusionSwap?.maxMultihop?.trade?.outputAmount.toExact() ?? '0')) * fee) / 1000
       : 0
 
   return (

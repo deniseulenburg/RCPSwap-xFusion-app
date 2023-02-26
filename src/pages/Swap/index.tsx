@@ -59,6 +59,7 @@ import { isTradeBetter } from 'utils/trades'
 import FusionPrice from 'components/swap/FusionPrice'
 import { ethers } from 'ethers'
 import { FUSION_CONTRACT, SWAP_CONTRACT } from 'contracts'
+import useFusionFee from 'hooks/useFusionFee'
 
 export default function Swap() {
   const loadedUrlParams = useDefaultsFromURLSearch()
@@ -469,7 +470,14 @@ export default function Swap() {
   )
 
   const handleMaxInput = useCallback(() => {
-    maxAmountInput && onUserInput(Field.INPUT, maxAmountInput.toExact())
+    if (maxAmountInput) {
+      let value = maxAmountInput.toExact()
+      const index = value.indexOf('.')
+      if (index > -1 && value.length - index - 1 > (currencies[Field.INPUT]?.decimals ?? 10)) {
+        value = parseInt(value) + '.' + value.slice(index + 1, index + (currencies[Field.INPUT]?.decimals ?? 10) + 1)
+      }
+      onUserInput(Field.INPUT, value)
+    }
   }, [maxAmountInput, onUserInput])
 
   const handleOutputSelect = useCallback(outputCurrency => onCurrencySelection(Field.OUTPUT, outputCurrency), [

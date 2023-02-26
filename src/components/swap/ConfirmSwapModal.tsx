@@ -9,6 +9,7 @@ import SwapModalHeader from './SwapModalHeader'
 
 import useBlockchain from '../../hooks/useBlockchain'
 import getBlockchainAdjustedCurrency from '../../utils/getBlockchainAdjustedCurrency'
+import useFusionFee from 'hooks/useFusionFee'
 
 /**
  * Returns true if the trade requires a confirmation of details before we can submit it
@@ -55,6 +56,7 @@ export default function ConfirmSwapModal({
   fusionSwap: any
 }) {
   const blockchain = useBlockchain()
+  const fee = useFusionFee()
 
   const showAcceptChanges = useMemo(
     () => Boolean(trade && originalTrade && tradeMeaningfullyDiffers(trade, originalTrade)),
@@ -71,6 +73,7 @@ export default function ConfirmSwapModal({
         recipient={recipient}
         showAcceptChanges={showAcceptChanges}
         onAcceptChanges={onAcceptChanges}
+        fee={fee}
       />
     ) : null
   }, [allowedSlippage, onAcceptChanges, recipient, showAcceptChanges, trade])
@@ -85,6 +88,7 @@ export default function ConfirmSwapModal({
         disabledConfirm={showAcceptChanges}
         swapErrorMessage={swapErrorMessage}
         allowedSlippage={allowedSlippage}
+        fee={fee}
       />
     ) : null
   }, [allowedSlippage, onConfirm, showAcceptChanges, swapErrorMessage, trade])
@@ -92,10 +96,17 @@ export default function ConfirmSwapModal({
   const adjustedInputCurrency = getBlockchainAdjustedCurrency(blockchain, trade?.inputAmount?.currency)
   const adjustedOutputCurrency = getBlockchainAdjustedCurrency(blockchain, trade?.outputAmount?.currency)
 
+  const fusionAmount =
+    swapMode === 1
+      ? fusionSwap?.type === 0
+        ? (parseFloat(fusionSwap?.maxMultihop?.trade?.outputAmount.toExact() ?? '0') * fee) / 1000 +
+          ((fusionSwap?.price ?? 0) * (1000 - fee)) / 1000
+        : fusionSwap?.price ?? 0
+      : 0
   // text to show while loading
-  const pendingText = `Swapping ${trade?.inputAmount?.toSignificant(6)} ${
-    adjustedInputCurrency?.symbol
-  } for ${trade?.outputAmount?.toSignificant(6)} ${adjustedOutputCurrency?.symbol}`
+  const pendingText = `Swapping ${trade?.inputAmount?.toSignificant(6)} ${adjustedInputCurrency?.symbol} for ${
+    swapMode === 0 ? trade?.outputAmount?.toSignificant(6) : fusionAmount.toFixed(6)
+  } ${adjustedOutputCurrency?.symbol}`
 
   const confirmationContent = useCallback(() => {
     return swapErrorMessage ? (
