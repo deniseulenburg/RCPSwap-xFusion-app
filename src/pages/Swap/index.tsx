@@ -59,7 +59,6 @@ import { isTradeBetter } from 'utils/trades'
 import FusionPrice from 'components/swap/FusionPrice'
 import { ethers } from 'ethers'
 import { FUSION_CONTRACT, SWAP_CONTRACT } from 'contracts'
-import useFusionFee from 'hooks/useFusionFee'
 
 export default function Swap() {
   const loadedUrlParams = useDefaultsFromURLSearch()
@@ -153,6 +152,7 @@ export default function Swap() {
   // }, [onUserInput])
 
   const { bestSwap, loading: bestLoading } = useBestPriceSwap()
+  console.log(bestSwap)
 
   const handleTypeInput = useCallback(
     (value: string) => {

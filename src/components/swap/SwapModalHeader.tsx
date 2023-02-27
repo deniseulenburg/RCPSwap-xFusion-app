@@ -15,7 +15,6 @@ import { TruncatedText, SwapShowAcceptChanges } from './styleds'
 
 import useBlockchain from '../../hooks/useBlockchain'
 import getBlockchainAdjustedCurrency from '../../utils/getBlockchainAdjustedCurrency'
-import useFusionFee from 'hooks/useFusionFee'
 
 export default function SwapModalHeader({
   trade,
@@ -24,8 +23,7 @@ export default function SwapModalHeader({
   showAcceptChanges,
   onAcceptChanges,
   swapMode,
-  fusionSwap,
-  fee
+  fusionSwap
 }: {
   trade: Trade
   swapMode: number
@@ -34,7 +32,6 @@ export default function SwapModalHeader({
   recipient: string | null
   showAcceptChanges: boolean
   onAcceptChanges: () => void
-  fee: number
 }) {
   const blockchain = useBlockchain()
   const slippageAdjustedAmounts = useMemo(() => computeSlippageAdjustedAmounts(trade, allowedSlippage), [
@@ -48,14 +45,6 @@ export default function SwapModalHeader({
   const tradeOutputCurrency = getBlockchainAdjustedCurrency(blockchain, trade.outputAmount.currency)
 
   const theme = useContext(ThemeContext)
-
-  const fusionAmount =
-    swapMode === 1
-      ? fusionSwap?.type === 0
-        ? (parseFloat(fusionSwap?.maxMultihop?.trade?.outputAmount.toExact() ?? '0') * fee) / 1000 +
-          ((fusionSwap?.price ?? 0) * (1000 - fee)) / 1000
-        : fusionSwap?.price ?? 0
-      : 0
 
   return (
     <AutoColumn gap={'md'} style={{ marginTop: '20px' }}>
@@ -123,7 +112,9 @@ export default function SwapModalHeader({
           <TYPE.italic textAlign="left" style={{ width: '100%' }}>
             {`Output is estimated. You will receive at least `}
             <b>
-              {swapMode === 0 ? slippageAdjustedAmounts[Field.OUTPUT]?.toSignificant(6) : fusionAmount.toFixed(6)}
+              {swapMode === 0
+                ? slippageAdjustedAmounts[Field.OUTPUT]?.toSignificant(6)
+                : (fusionSwap?.price ?? 0).toFixed(6)}
               {tradeOutputCurrency?.symbol}
             </b>
             {' or the transaction will revert.'}

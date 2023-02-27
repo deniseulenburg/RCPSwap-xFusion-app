@@ -1,5 +1,5 @@
-import { Trade, TradeType } from '@venomswap/sdk'
-import React, { useContext, useMemo, useState } from 'react'
+import { Currency, Token, Trade, TradeType } from '@venomswap/sdk'
+import React, { useContext, useEffect, useMemo, useState } from 'react'
 import { Repeat, Type } from 'react-feather'
 import { Text } from 'rebass'
 import { ThemeContext } from 'styled-components'
@@ -18,8 +18,35 @@ import { AutoRow, RowBetween, RowFixed } from '../Row'
 import FormattedPriceImpact from './FormattedPriceImpact'
 import { StyledBalanceMaxMini, SwapCallbackError } from './styleds'
 import useBlockchain from '../../hooks/useBlockchain'
+import useBUSDPrice from '../../hooks/useBUSDPrice'
 import getBlockchainAdjustedCurrency from '../../utils/getBlockchainAdjustedCurrency'
-import useFusionFee from 'hooks/useFusionFee'
+import axios from 'axios'
+
+export const useTokenPrice = (token: Currency, fetch: boolean) => {
+  const [price, setPrice] = useState(0)
+
+  useEffect(() => {
+    async function getPrice() {
+      try {
+        if (token?.symbol === 'ETH') {
+          const data = await axios.get('https://api.coingecko.com/api/v3/simple/price?ids=weth&vs_currencies=usd')
+          setPrice(data?.data?.weth?.usd ?? 0)
+        } else if ((token as Token)?.address) {
+          const data = await axios.get(
+            `https://api.coingecko.com/api/v3/coins/arbitrum_nova_ecosystem/contract/${(token as Token).address}`
+          )
+          setPrice(data?.data?.['market_data']?.['current_price']?.usd ?? 0)
+        } else {
+          setPrice(0)
+        }
+      } catch (err) {
+        setPrice(0)
+      }
+    }
+    if (fetch) getPrice()
+  }, [token.name, fetch])
+  return price
+}
 
 export default function SwapModalFooter({
   trade,
@@ -28,8 +55,7 @@ export default function SwapModalFooter({
   swapErrorMessage,
   disabledConfirm,
   swapMode,
-  fusionSwap,
-  fee
+  fusionSwap
 }: {
   trade: Trade
   swapMode: number
@@ -38,7 +64,6 @@ export default function SwapModalFooter({
   onConfirm: () => void
   swapErrorMessage: string | undefined
   disabledConfirm: boolean
-  fee: number
 }) {
   const blockchain = useBlockchain()
 
@@ -54,10 +79,7 @@ export default function SwapModalFooter({
   const tradeInputCurrency = getBlockchainAdjustedCurrency(blockchain, trade.inputAmount.currency)
   const tradeOutputCurrency = getBlockchainAdjustedCurrency(blockchain, trade.outputAmount.currency)
 
-  const fusionFee =
-    swapMode === 1 && fusionSwap.type === 0
-      ? ((fusionSwap?.price - parseFloat(fusionSwap?.maxMultihop?.trade?.outputAmount.toExact() ?? '0')) * fee) / 1000
-      : 0
+  const outputPrice = useTokenPrice(fusionSwap?.tokenOut,true)
 
   return (
     <>
@@ -125,7 +147,7 @@ export default function SwapModalFooter({
             <FormattedPriceImpact priceImpact={priceImpactWithoutFee} />
           </RowBetween>
         )}
-        {swapMode === 1 && fusionSwap.type === 0 && fusionFee > 0 && (
+        {swapMode === 1 && fusionSwap.type === 0 && (fusionSwap?.fee ?? 0) > 0 && (
           <RowBetween>
             <RowFixed>
               <TYPE.black color={theme.text2} fontSize={14} fontWeight={400}>
@@ -172,7 +194,7 @@ export default function SwapModalFooter({
             {realizedLPFee ? realizedLPFee?.toSignificant(6) + ' ' + tradeInputCurrency?.symbol : '-'}
           </TYPE.black>
         </RowBetween>
-        {swapMode === 1 && fusionSwap.type === 0 && fusionFee > 0 && (
+        {swapMode === 1 && fusionSwap.type === 0 && (fusionSwap?.fee ?? 0) > 0 && (
           <RowBetween>
             <RowFixed>
               <TYPE.black fontSize={14} fontWeight={400} color={theme.text2}>
@@ -180,7 +202,27 @@ export default function SwapModalFooter({
               </TYPE.black>
               <QuestionHelper text={`A portion of profit (10%) from the fusion goes to fusion provider.`} />
             </RowFixed>
-            <TYPE.black fontSize={14}>{fusionFee.toFixed(6) + ' ' + tradeOutputCurrency?.symbol}</TYPE.black>
+            <TYPE.black fontSize={14}>
+              {(fusionSwap?.fee ?? 0).toFixed(6) + ' ' + tradeOutputCurrency?.symbol}
+            </TYPE.black>
+          </RowBetween>
+        )}
+        {swapMode === 1 && fusionSwap.type === 0 && (fusionSwap?.fee ?? 0) > 0 && (
+          <RowBetween>
+            <RowFixed>
+              <TYPE.black fontSize={14} fontWeight={400} color={theme.text2}>
+                Saving
+              </TYPE.black>
+              <QuestionHelper text={`Savings comparing the best multihop swap and fushion swap.`} />
+            </RowFixed>
+            <TYPE.black fontSize={14}>
+              {(
+                ((fusionSwap?.price ?? 0) - (fusionSwap?.maxMultihop?.trade?.outputAmount?.toExact() ?? 0)) *
+                (outputPrice === 0 ? 1 : outputPrice)
+              ).toFixed(6) +
+                ' ' +
+                (outputPrice === 0 ? tradeOutputCurrency?.symbol : '$')}
+            </TYPE.black>
           </RowBetween>
         )}
       </AutoColumn>

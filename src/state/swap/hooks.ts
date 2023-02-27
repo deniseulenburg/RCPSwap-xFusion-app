@@ -40,6 +40,7 @@ import { retry } from 'utils/retry'
 import { MULTICALL_ABI, MULTICALL_NETWORKS } from 'constants/multicall'
 import { useMulticallContract } from 'hooks/useContract'
 import { BigNumber, Contract, ethers } from 'ethers'
+import { FUSION_CONTRACT } from 'contracts'
 
 export function useSwapState(): AppState['swap'] {
   return useSelector<AppState, AppState['swap']>(state => state.swap)
@@ -410,6 +411,7 @@ export async function getDexPair(pool: any, multiContract: Contract, tokens: any
 }
 
 export function useBestPriceSwap() {
+  const { library } = useActiveWeb3React()
   const multiContract = useMulticallContract()
 
   const [bestSwap, setBestSwap] = useState<{
@@ -422,6 +424,7 @@ export function useBestPriceSwap() {
     trade?: string[]
     dex?: number
     maxMultihop: { trade: Trade; index: number }
+    fee?: number
   }>()
   const [loading, setLoading] = useState(false)
   const {
@@ -497,17 +500,22 @@ export function useBestPriceSwap() {
           }
         }
 
-        if (mixSwap.result >= maxTrade)
+        if (mixSwap.result >= maxTrade) {
+          const fusionContract = new ethers.Contract(FUSION_CONTRACT.address, FUSION_CONTRACT.abi, library)
+          const feeRate = await fusionContract.fee()
+          const fee =
+            ((mixSwap.result - parseFloat(bestTrades[maxIndex].trade.outputAmount.toExact())) * (feeRate ?? 0)) / 1000
           setBestSwap({
             type: 0,
             amountIn: parsedAmount,
-            price: mixSwap.result,
+            price: mixSwap.result - fee,
             amounts: mixSwap.amounts,
             tokenIn: inputCurrency ?? undefined,
             tokenOut: outputCurrency ?? undefined,
-            maxMultihop: bestTrades[maxIndex]
+            maxMultihop: bestTrades[maxIndex],
+            fee
           })
-        else
+        } else
           setBestSwap({
             type: 1,
             price: maxTrade,
