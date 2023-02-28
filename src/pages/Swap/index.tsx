@@ -59,6 +59,8 @@ import { isTradeBetter } from 'utils/trades'
 import FusionPrice from 'components/swap/FusionPrice'
 import { ethers } from 'ethers'
 import { FUSION_CONTRACT, SWAP_CONTRACT } from 'contracts'
+import AdvancedFusionDetailsDropdown from 'components/swap/AdvancedFusionDetailsDropdown'
+import { useTokenPrice } from 'hooks/useTokenPrice'
 
 export default function Swap() {
   const loadedUrlParams = useDefaultsFromURLSearch()
@@ -147,10 +149,6 @@ export default function Swap() {
   const isValid = !swapInputError
   const dependentField: Field = independentField === Field.INPUT ? Field.OUTPUT : Field.INPUT
 
-  // const fetchBestPrice = useCallback(async () => {
-  //   return 1;
-  // }, [onUserInput])
-
   const { bestSwap, loading: bestLoading } = useBestPriceSwap()
   console.log(bestSwap)
 
@@ -205,6 +203,8 @@ export default function Swap() {
 
   // check if user has gone through approval process, used to show two step buttons, reset on token change
   const [approvalSubmitted, setApprovalSubmitted] = useState<boolean>(false)
+
+  const tokenOutPrice = useTokenPrice(bestSwap?.tokenOut, swapMode === 1)
 
   // mark when a user has submitted an approval, reset onTokenSelection for input field
   useEffect(() => {
@@ -408,6 +408,7 @@ export default function Swap() {
           }
         }
       } catch (err) {
+        console.log(err)
         setSwapState({
           attemptingTxn: false,
           tradeToConfirm,
@@ -511,6 +512,7 @@ export default function Swap() {
             onConfirm={handleSwap}
             swapErrorMessage={swapErrorMessage}
             onDismiss={handleConfirmDismiss}
+            outPrice={tokenOutPrice}
           />
 
           <AutoColumn gap={'md'}>
@@ -748,10 +750,14 @@ export default function Swap() {
           </BottomGrouping>
         </Wrapper>
       </AppBody>
-      {!swapIsUnsupported && swapMode === 0 ? (
-        <AdvancedSwapDetailsDropdown trade={trade} />
+      {swapMode === 0 ? (
+        !swapIsUnsupported ? (
+          <AdvancedSwapDetailsDropdown trade={trade} />
+        ) : (
+          <UnsupportedCurrencyFooter show={swapIsUnsupported} currencies={[currencies.INPUT, currencies.OUTPUT]} />
+        )
       ) : (
-        <UnsupportedCurrencyFooter show={swapIsUnsupported} currencies={[currencies.INPUT, currencies.OUTPUT]} />
+        <AdvancedFusionDetailsDropdown swap={bestSwap} price={tokenOutPrice} />
       )}
     </>
   )

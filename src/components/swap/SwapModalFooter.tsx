@@ -18,35 +18,7 @@ import { AutoRow, RowBetween, RowFixed } from '../Row'
 import FormattedPriceImpact from './FormattedPriceImpact'
 import { StyledBalanceMaxMini, SwapCallbackError } from './styleds'
 import useBlockchain from '../../hooks/useBlockchain'
-import useBUSDPrice from '../../hooks/useBUSDPrice'
 import getBlockchainAdjustedCurrency from '../../utils/getBlockchainAdjustedCurrency'
-import axios from 'axios'
-
-export const useTokenPrice = (token: Currency, fetch: boolean) => {
-  const [price, setPrice] = useState(0)
-
-  useEffect(() => {
-    async function getPrice() {
-      try {
-        if (token?.symbol === 'ETH') {
-          const data = await axios.get('https://api.coingecko.com/api/v3/simple/price?ids=weth&vs_currencies=usd')
-          setPrice(data?.data?.weth?.usd ?? 0)
-        } else if ((token as Token)?.address) {
-          const data = await axios.get(
-            `https://api.coingecko.com/api/v3/coins/arbitrum_nova_ecosystem/contract/${(token as Token).address}`
-          )
-          setPrice(data?.data?.['market_data']?.['current_price']?.usd ?? 0)
-        } else {
-          setPrice(0)
-        }
-      } catch (err) {
-        setPrice(0)
-      }
-    }
-    if (fetch) getPrice()
-  }, [token.name, fetch])
-  return price
-}
 
 export default function SwapModalFooter({
   trade,
@@ -55,7 +27,8 @@ export default function SwapModalFooter({
   swapErrorMessage,
   disabledConfirm,
   swapMode,
-  fusionSwap
+  fusionSwap,
+  outPrice
 }: {
   trade: Trade
   swapMode: number
@@ -64,6 +37,7 @@ export default function SwapModalFooter({
   onConfirm: () => void
   swapErrorMessage: string | undefined
   disabledConfirm: boolean
+  outPrice: number
 }) {
   const blockchain = useBlockchain()
 
@@ -78,8 +52,6 @@ export default function SwapModalFooter({
 
   const tradeInputCurrency = getBlockchainAdjustedCurrency(blockchain, trade.inputAmount.currency)
   const tradeOutputCurrency = getBlockchainAdjustedCurrency(blockchain, trade.outputAmount.currency)
-
-  const outputPrice = useTokenPrice(fusionSwap?.tokenOut,true)
 
   return (
     <>
@@ -218,10 +190,10 @@ export default function SwapModalFooter({
             <TYPE.black fontSize={14}>
               {(
                 ((fusionSwap?.price ?? 0) - (fusionSwap?.maxMultihop?.trade?.outputAmount?.toExact() ?? 0)) *
-                (outputPrice === 0 ? 1 : outputPrice)
+                (outPrice === 0 ? 1 : outPrice)
               ).toFixed(6) +
                 ' ' +
-                (outputPrice === 0 ? tradeOutputCurrency?.symbol : '$')}
+                (outPrice === 0 ? tradeOutputCurrency?.symbol : '$')}
             </TYPE.black>
           </RowBetween>
         )}
