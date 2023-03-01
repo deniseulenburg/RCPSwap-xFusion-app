@@ -3,9 +3,7 @@ import Row, { RowFixed } from 'components/Row'
 import { CoinSVG } from 'components/svgs'
 import React, { useContext } from 'react'
 import styled, { ThemeContext } from 'styled-components'
-import { TYPE } from 'theme'
 import { Text } from 'rebass'
-import Sushi from '../../assets/dex/sushiswap.png'
 
 const AdvancedDetailsFooter = styled.div<{ show: boolean }>`
   padding-top: 16px;
@@ -52,14 +50,14 @@ export default function AdvancedFusionDetailsDropdown({
             </RowFixed>
             <AutoColumn style={{ marginLeft: '30px' }}>
               <RowFixed>
-                <TYPE.black fontSize={15} fontWeight={600}>
+                <Text fontSize={15} color={theme.green1} fontWeight={600}>
                   {(
                     ((swap?.price ?? 0) - (swap?.maxMultihop?.trade?.outputAmount?.toExact() ?? 0)) *
                     (price === 0 ? 1 : price)
-                  ).toFixed(6) +
+                  ).toFixed(3) +
                     ' ' +
                     (price === 0 ? swap.tokenOut?.symbol : '$')}
-                </TYPE.black>
+                </Text>
                 <Text fontSize={14} color={theme.text2} marginLeft={'5px'}>
                   in saving
                 </Text>
@@ -68,7 +66,10 @@ export default function AdvancedFusionDetailsDropdown({
                 <Text fontSize={14} color={theme.text2}>
                   Compared to
                 </Text>
-                <DexLogo src={Sushi}></DexLogo>
+                {/* eslint-disable */}
+                <DexLogo
+                  src={require(`../../assets/dex/${dexes[swap?.maxMultihop?.index ?? 0].name.toLowerCase()}.png`).default}
+                ></DexLogo>
                 <Text fontSize={14} color={theme.text2}>
                   {dexes[swap?.maxMultihop?.index ?? 0].name}.
                 </Text>
