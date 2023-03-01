@@ -150,7 +150,6 @@ export default function Swap() {
   const dependentField: Field = independentField === Field.INPUT ? Field.OUTPUT : Field.INPUT
 
   const { bestSwap, loading: bestLoading } = useBestPriceSwap()
-  console.log(bestSwap)
 
   const handleTypeInput = useCallback(
     (value: string) => {
@@ -287,8 +286,8 @@ export default function Swap() {
             const tx = await fusionContract.swapExactETHForTokensWithMultiDex(
               bestSwap.amounts?.map(amount => ethers.utils.parseUnits(amount.toFixed(18), 18)),
               outputCurrencyId,
-              bestSwap.maxMultihop.index,
-              bestSwap.maxMultihop.trade.route.path.map(path => path.address),
+              bestSwap.maxMultihop?.index,
+              bestSwap.maxMultihop?.trade.route.path.map(path => path.address),
               { value: ethers.utils.parseEther(parseFloat(typedValue).toFixed(18)) }
             )
             await tx.wait()
@@ -312,8 +311,8 @@ export default function Swap() {
                 parseFloat(typedValue).toFixed(bestSwap.tokenIn?.decimals ?? 18),
                 bestSwap.tokenIn?.decimals ?? 18
               ),
-              bestSwap.maxMultihop.index,
-              bestSwap.maxMultihop.trade.route.path.map(path => path.address)
+              bestSwap.maxMultihop?.index,
+              bestSwap.maxMultihop?.trade.route.path.map(path => path.address)
             )
             await tx.wait()
             setSwapState({
@@ -337,8 +336,8 @@ export default function Swap() {
                 parseFloat(typedValue).toFixed(bestSwap.tokenIn?.decimals ?? 18),
                 bestSwap.tokenIn?.decimals ?? 18
               ),
-              bestSwap.maxMultihop.index,
-              bestSwap.maxMultihop.trade.route.path.map(path => path.address)
+              bestSwap.maxMultihop?.index,
+              bestSwap.maxMultihop?.trade.route.path.map(path => path.address)
             )
             await tx.wait()
             setSwapState({
@@ -408,7 +407,6 @@ export default function Swap() {
           }
         }
       } catch (err) {
-        console.log(err)
         setSwapState({
           attemptingTxn: false,
           tradeToConfirm,
@@ -757,7 +755,7 @@ export default function Swap() {
           <UnsupportedCurrencyFooter show={swapIsUnsupported} currencies={[currencies.INPUT, currencies.OUTPUT]} />
         )
       ) : (
-        <AdvancedFusionDetailsDropdown swap={bestSwap} price={tokenOutPrice} />
+        <AdvancedFusionDetailsDropdown swap={bestSwap} price={tokenOutPrice} dexes={dexes} />
       )}
     </>
   )

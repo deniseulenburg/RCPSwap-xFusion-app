@@ -1,15 +1,19 @@
-import React from 'react'
-import styled from 'styled-components'
-import { AdvancedFusionDetails } from './AdvancedFusionDetails'
+import { AutoColumn } from 'components/Column'
+import Row, { RowFixed } from 'components/Row'
+import { CoinSVG } from 'components/svgs'
+import React, { useContext } from 'react'
+import styled, { ThemeContext } from 'styled-components'
+import { TYPE } from 'theme'
+import { Text } from 'rebass'
+import Sushi from '../../assets/dex/sushiswap.png'
 
 const AdvancedDetailsFooter = styled.div<{ show: boolean }>`
-  padding-top: calc(16px + 2rem);
+  padding-top: 16px;
   padding-bottom: 16px;
-  margin-top: -2rem;
+  margin-top: 1rem;
   width: 100%;
   max-width: 400px;
-  border-bottom-left-radius: 20px;
-  border-bottom-right-radius: 20px;
+  border-radius: 20px;
   color: ${({ theme }) => theme.text2};
   background-color: ${({ theme }) => theme.advancedBG};
   z-index: -1;
@@ -18,10 +22,61 @@ const AdvancedDetailsFooter = styled.div<{ show: boolean }>`
   transition: transform 300ms ease-in-out;
 `
 
-export default function AdvancedFusionDetailsDropdown({ swap, price, ...rest }: { swap: any; price: number }) {
+const DexLogo = styled.img`
+  width: 18px;
+  height: 18px;
+  padding: 2px;
+  border: 1px solid ${({ theme }) => theme.text4};
+  border-radius: 5px;
+  margin: 1px 6px 0;
+`
+
+export default function AdvancedFusionDetailsDropdown({
+  swap,
+  price,
+  dexes
+}: {
+  swap: any
+  price: number
+  dexes: any
+}) {
+  const theme = useContext(ThemeContext)
+
   return (
     <AdvancedDetailsFooter show={Boolean(swap)}>
-      <AdvancedFusionDetails {...rest} swap={swap} price={price} />
+      {swap && swap.type === 0 && (
+        <AutoColumn style={{ padding: '0 30px' }}>
+          <Row>
+            <RowFixed style={{ padding: '10px', borderRadius: '50%', background: theme.bg3 }}>
+              <CoinSVG color={theme.text1}></CoinSVG>
+            </RowFixed>
+            <AutoColumn style={{ marginLeft: '30px' }}>
+              <RowFixed>
+                <TYPE.black fontSize={15} fontWeight={600}>
+                  {(
+                    ((swap?.price ?? 0) - (swap?.maxMultihop?.trade?.outputAmount?.toExact() ?? 0)) *
+                    (price === 0 ? 1 : price)
+                  ).toFixed(6) +
+                    ' ' +
+                    (price === 0 ? swap.tokenOut?.symbol : '$')}
+                </TYPE.black>
+                <Text fontSize={14} color={theme.text2} marginLeft={'5px'}>
+                  in saving
+                </Text>
+              </RowFixed>
+              <RowFixed>
+                <Text fontSize={14} color={theme.text2}>
+                  Compared to
+                </Text>
+                <DexLogo src={Sushi}></DexLogo>
+                <Text fontSize={14} color={theme.text2}>
+                  {dexes[swap?.maxMultihop?.index ?? 0].name}.
+                </Text>
+              </RowFixed>
+            </AutoColumn>
+          </Row>
+        </AutoColumn>
+      )}
     </AdvancedDetailsFooter>
   )
 }

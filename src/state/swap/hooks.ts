@@ -423,7 +423,7 @@ export function useBestPriceSwap() {
     amounts?: number[]
     trade?: string[]
     dex?: number
-    maxMultihop: { trade: Trade; index: number }
+    maxMultihop?: { trade: Trade; index: number }
     fee?: number
   }>()
   const [loading, setLoading] = useState(false)
@@ -439,9 +439,10 @@ export function useBestPriceSwap() {
   const outputCurrency = useCurrency(outputCurrencyId)
   const parsedAmount = tryParseAmount(typedValue, inputCurrency ?? undefined)
   useEffect(() => {
-    setLoading(true)
     async function getBestSwap() {
+      setLoading(true)
       if (inputCurrencyId && outputCurrencyId && parseFloat(typedValue) > 0 && swapMode === 1 && multiContract) {
+        setBestSwap({ type: -1, price: 0, amountIn: parsedAmount })
         const mixSwap = await getMixSwap(
           inputCurrencyId === 'ETH' ? WETH[42170].address : inputCurrencyId,
           outputCurrencyId === 'ETH' ? WETH[42170].address : outputCurrencyId,
@@ -486,48 +487,53 @@ export function useBestPriceSwap() {
             return { trade: bestTrade[0], index }
           })
         )
-        console.log(
-          bestTrades.map(trade => ({
-            amount: trade.trade.outputAmount.toExact(),
-            path: trade.trade.route.path.map(path => path.name)
-          }))
-        )
+
         let maxTrade = 0,
-          maxIndex = 0
+          maxIndex = -1
         for (let index = 0; index < bestTrades.length; index++) {
-          if (maxTrade < parseFloat(bestTrades[index].trade.outputAmount.toExact())) {
-            ;(maxTrade = parseFloat(bestTrades[index].trade.outputAmount.toExact())), (maxIndex = index)
+          if (maxTrade < parseFloat(bestTrades[index]?.trade?.outputAmount?.toExact() ?? 0)) {
+            ;(maxTrade = parseFloat(bestTrades[index]?.trade?.outputAmount?.toExact() ?? 0)), (maxIndex = index)
           }
         }
 
-        if (mixSwap.result >= maxTrade) {
-          const fusionContract = new ethers.Contract(FUSION_CONTRACT.address, FUSION_CONTRACT.abi, library)
-          const feeRate = await fusionContract.fee()
-          const fee =
-            ((mixSwap.result - parseFloat(bestTrades[maxIndex].trade.outputAmount.toExact())) * (feeRate ?? 0)) / 1000
+        if (maxIndex === -1) {
           setBestSwap({
-            type: 0,
+            type: -1,
             amountIn: parsedAmount,
-            price: mixSwap.result - fee,
-            amounts: mixSwap.amounts,
+            price: 0,
             tokenIn: inputCurrency ?? undefined,
-            tokenOut: outputCurrency ?? undefined,
-            maxMultihop: bestTrades[maxIndex],
-            fee
+            tokenOut: outputCurrency ?? undefined
           })
-        } else
-          setBestSwap({
-            type: 1,
-            price: maxTrade,
-            amountIn: parsedAmount,
-            dex: maxIndex,
-            trade: bestTrades[maxIndex].trade.route.path.map((path: any) => path.address),
-            tokenIn: inputCurrency ?? undefined,
-            tokenOut: outputCurrency ?? undefined,
-            maxMultihop: bestTrades[maxIndex]
-          })
-        setLoading(false)
+        } else {
+          if (mixSwap.result >= maxTrade) {
+            const fusionContract = new ethers.Contract(FUSION_CONTRACT.address, FUSION_CONTRACT.abi, library)
+            const feeRate = await fusionContract.fee()
+            const fee =
+              ((mixSwap.result - parseFloat(bestTrades[maxIndex].trade.outputAmount.toExact())) * (feeRate ?? 0)) / 1000
+            setBestSwap({
+              type: 0,
+              amountIn: parsedAmount,
+              price: mixSwap.result - fee,
+              amounts: mixSwap.amounts,
+              tokenIn: inputCurrency ?? undefined,
+              tokenOut: outputCurrency ?? undefined,
+              maxMultihop: bestTrades[maxIndex],
+              fee
+            })
+          } else
+            setBestSwap({
+              type: 1,
+              price: maxTrade,
+              amountIn: parsedAmount,
+              dex: maxIndex,
+              trade: bestTrades[maxIndex].trade.route.path.map((path: any) => path.address),
+              tokenIn: inputCurrency ?? undefined,
+              tokenOut: outputCurrency ?? undefined,
+              maxMultihop: bestTrades[maxIndex]
+            })
+        }
       }
+      setLoading(false)
     }
     getBestSwap()
   }, [inputCurrencyId, outputCurrencyId, typedValue, swapMode, multiContract])
