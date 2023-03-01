@@ -68,7 +68,9 @@ export default function AdvancedFusionDetailsDropdown({
                 </Text>
                 {/* eslint-disable */}
                 <DexLogo
-                  src={require(`../../assets/dex/${dexes[swap?.maxMultihop?.index ?? 0].name.toLowerCase()}.png`).default}
+                  src={
+                    require(`../../assets/dex/${dexes[swap?.maxMultihop?.index ?? 0].name.toLowerCase()}.png`).default
+                  }
                 ></DexLogo>
                 <Text fontSize={14} color={theme.text2}>
                   {dexes[swap?.maxMultihop?.index ?? 0].name}.

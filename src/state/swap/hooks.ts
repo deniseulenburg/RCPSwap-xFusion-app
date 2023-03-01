@@ -48,7 +48,7 @@ export function useSwapState(): AppState['swap'] {
 
 export function useSwapActionHandlers(): {
   onCurrencySelection: (field: Field, currency: Currency) => void
-  onSwitchTokens: () => void
+  onSwitchTokens: (mode: number | undefined, value: string | undefined) => void
   onUserInput: (field: Field, typedValue: string) => void
   onChangeRecipient: (recipient: string | null) => void
   onSwitchSwapMode: () => void
@@ -72,9 +72,12 @@ export function useSwapActionHandlers(): {
     [dispatch]
   )
 
-  const onSwitchTokens = useCallback(() => {
-    dispatch(switchCurrencies())
-  }, [dispatch])
+  const onSwitchTokens = useCallback(
+    (mode: number | undefined, value: string | undefined) => {
+      dispatch(switchCurrencies({ mode, value }))
+    },
+    [dispatch]
+  )
 
   const onUserInput = useCallback(
     (field: Field, typedValue: string) => {

@@ -73,12 +73,14 @@ export default createReducer<SwapState>(initialState, builder =>
         }
       }
     })
-    .addCase(switchCurrencies, state => {
+    .addCase(switchCurrencies, (state, { payload: { mode, value } }) => {
       return {
         ...state,
-        independentField: state.independentField === Field.INPUT ? Field.OUTPUT : Field.INPUT,
+        independentField:
+          mode === 1 ? Field.INPUT : state.independentField === Field.INPUT ? Field.OUTPUT : Field.INPUT,
         [Field.INPUT]: { currencyId: state[Field.OUTPUT].currencyId },
-        [Field.OUTPUT]: { currencyId: state[Field.INPUT].currencyId }
+        [Field.OUTPUT]: { currencyId: state[Field.INPUT].currencyId },
+        typedValue: mode === 1 ? value ?? '' : state.typedValue
       }
     })
     .addCase(typeInput, (state, { payload: { field, typedValue } }) => {

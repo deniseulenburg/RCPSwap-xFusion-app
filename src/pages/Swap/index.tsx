@@ -150,6 +150,7 @@ export default function Swap() {
   const dependentField: Field = independentField === Field.INPUT ? Field.OUTPUT : Field.INPUT
 
   const { bestSwap, loading: bestLoading } = useBestPriceSwap()
+  console.log(bestSwap)
 
   const handleTypeInput = useCallback(
     (value: string) => {
@@ -532,7 +533,10 @@ export default function Swap() {
                     size="16"
                     onClick={() => {
                       setApprovalSubmitted(false) // reset 2 step UI for approvals
-                      onSwitchTokens()
+                      onSwitchTokens(
+                        swapMode === 1 ? 1 : undefined,
+                        swapMode === 1 ? bestSwap?.price?.toFixed(bestSwap?.tokenOut?.decimals ?? 18) : undefined
+                      )
                     }}
                     color={currencies[Field.INPUT] && currencies[Field.OUTPUT] ? theme.primary1 : theme.text2}
                   />
@@ -614,11 +618,7 @@ export default function Swap() {
             )}
           </AutoColumn>
           <BottomGrouping>
-            {swapMode === 1 && bestLoading ? (
-              <ButtonPrimary disabled={true}>
-                <TYPE.main mb="4px">Loading</TYPE.main>
-              </ButtonPrimary>
-            ) : swapIsUnsupported ? (
+            {swapIsUnsupported ? (
               <ButtonPrimary disabled={true}>
                 <TYPE.main mb="4px">Unsupported Asset</TYPE.main>
               </ButtonPrimary>
@@ -628,6 +628,10 @@ export default function Swap() {
               <ButtonPrimary disabled={Boolean(wrapInputError)} onClick={onWrap}>
                 {wrapInputError ??
                   (wrapType === WrapType.WRAP ? 'Wrap' : wrapType === WrapType.UNWRAP ? 'Unwrap' : null)}
+              </ButtonPrimary>
+            ) : swapMode === 1 && bestLoading ? (
+              <ButtonPrimary disabled={true}>
+                <TYPE.main mb="4px">Loading</TYPE.main>
               </ButtonPrimary>
             ) : noRoute && userHasSpecifiedInputOutput ? (
               <GreyCard style={{ textAlign: 'center' }}>

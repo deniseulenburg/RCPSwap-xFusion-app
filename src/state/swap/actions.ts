@@ -6,7 +6,9 @@ export enum Field {
 }
 
 export const selectCurrency = createAction<{ field: Field; currencyId: string }>('swap/selectCurrency')
-export const switchCurrencies = createAction<void>('swap/switchCurrencies')
+export const switchCurrencies = createAction<{ mode: number | undefined; value: string | undefined }>(
+  'swap/switchCurrencies'
+)
 export const typeInput = createAction<{ field: Field; typedValue: string }>('swap/typeInput')
 export const switchSwapMode = createAction('swap/switchSwapMode')
 export const replaceSwapState = createAction<{
