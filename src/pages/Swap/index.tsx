@@ -61,6 +61,7 @@ import { ethers } from 'ethers'
 import { FUSION_CONTRACT, SWAP_CONTRACT } from 'contracts'
 import AdvancedFusionDetailsDropdown from 'components/swap/AdvancedFusionDetailsDropdown'
 import { useTokenPrice } from 'hooks/useTokenPrice'
+import truncateNumber from 'utils/truncateNumber'
 
 export default function Swap() {
   const loadedUrlParams = useDefaultsFromURLSearch()
@@ -284,11 +285,15 @@ export default function Swap() {
           )
           if (inputCurrencyId === 'ETH') {
             const tx = await fusionContract.swapExactETHForTokensWithMultiDex(
-              bestSwap.amounts?.map(amount => ethers.utils.parseUnits(amount.toFixed(18), 18)),
+              bestSwap.amounts?.map(amount => ethers.utils.parseUnits(truncateNumber(amount, 18), 18)),
               outputCurrencyId,
+              ethers.utils.parseUnits(
+                truncateNumber(bestSwap.price, bestSwap.tokenOut?.decimals ?? 18),
+                bestSwap.tokenOut?.decimals ?? 18
+              ),
               bestSwap.maxMultihop?.index,
               bestSwap.maxMultihop?.trade.route.path.map(path => path.address),
-              { value: ethers.utils.parseEther(parseFloat(typedValue).toFixed(18)) }
+              { value: ethers.utils.parseEther(truncateNumber(typedValue, 18)) }
             )
             await tx.wait()
             setSwapState({
@@ -302,15 +307,16 @@ export default function Swap() {
             const tx = await fusionContract.swapExactTokensforETHWithMultiDex(
               bestSwap.amounts?.map(amount =>
                 ethers.utils.parseUnits(
-                  amount.toFixed(bestSwap.tokenIn?.decimals ?? 18),
+                  truncateNumber(amount, bestSwap.tokenIn?.decimals ?? 18),
                   bestSwap.tokenIn?.decimals ?? 18
                 )
               ),
               inputCurrencyId,
               ethers.utils.parseUnits(
-                parseFloat(typedValue).toFixed(bestSwap.tokenIn?.decimals ?? 18),
+                truncateNumber(typedValue, bestSwap.tokenIn?.decimals ?? 18),
                 bestSwap.tokenIn?.decimals ?? 18
               ),
+              ethers.utils.parseEther(truncateNumber(bestSwap.price, 18)),
               bestSwap.maxMultihop?.index,
               bestSwap.maxMultihop?.trade.route.path.map(path => path.address)
             )
@@ -326,15 +332,19 @@ export default function Swap() {
             const tx = await fusionContract.swapExactTokensForTokensWithMultiDex(
               bestSwap.amounts?.map(amount =>
                 ethers.utils.parseUnits(
-                  amount.toFixed(bestSwap.tokenIn?.decimals ?? 18),
+                  truncateNumber(amount, bestSwap.tokenIn?.decimals ?? 18),
                   bestSwap.tokenIn?.decimals ?? 18
                 )
               ),
               inputCurrencyId,
               outputCurrencyId,
               ethers.utils.parseUnits(
-                parseFloat(typedValue).toFixed(bestSwap.tokenIn?.decimals ?? 18),
+                truncateNumber(typedValue, bestSwap.tokenIn?.decimals ?? 18),
                 bestSwap.tokenIn?.decimals ?? 18
+              ),
+              ethers.utils.parseUnits(
+                truncateNumber(bestSwap.price, bestSwap.tokenOut?.decimals ?? 18),
+                bestSwap.tokenOut?.decimals ?? 18
               ),
               bestSwap.maxMultihop?.index,
               bestSwap.maxMultihop?.trade.route.path.map(path => path.address)
@@ -411,7 +421,7 @@ export default function Swap() {
           attemptingTxn: false,
           tradeToConfirm,
           showConfirm,
-          swapErrorMessage: (err as any)?.message ?? JSON.stringify(err),
+          swapErrorMessage: JSON.stringify(err), //(err as any)?.message ?? JSON.stringify(err),
           txHash: undefined
         })
       }
@@ -534,7 +544,11 @@ export default function Swap() {
                       setApprovalSubmitted(false) // reset 2 step UI for approvals
                       onSwitchTokens(
                         swapMode === 1 ? 1 : undefined,
-                        swapMode === 1 ? bestSwap?.price?.toFixed(bestSwap?.tokenOut?.decimals ?? 18) : undefined
+                        swapMode === 1
+                          ? bestSwap?.price
+                            ? truncateNumber(bestSwap.price, bestSwap?.tokenOut?.decimals ?? 18)
+                            : undefined
+                          : undefined
                       )
                     }}
                     color={currencies[Field.INPUT] && currencies[Field.OUTPUT] ? theme.primary1 : theme.text2}
