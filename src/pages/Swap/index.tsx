@@ -1,4 +1,4 @@
-import { CurrencyAmount, JSBI, Token, Trade } from '@venomswap/sdk'
+import { CurrencyAmount, JSBI, Percent, Token, Trade } from '@venomswap/sdk'
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { ArrowDown, Type } from 'react-feather'
 import ReactGA from 'react-ga'
@@ -21,7 +21,7 @@ import TokenWarningModal from '../../components/TokenWarningModal'
 import ProgressSteps from '../../components/ProgressSteps'
 import SwapHeader from '../../components/swap/SwapHeader'
 
-import { INITIAL_ALLOWED_SLIPPAGE } from '../../constants'
+import { BIPS_BASE, INITIAL_ALLOWED_SLIPPAGE } from '../../constants'
 import { getTradeVersion } from '../../data/V1'
 import { useActiveWeb3React } from '../../hooks'
 import { useCurrency, useAllTokens } from '../../hooks/Tokens'
@@ -150,8 +150,6 @@ export default function Swap() {
   const isValid = !swapInputError
   const dependentField: Field = independentField === Field.INPUT ? Field.OUTPUT : Field.INPUT
 
-  const { bestSwap, loading: bestLoading } = useBestPriceSwap()
-
   const handleTypeInput = useCallback(
     (value: string) => {
       const index = value.indexOf('.')
@@ -183,6 +181,8 @@ export default function Swap() {
     swapErrorMessage: undefined,
     txHash: undefined
   })
+
+  const { bestSwap, loading: bestLoading } = useBestPriceSwap(showConfirm)
 
   const formattedAmounts = {
     [independentField]: typedValue,
@@ -288,7 +288,7 @@ export default function Swap() {
               bestSwap.amounts?.map(amount => ethers.utils.parseUnits(truncateNumber(amount, 18), 18)),
               outputCurrencyId,
               ethers.utils.parseUnits(
-                truncateNumber(bestSwap.price, bestSwap.tokenOut?.decimals ?? 18),
+                truncateNumber(bestSwap.price / (1 + allowedSlippage / 10000), bestSwap.tokenOut?.decimals ?? 18),
                 bestSwap.tokenOut?.decimals ?? 18
               ),
               bestSwap.maxMultihop?.index,
@@ -316,7 +316,7 @@ export default function Swap() {
                 truncateNumber(typedValue, bestSwap.tokenIn?.decimals ?? 18),
                 bestSwap.tokenIn?.decimals ?? 18
               ),
-              ethers.utils.parseEther(truncateNumber(bestSwap.price, 18)),
+              ethers.utils.parseEther(truncateNumber(bestSwap.price / (1 + allowedSlippage / 10000), 18)),
               bestSwap.maxMultihop?.index,
               bestSwap.maxMultihop?.trade.route.path.map(path => path.address)
             )
@@ -343,7 +343,7 @@ export default function Swap() {
                 bestSwap.tokenIn?.decimals ?? 18
               ),
               ethers.utils.parseUnits(
-                truncateNumber(bestSwap.price, bestSwap.tokenOut?.decimals ?? 18),
+                truncateNumber(bestSwap.price / (1 + allowedSlippage / 10000), bestSwap.tokenOut?.decimals ?? 18),
                 bestSwap.tokenOut?.decimals ?? 18
               ),
               bestSwap.maxMultihop?.index,
@@ -366,7 +366,9 @@ export default function Swap() {
           )
           if (inputCurrencyId === 'ETH') {
             const tx = await dexContract.swapExactETHForTokens(
-              0,
+              bestSwap.maxMultihop?.trade
+                .minimumAmountOut(new Percent(JSBI.BigInt(allowedSlippage), BIPS_BASE))
+                .quotient.toString(),
               bestSwap.trade,
               account,
               Math.floor(Date.now() / 1000) + 60 * 10,
@@ -385,7 +387,9 @@ export default function Swap() {
           } else if (outputCurrencyId === 'ETH') {
             const tx = await dexContract.swapExactTokensForETH(
               ethers.utils.parseUnits(typedValue, bestSwap.tokenIn?.decimals ?? 18).toString(),
-              0,
+              bestSwap.maxMultihop?.trade
+                .minimumAmountOut(new Percent(JSBI.BigInt(allowedSlippage), BIPS_BASE))
+                .quotient.toString(),
               bestSwap.trade,
               account,
               Math.floor(Date.now() / 1000) + 60 * 10
@@ -401,7 +405,9 @@ export default function Swap() {
           } else {
             const tx = await dexContract.swapExactTokensForTokens(
               ethers.utils.parseUnits(typedValue, bestSwap.tokenIn?.decimals ?? 18),
-              0,
+              bestSwap.maxMultihop?.trade
+                .minimumAmountOut(new Percent(JSBI.BigInt(allowedSlippage), BIPS_BASE))
+                .quotient.toString(),
               bestSwap.trade,
               account,
               Math.floor(Date.now() / 1000) + 60 * 10
@@ -521,6 +527,7 @@ export default function Swap() {
             swapErrorMessage={swapErrorMessage}
             onDismiss={handleConfirmDismiss}
             outPrice={tokenOutPrice}
+            loading={swapMode === 0 ? false : bestLoading}
           />
 
           <AutoColumn gap={'md'}>
@@ -642,7 +649,7 @@ export default function Swap() {
                 {wrapInputError ??
                   (wrapType === WrapType.WRAP ? 'Wrap' : wrapType === WrapType.UNWRAP ? 'Unwrap' : null)}
               </ButtonPrimary>
-            ) : swapMode === 1 && bestLoading ? (
+            ) : swapMode === 1 && (bestLoading || bestSwap?.type === -1) ? (
               <ButtonPrimary disabled={true}>
                 <TYPE.main mb="4px">Loading</TYPE.main>
               </ButtonPrimary>

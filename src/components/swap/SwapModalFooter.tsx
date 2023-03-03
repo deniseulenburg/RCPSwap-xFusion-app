@@ -28,7 +28,8 @@ export default function SwapModalFooter({
   disabledConfirm,
   swapMode,
   fusionSwap,
-  outPrice
+  outPrice,
+  loading
 }: {
   trade: Trade
   swapMode: number
@@ -38,6 +39,7 @@ export default function SwapModalFooter({
   swapErrorMessage: string | undefined
   disabledConfirm: boolean
   outPrice: number
+  loading: boolean
 }) {
   const blockchain = useBlockchain()
 
@@ -202,13 +204,13 @@ export default function SwapModalFooter({
       <AutoRow>
         <ButtonError
           onClick={onConfirm}
-          disabled={disabledConfirm}
+          disabled={disabledConfirm || loading}
           error={severity > 2}
           style={{ margin: '10px 0 0 0' }}
           id="confirm-swap-or-send"
         >
           <Text fontSize={20} fontWeight={500}>
-            {severity > 2 ? 'Swap Anyway' : 'Confirm Swap'}
+            {loading ? 'Loading' : severity > 2 ? 'Swap Anyway' : 'Confirm Swap'}
           </Text>
         </ButtonError>
 

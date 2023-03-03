@@ -413,7 +413,7 @@ export async function getDexPair(pool: any, multiContract: Contract, tokens: any
   return pairs
 }
 
-export function useBestPriceSwap() {
+export function useBestPriceSwap(swapConfirm: boolean) {
   const { library } = useActiveWeb3React()
   const multiContract = useMulticallContract()
 
@@ -542,17 +542,21 @@ export function useBestPriceSwap() {
       setLoading(false)
     }
 
-    setBestSwap({
-      type: -1,
-      amountIn: parsedAmount,
-      price: 0,
-      tokenIn: inputCurrency ?? undefined,
-      tokenOut: outputCurrency ?? undefined
-    })
+    if (!swapConfirm)
+      setBestSwap({
+        type: -1,
+        amountIn: parsedAmount,
+        price: 0,
+        tokenIn: inputCurrency ?? undefined,
+        tokenOut: outputCurrency ?? undefined
+      })
 
-    const inputTimer = (setTimeout(() => {
-      getBestSwap(false)
-    }, 2000) as unknown) as number
+    const inputTimer = (setTimeout(
+      () => {
+        getBestSwap(swapConfirm)
+      },
+      swapConfirm ? 0 : 2000
+    ) as unknown) as number
 
     const autoTimer = (setInterval(() => {
       getBestSwap(true)
@@ -562,7 +566,7 @@ export function useBestPriceSwap() {
       clearTimeout(inputTimer)
       clearInterval(autoTimer)
     }
-  }, [inputCurrencyId, outputCurrencyId, typedValue, swapMode])
+  }, [inputCurrencyId, outputCurrencyId, typedValue, swapMode, swapConfirm])
 
   return { bestSwap, loading }
 }
