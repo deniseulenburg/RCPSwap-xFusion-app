@@ -150,7 +150,6 @@ export default function Swap() {
   const dependentField: Field = independentField === Field.INPUT ? Field.OUTPUT : Field.INPUT
 
   const { bestSwap, loading: bestLoading } = useBestPriceSwap()
-  console.log(bestSwap)
 
   const handleTypeInput = useCallback(
     (value: string) => {
@@ -758,9 +757,9 @@ export default function Swap() {
         ) : (
           <UnsupportedCurrencyFooter show={swapIsUnsupported} currencies={[currencies.INPUT, currencies.OUTPUT]} />
         )
-      ) : (
+      ) : swapMode === 1 && bestSwap?.type === 0 ? (
         <AdvancedFusionDetailsDropdown swap={bestSwap} price={tokenOutPrice} dexes={dexes} />
-      )}
+      ) : null}
     </>
   )
 }

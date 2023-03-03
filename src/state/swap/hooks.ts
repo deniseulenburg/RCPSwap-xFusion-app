@@ -430,6 +430,8 @@ export function useBestPriceSwap() {
     fee?: number
   }>()
   const [loading, setLoading] = useState(false)
+  const [callable, setCallable] = useState(false)
+
   const {
     swapMode,
     typedValue,
@@ -441,11 +443,12 @@ export function useBestPriceSwap() {
 
   const outputCurrency = useCurrency(outputCurrencyId)
   const parsedAmount = tryParseAmount(typedValue, inputCurrency ?? undefined)
+
   useEffect(() => {
-    async function getBestSwap() {
-      setLoading(true)
+    async function getBestSwap(isUpdaing: boolean) {
+      if (!isUpdaing) setLoading(true)
       if (inputCurrencyId && outputCurrencyId && parseFloat(typedValue) > 0 && swapMode === 1 && multiContract) {
-        setBestSwap({ type: -1, price: 0, amountIn: parsedAmount })
+        if (!isUpdaing) setBestSwap({ type: -1, price: 0, amountIn: parsedAmount })
         const mixSwap = await getMixSwap(
           inputCurrencyId === 'ETH' ? WETH[42170].address : inputCurrencyId,
           outputCurrencyId === 'ETH' ? WETH[42170].address : outputCurrencyId,
@@ -538,7 +541,28 @@ export function useBestPriceSwap() {
       }
       setLoading(false)
     }
-    getBestSwap()
-  }, [inputCurrencyId, outputCurrencyId, typedValue, swapMode, multiContract])
+
+    setBestSwap({
+      type: -1,
+      amountIn: parsedAmount,
+      price: 0,
+      tokenIn: inputCurrency ?? undefined,
+      tokenOut: outputCurrency ?? undefined
+    })
+
+    const inputTimer = (setTimeout(() => {
+      getBestSwap(false)
+    }, 2000) as unknown) as number
+
+    const autoTimer = (setInterval(() => {
+      getBestSwap(true)
+    }, 120000) as unknown) as number
+
+    return () => {
+      clearTimeout(inputTimer)
+      clearInterval(autoTimer)
+    }
+  }, [inputCurrencyId, outputCurrencyId, typedValue, swapMode])
+
   return { bestSwap, loading }
 }
