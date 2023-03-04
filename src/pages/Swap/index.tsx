@@ -528,6 +528,7 @@ export default function Swap() {
             onDismiss={handleConfirmDismiss}
             outPrice={tokenOutPrice}
             loading={swapMode === 0 ? false : bestLoading}
+            dexes={dexes}
           />
 
           <AutoColumn gap={'md'}>
@@ -550,8 +551,8 @@ export default function Swap() {
                     onClick={() => {
                       setApprovalSubmitted(false) // reset 2 step UI for approvals
                       onSwitchTokens(
-                        swapMode === 1 ? 1 : undefined,
-                        swapMode === 1
+                        swapMode === 1 && !showWrap ? 1 : undefined,
+                        swapMode === 1 && !showWrap
                           ? bestSwap?.price
                             ? truncateNumber(bestSwap.price, bestSwap?.tokenOut?.decimals ?? 18)
                             : undefined
@@ -570,7 +571,11 @@ export default function Swap() {
             </AutoColumn>
             <CurrencyInputPanel
               value={
-                swapMode === 0 ? formattedAmounts[Field.OUTPUT] : bestLoading ? '0' : bestSwap?.price?.toString() ?? '0'
+                swapMode === 0 || showWrap
+                  ? formattedAmounts[Field.OUTPUT]
+                  : bestLoading
+                  ? '0'
+                  : bestSwap?.price?.toString() ?? '0'
               }
               onUserInput={handleTypeOutput}
               label={independentField === Field.INPUT && !showWrap && trade ? 'To (estimated)' : 'To'}

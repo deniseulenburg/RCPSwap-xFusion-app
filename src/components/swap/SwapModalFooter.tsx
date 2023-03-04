@@ -29,7 +29,8 @@ export default function SwapModalFooter({
   swapMode,
   fusionSwap,
   outPrice,
-  loading
+  loading,
+  dexes
 }: {
   trade: Trade
   swapMode: number
@@ -40,6 +41,7 @@ export default function SwapModalFooter({
   disabledConfirm: boolean
   outPrice: number
   loading: boolean
+  dexes: any
 }) {
   const blockchain = useBlockchain()
 
@@ -125,9 +127,9 @@ export default function SwapModalFooter({
           <RowBetween>
             <RowFixed>
               <TYPE.black color={theme.text2} fontSize={14} fontWeight={400}>
-                Multihop
+                {dexes[fusionSwap?.maxMultihop?.index ?? 0].name} Price
               </TYPE.black>
-              <QuestionHelper text="The difference between the market price and your price due to trade size." />
+              <QuestionHelper text="The best price found on any Dexes on Nova." />
             </RowFixed>
             <Text
               fontWeight={500}
@@ -171,23 +173,10 @@ export default function SwapModalFooter({
         {swapMode === 1 && fusionSwap.type === 0 && (fusionSwap?.fee ?? 0) > 0 && (
           <RowBetween>
             <RowFixed>
-              <TYPE.black fontSize={14} fontWeight={400} color={theme.text2}>
-                Fusion Provider Fee
-              </TYPE.black>
-              <QuestionHelper text={`A portion of profit (10%) from the fusion goes to fusion provider.`} />
-            </RowFixed>
-            <TYPE.black fontSize={14}>
-              {(fusionSwap?.fee ?? 0).toFixed(6) + ' ' + tradeOutputCurrency?.symbol}
-            </TYPE.black>
-          </RowBetween>
-        )}
-        {swapMode === 1 && fusionSwap.type === 0 && (fusionSwap?.fee ?? 0) > 0 && (
-          <RowBetween>
-            <RowFixed>
-              <TYPE.black fontSize={14} fontWeight={400} color={theme.text2}>
+              <Text fontSize={14} fontWeight={400} color={theme.green1}>
                 Saving
-              </TYPE.black>
-              <QuestionHelper text={`Savings comparing the best multihop swap and fushion swap.`} />
+              </Text>
+              <QuestionHelper text={`Saving compared with the best price found on any DEX on Nova.`} />
             </RowFixed>
             <TYPE.black fontSize={14}>
               {(

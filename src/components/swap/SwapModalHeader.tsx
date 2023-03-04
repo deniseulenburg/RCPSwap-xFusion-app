@@ -114,7 +114,7 @@ export default function SwapModalHeader({
             <b>
               {swapMode === 0
                 ? slippageAdjustedAmounts[Field.OUTPUT]?.toSignificant(6)
-                : (fusionSwap?.price ?? 0).toFixed(6)}
+                : (fusionSwap?.price / (1 + allowedSlippage / 10000) ?? 0).toFixed(6)}
               {tradeOutputCurrency?.symbol}
             </b>
             {' or the transaction will revert.'}
