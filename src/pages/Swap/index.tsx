@@ -772,6 +772,7 @@ export default function Swap() {
                   disabled={
                     !isValid ||
                     (swapMode === 0 && approval !== ApprovalState.APPROVED) ||
+                    (swapMode === 1 && fusionApproval !== ApprovalState.APPROVED) ||
                     (priceImpactSeverity > 3 && !isExpertMode && swapMode === 0)
                   }
                   error={isValid && priceImpactSeverity > 2}

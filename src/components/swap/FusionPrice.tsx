@@ -24,7 +24,7 @@ export default function FusionPrice({
 }: FusionPriceProps) {
   const theme = useContext(ThemeContext)
   const formattedPrice =
-    fusionSwap.price && fusionSwap.amountIn
+    fusionSwap && fusionSwap.price && fusionSwap.amountIn
       ? showInverted
         ? new Fraction(fusionSwap?.price.raw, fusionSwap?.amountIn.raw).toFixed(6)
         : new Fraction(fusionSwap?.amountIn.raw, fusionSwap?.price.raw).toFixed(6)
@@ -39,7 +39,7 @@ export default function FusionPrice({
       color={theme.text2}
       style={{ justifyContent: 'center', alignItems: 'center', display: 'flex' }}
     >
-      {fusionSwap.amountIn && fusionSwap.price && !loading ? (
+      {fusionSwap && fusionSwap.amountIn && fusionSwap.price && !loading ? (
         <>
           <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'end' }}>
             <div>{formattedPrice ?? '-'}</div> <div>{label}</div>
