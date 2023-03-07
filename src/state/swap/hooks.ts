@@ -1,7 +1,17 @@
 import useENS from '../../hooks/useENS'
 import { Version } from '../../hooks/useToggledVersion'
 import { parseUnits } from '@ethersproject/units'
-import { Currency, CurrencyAmount, JSBI, Token, TokenAmount, Trade, DEFAULT_CURRENCIES, Pair } from '@venomswap/sdk'
+import {
+  Currency,
+  CurrencyAmount,
+  JSBI,
+  Token,
+  TokenAmount,
+  Trade,
+  DEFAULT_CURRENCIES,
+  Pair,
+  Fraction
+} from '@venomswap/sdk'
 import { ParsedQs } from 'qs'
 import { useCallback, useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
@@ -364,12 +374,48 @@ export async function getAllPools() {
 }
 
 export async function getMixSwap(tokenIn: string, tokenOut: string, amountIn: string) {
-  const data = await axios.post('http://localhost:8001/api/swap/mixswap', {
-    addressIn: tokenIn,
-    addressOut: tokenOut,
-    amountIn
-  })
-  return data.data
+  try {
+    const data = await axios.post('http://localhost:8001/api/swap/mixswap', {
+      addressIn: tokenIn,
+      addressOut: tokenOut,
+      amountIn
+    })
+    if (data.status === 200 && data.data) {
+      const tokenIn = data.data.tokenIn
+        ? new Token(
+            data.data.tokenIn.chainId,
+            data.data.tokenIn.address,
+            data.data.tokenIn.decimals,
+            data.data.tokenIn.symbol,
+            data.data.tokenIn.name
+          )
+        : undefined
+      const tokenOut = data.data.tokenOut
+        ? new Token(
+            data.data.tokenOut.chainId,
+            data.data.tokenOut.address,
+            data.data.tokenOut.decimals,
+            data.data.tokenOut.symbol,
+            data.data.tokenOut.name
+          )
+        : undefined
+      const resultAmount = data.data.result && tokenOut ? new TokenAmount(tokenOut, data.data.result) : undefined
+      const amounts: CurrencyAmount[] | undefined =
+        data.data.amounts && tokenIn
+          ? data.data.amounts.map((amount: any) => new TokenAmount(tokenIn, amount))
+          : undefined
+
+      return {
+        tokenIn,
+        tokenOut,
+        result: resultAmount,
+        amounts
+      }
+    }
+  } catch (err) {
+    console.log(err)
+    throw new Error(JSON.stringify(err))
+  }
 }
 
 export async function getDexPair(pool: any, multiContract: Contract, tokens: any) {
@@ -413,24 +459,23 @@ export async function getDexPair(pool: any, multiContract: Contract, tokens: any
   return pairs
 }
 
-export function useBestPriceSwap(swapConfirm: boolean) {
+export function useFusionSwap(swapConfirm: boolean) {
   const { library } = useActiveWeb3React()
   const multiContract = useMulticallContract()
 
   const [bestSwap, setBestSwap] = useState<{
-    amountIn: CurrencyAmount | undefined
+    amountIn?: CurrencyAmount
     type: number
-    price: number
+    price?: CurrencyAmount
     tokenIn?: Currency
     tokenOut?: Currency
-    amounts?: number[]
+    amounts?: CurrencyAmount[]
     trade?: string[]
     dex?: number
     maxMultihop?: { trade: Trade; index: number }
-    fee?: number
+    fee?: CurrencyAmount
   }>()
   const [loading, setLoading] = useState(false)
-  const [callable, setCallable] = useState(false)
 
   const {
     swapMode,
@@ -448,7 +493,7 @@ export function useBestPriceSwap(swapConfirm: boolean) {
     async function getBestSwap(isUpdaing: boolean) {
       if (!isUpdaing) setLoading(true)
       if (inputCurrencyId && outputCurrencyId && parseFloat(typedValue) > 0 && swapMode === 1 && multiContract) {
-        if (!isUpdaing) setBestSwap({ type: -1, price: 0, amountIn: parsedAmount })
+        if (!isUpdaing) setBestSwap({ type: -1, amountIn: parsedAmount })
         const mixSwap = await getMixSwap(
           inputCurrencyId === 'ETH' ? WETH[42170].address : inputCurrencyId,
           outputCurrencyId === 'ETH' ? WETH[42170].address : outputCurrencyId,
@@ -494,59 +539,66 @@ export function useBestPriceSwap(swapConfirm: boolean) {
           })
         )
 
-        let maxTrade = 0,
+        console.log(bestTrades)
+
+        let maxTrade: CurrencyAmount | undefined = undefined,
           maxIndex = -1
         for (let index = 0; index < bestTrades.length; index++) {
-          if (maxTrade < parseFloat(bestTrades[index]?.trade?.outputAmount?.toExact() ?? 0)) {
-            ;(maxTrade = parseFloat(bestTrades[index]?.trade?.outputAmount?.toExact() ?? 0)), (maxIndex = index)
+          if (!maxTrade || maxTrade.lessThan(bestTrades[index]?.trade?.outputAmount)) {
+            ;(maxTrade = bestTrades[index]?.trade?.outputAmount), (maxIndex = index)
           }
         }
 
-        if (maxIndex === -1) {
+        if (maxIndex === -1 || !maxTrade) {
           setBestSwap({
             type: -1,
             amountIn: parsedAmount,
-            price: 0,
             tokenIn: inputCurrency ?? undefined,
             tokenOut: outputCurrency ?? undefined
           })
-        } else {
-          if (mixSwap.result >= maxTrade) {
-            const fusionContract = new ethers.Contract(FUSION_CONTRACT.address, FUSION_CONTRACT.abi, library)
-            const feeRate = await fusionContract.fee()
-            const fee =
-              ((mixSwap.result - parseFloat(bestTrades[maxIndex].trade.outputAmount.toExact())) * (feeRate ?? 0)) / 1000
-            setBestSwap({
-              type: 0,
-              amountIn: parsedAmount,
-              price: mixSwap.result - fee,
-              amounts: mixSwap.amounts,
-              tokenIn: inputCurrency ?? undefined,
-              tokenOut: outputCurrency ?? undefined,
-              maxMultihop: bestTrades[maxIndex],
-              fee
-            })
-          } else
-            setBestSwap({
-              type: 1,
-              price: maxTrade,
-              amountIn: parsedAmount,
-              dex: maxIndex,
-              trade: bestTrades[maxIndex].trade.route.path.map((path: any) => path.address),
-              tokenIn: inputCurrency ?? undefined,
-              tokenOut: outputCurrency ?? undefined,
-              maxMultihop: bestTrades[maxIndex]
-            })
+        } else if (
+          !mixSwap?.result ||
+          !mixSwap.amounts ||
+          !mixSwap.tokenIn ||
+          !mixSwap.tokenOut ||
+          mixSwap.result.lessThan(maxTrade)
+        ) {
+          setBestSwap({
+            type: 1,
+            price: maxTrade,
+            amountIn: parsedAmount,
+            dex: maxIndex,
+            trade: bestTrades[maxIndex].trade.route.path.map((path: any) => path.address),
+            tokenIn: inputCurrency ?? undefined,
+            tokenOut: outputCurrency ?? undefined,
+            maxMultihop: bestTrades[maxIndex]
+          })
+        } else if (mixSwap.result.greaterThan(maxTrade)) {
+          const fusionContract = new ethers.Contract(FUSION_CONTRACT.address, FUSION_CONTRACT.abi, library)
+          const feeRate = await fusionContract.fee()
+          const fee = new TokenAmount(
+            mixSwap.tokenOut,
+            new Fraction(feeRate ?? '0', '1000').multiply(JSBI.subtract(mixSwap.result.raw, maxTrade.raw)).quotient
+          )
+          setBestSwap({
+            type: 0,
+            amountIn: parsedAmount,
+            price: mixSwap.result.subtract(fee),
+            amounts: mixSwap.amounts,
+            tokenIn: inputCurrency ?? undefined,
+            tokenOut: outputCurrency ?? undefined,
+            maxMultihop: bestTrades[maxIndex],
+            fee
+          })
         }
+        setLoading(false)
       }
-      setLoading(false)
     }
 
     if (!swapConfirm)
       setBestSwap({
         type: -1,
         amountIn: parsedAmount,
-        price: 0,
         tokenIn: inputCurrency ?? undefined,
         tokenOut: outputCurrency ?? undefined
       })

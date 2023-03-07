@@ -68,7 +68,7 @@ export default function ConfirmSwapModal({
   )
 
   const modalHeader = useCallback(() => {
-    return trade ? (
+    return trade || swapMode === 1 ? (
       <SwapModalHeader
         trade={trade}
         fusionSwap={fusionSwap}
@@ -82,7 +82,7 @@ export default function ConfirmSwapModal({
   }, [allowedSlippage, onAcceptChanges, recipient, showAcceptChanges, trade])
 
   const modalBottom = useCallback(() => {
-    return trade ? (
+    return trade || swapMode === 1 ? (
       <SwapModalFooter
         onConfirm={onConfirm}
         trade={trade}
@@ -98,13 +98,21 @@ export default function ConfirmSwapModal({
     ) : null
   }, [allowedSlippage, onConfirm, showAcceptChanges, swapErrorMessage, trade])
 
-  const adjustedInputCurrency = getBlockchainAdjustedCurrency(blockchain, trade?.inputAmount?.currency)
-  const adjustedOutputCurrency = getBlockchainAdjustedCurrency(blockchain, trade?.outputAmount?.currency)
+  const adjustedInputCurrency = getBlockchainAdjustedCurrency(
+    blockchain,
+    trade?.inputAmount?.currency ?? fusionSwap?.tokenIn
+  )
+  const adjustedOutputCurrency = getBlockchainAdjustedCurrency(
+    blockchain,
+    trade?.outputAmount?.currency ?? fusionSwap?.tokenOut
+  )
 
   // text to show while loading
-  const pendingText = `Swapping ${trade?.inputAmount?.toSignificant(6)} ${adjustedInputCurrency?.symbol} for ${
-    swapMode === 0 ? trade?.outputAmount?.toSignificant(6) : (fusionSwap?.price ?? 0).toFixed(6)
-  } ${adjustedOutputCurrency?.symbol}`
+  const pendingText = `Swapping ${trade?.inputAmount?.toSignificant(6) ?? fusionSwap?.amountIn?.toSignificant(6)} ${
+    adjustedInputCurrency?.symbol
+  } for ${swapMode === 0 ? trade?.outputAmount?.toSignificant(6) : fusionSwap?.price?.toSignificant(6)} ${
+    adjustedOutputCurrency?.symbol
+  }`
 
   const confirmationContent = useCallback(() => {
     return swapErrorMessage ? (

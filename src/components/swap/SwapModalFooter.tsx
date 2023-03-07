@@ -32,7 +32,7 @@ export default function SwapModalFooter({
   loading,
   dexes
 }: {
-  trade: Trade
+  trade: Trade | undefined
   swapMode: number
   fusionSwap: any
   allowedSlippage: number
@@ -54,8 +54,14 @@ export default function SwapModalFooter({
   const { priceImpactWithoutFee, realizedLPFee } = useMemo(() => computeTradePriceBreakdown(trade), [trade])
   const severity = warningSeverity(priceImpactWithoutFee)
 
-  const tradeInputCurrency = getBlockchainAdjustedCurrency(blockchain, trade.inputAmount.currency)
-  const tradeOutputCurrency = getBlockchainAdjustedCurrency(blockchain, trade.outputAmount.currency)
+  const tradeInputCurrency = getBlockchainAdjustedCurrency(
+    blockchain,
+    trade?.inputAmount.currency ?? fusionSwap.tokenIn
+  )
+  const tradeOutputCurrency = getBlockchainAdjustedCurrency(
+    blockchain,
+    trade?.outputAmount.currency ?? fusionSwap.tokenOut
+  )
 
   return (
     <>
@@ -91,22 +97,24 @@ export default function SwapModalFooter({
         </RowBetween>
 
         <RowBetween>
-          {swapMode === 0 && (
+          {swapMode === 0 && trade && (
             <>
               <RowFixed>
                 <TYPE.black fontSize={14} fontWeight={400} color={theme.text2}>
-                  {trade.tradeType === TradeType.EXACT_INPUT ? 'Minimum received' : 'Maximum sold'}
+                  {trade?.tradeType === TradeType.EXACT_INPUT ? 'Minimum received' : 'Maximum sold'}
                 </TYPE.black>
                 <QuestionHelper text="Your transaction will revert if there is a large, unfavorable price movement before it is confirmed." />
               </RowFixed>
               <RowFixed>
                 <TYPE.black fontSize={14}>
-                  {trade.tradeType === TradeType.EXACT_INPUT
+                  {trade?.tradeType === TradeType.EXACT_INPUT
                     ? slippageAdjustedAmounts[Field.OUTPUT]?.toSignificant(4) ?? '-'
                     : slippageAdjustedAmounts[Field.INPUT]?.toSignificant(4) ?? '-'}
                 </TYPE.black>
                 <TYPE.black fontSize={14} marginLeft={'4px'}>
-                  {trade.tradeType === TradeType.EXACT_INPUT ? tradeOutputCurrency?.symbol : tradeInputCurrency?.symbol}
+                  {trade?.tradeType === TradeType.EXACT_INPUT
+                    ? tradeOutputCurrency?.symbol
+                    : tradeInputCurrency?.symbol}
                 </TYPE.black>
               </RowFixed>
             </>
@@ -123,7 +131,7 @@ export default function SwapModalFooter({
             <FormattedPriceImpact priceImpact={priceImpactWithoutFee} />
           </RowBetween>
         )}
-        {swapMode === 1 && fusionSwap.type === 0 && (fusionSwap?.fee ?? 0) > 0 && (
+        {swapMode === 1 && fusionSwap.type === 0 && fusionSwap.fee && (
           <RowBetween>
             <RowFixed>
               <TYPE.black color={theme.text2} fontSize={14} fontWeight={400}>
@@ -157,20 +165,22 @@ export default function SwapModalFooter({
             </Text>
           </RowBetween>
         )}
-        <RowBetween>
-          <RowFixed>
-            <TYPE.black fontSize={14} fontWeight={400} color={theme.text2}>
-              Liquidity Provider Fee
+        {swapMode === 0 && (
+          <RowBetween>
+            <RowFixed>
+              <TYPE.black fontSize={14} fontWeight={400} color={theme.text2}>
+                Liquidity Provider Fee
+              </TYPE.black>
+              <QuestionHelper
+                text={`A portion of each trade (0.25%) goes to liquidity providers and 0.05% for RCPswap Treasury.`}
+              />
+            </RowFixed>
+            <TYPE.black fontSize={14}>
+              {realizedLPFee ? realizedLPFee?.toSignificant(6) + ' ' + tradeInputCurrency?.symbol : '-'}
             </TYPE.black>
-            <QuestionHelper
-              text={`A portion of each trade (0.25%) goes to liquidity providers and 0.05% for RCPswap Treasury.`}
-            />
-          </RowFixed>
-          <TYPE.black fontSize={14}>
-            {realizedLPFee ? realizedLPFee?.toSignificant(6) + ' ' + tradeInputCurrency?.symbol : '-'}
-          </TYPE.black>
-        </RowBetween>
-        {swapMode === 1 && fusionSwap.type === 0 && (fusionSwap?.fee ?? 0) > 0 && (
+          </RowBetween>
+        )}
+        {swapMode === 1 && fusionSwap.type === 0 && fusionSwap.price && (
           <RowBetween>
             <RowFixed>
               <Text fontSize={14} fontWeight={400} color={theme.green1}>
@@ -180,7 +190,7 @@ export default function SwapModalFooter({
             </RowFixed>
             <TYPE.black fontSize={14}>
               {(
-                ((fusionSwap?.price ?? 0) - (fusionSwap?.maxMultihop?.trade?.outputAmount?.toExact() ?? 0)) *
+                parseFloat(fusionSwap.price.subtract(fusionSwap.maxMultihop.trade.outputAmount).toExact()) *
                 (outPrice === 0 ? 1 : outPrice)
               ).toFixed(6) +
                 ' ' +

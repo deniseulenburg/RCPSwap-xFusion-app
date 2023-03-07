@@ -126,11 +126,6 @@ export function useDexList() {
   return dexes
 }
 
-export function useFusionApproveCallback(fusionSwap: any, dexes: any) {
-  return useApproveCallback(
-    fusionSwap?.amountIn,
-    fusionSwap?.type === 0
-      ? FUSION_CONTRACT.address
-      : dexes?.[fusionSwap?.dex ?? 0].addresses.router ?? FUSION_CONTRACT.address
-  )
+export function useFusionApproveCallback(fusionSwap: any) {
+  return useApproveCallback(fusionSwap?.amountIn, FUSION_CONTRACT.address)
 }

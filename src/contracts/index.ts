@@ -1,5 +1,5 @@
 export const FUSION_CONTRACT = {
-  address: '0x65A0dE01B6EE7D8b33EE52a9136EAfA94Db033Ae',
+  address: '0x3644F266cdBD6e4dD6eeB45E860E10f8EF3eB46C',
   abi: [
     {
       inputs: [
@@ -261,6 +261,118 @@ export const FUSION_CONTRACT = {
     {
       inputs: [
         {
+          internalType: 'uint256',
+          name: 'amountOutMin',
+          type: 'uint256'
+        },
+        {
+          internalType: 'uint256',
+          name: 'dexIndex',
+          type: 'uint256'
+        },
+        {
+          internalType: 'address[]',
+          name: 'path_',
+          type: 'address[]'
+        }
+      ],
+      name: 'swapExactETHForTokensWithMultiHops',
+      outputs: [
+        {
+          internalType: 'uint256',
+          name: 'amountOut',
+          type: 'uint256'
+        }
+      ],
+      stateMutability: 'payable',
+      type: 'function'
+    },
+    {
+      inputs: [
+        {
+          internalType: 'uint256[]',
+          name: 'amounts',
+          type: 'uint256[]'
+        },
+        {
+          internalType: 'address',
+          name: 'tokenIn',
+          type: 'address'
+        },
+        {
+          internalType: 'uint256',
+          name: 'amountIn',
+          type: 'uint256'
+        },
+        {
+          internalType: 'uint256',
+          name: 'amountOutMin',
+          type: 'uint256'
+        },
+        {
+          internalType: 'uint256',
+          name: 'dexIndex',
+          type: 'uint256'
+        },
+        {
+          internalType: 'address[]',
+          name: 'path_',
+          type: 'address[]'
+        }
+      ],
+      name: 'swapExactTokensForETHWithMultiDex',
+      outputs: [
+        {
+          internalType: 'uint256',
+          name: 'amountOut',
+          type: 'uint256'
+        }
+      ],
+      stateMutability: 'nonpayable',
+      type: 'function'
+    },
+    {
+      inputs: [
+        {
+          internalType: 'address',
+          name: 'tokenIn',
+          type: 'address'
+        },
+        {
+          internalType: 'uint256',
+          name: 'amountIn',
+          type: 'uint256'
+        },
+        {
+          internalType: 'uint256',
+          name: 'amountOutMin',
+          type: 'uint256'
+        },
+        {
+          internalType: 'uint256',
+          name: 'dexIndex',
+          type: 'uint256'
+        },
+        {
+          internalType: 'address[]',
+          name: 'path_',
+          type: 'address[]'
+        }
+      ],
+      name: 'swapExactTokensForETHWithMultiHops',
+      outputs: [
+        {
+          internalType: 'uint256',
+          name: 'amountOut',
+          type: 'uint256'
+        }
+      ],
+      stateMutability: 'nonpayable',
+      type: 'function'
+    },
+    {
+      inputs: [
+        {
           internalType: 'uint256[]',
           name: 'amounts',
           type: 'uint256[]'
@@ -310,11 +422,6 @@ export const FUSION_CONTRACT = {
     {
       inputs: [
         {
-          internalType: 'uint256[]',
-          name: 'amounts',
-          type: 'uint256[]'
-        },
-        {
           internalType: 'address',
           name: 'tokenIn',
           type: 'address'
@@ -340,7 +447,7 @@ export const FUSION_CONTRACT = {
           type: 'address[]'
         }
       ],
-      name: 'swapExactTokensforETHWithMultiDex',
+      name: 'swapExactTokensForTokensWithMultiHops',
       outputs: [
         {
           internalType: 'uint256',

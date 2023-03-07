@@ -1,4 +1,4 @@
-import { Trade, TradeType } from '@venomswap/sdk'
+import { TokenAmount, Trade, TradeType } from '@venomswap/sdk'
 import React, { useContext, useMemo } from 'react'
 import { ArrowDown, AlertTriangle } from 'react-feather'
 import { Text } from 'rebass'
@@ -6,7 +6,7 @@ import { ThemeContext } from 'styled-components'
 import { Field } from '../../state/swap/actions'
 import { TYPE } from '../../theme'
 import { ButtonPrimary } from '../Button'
-import { isAddress, shortenAddress } from '../../utils'
+import { calculateSlippageAmount, isAddress, shortenAddress } from '../../utils'
 import { computeSlippageAdjustedAmounts, computeTradePriceBreakdown, warningSeverity } from '../../utils/prices'
 import { AutoColumn } from '../Column'
 import CurrencyLogo from '../CurrencyLogo'
@@ -25,7 +25,7 @@ export default function SwapModalHeader({
   swapMode,
   fusionSwap
 }: {
-  trade: Trade
+  trade: Trade | undefined
   swapMode: number
   fusionSwap: any
   allowedSlippage: number
@@ -41,8 +41,14 @@ export default function SwapModalHeader({
   const { priceImpactWithoutFee } = useMemo(() => computeTradePriceBreakdown(trade), [trade])
   const priceImpactSeverity = warningSeverity(priceImpactWithoutFee)
 
-  const tradeInputCurrency = getBlockchainAdjustedCurrency(blockchain, trade.inputAmount.currency)
-  const tradeOutputCurrency = getBlockchainAdjustedCurrency(blockchain, trade.outputAmount.currency)
+  const tradeInputCurrency = getBlockchainAdjustedCurrency(
+    blockchain,
+    trade?.inputAmount.currency ?? fusionSwap.tokenIn
+  )
+  const tradeOutputCurrency = getBlockchainAdjustedCurrency(
+    blockchain,
+    trade?.outputAmount.currency ?? fusionSwap.tokenOut
+  )
 
   const theme = useContext(ThemeContext)
 
@@ -54,9 +60,9 @@ export default function SwapModalHeader({
           <TruncatedText
             fontSize={24}
             fontWeight={500}
-            color={showAcceptChanges && trade.tradeType === TradeType.EXACT_OUTPUT ? theme.primary1 : ''}
+            color={showAcceptChanges && trade?.tradeType === TradeType.EXACT_OUTPUT ? theme.primary1 : ''}
           >
-            {trade.inputAmount.toSignificant(6)}
+            {trade?.inputAmount.toSignificant(6) ?? fusionSwap?.amountIn?.toSignificant(6)}
           </TruncatedText>
         </RowFixed>
         <RowFixed gap={'0px'}>
@@ -77,12 +83,12 @@ export default function SwapModalHeader({
             color={
               priceImpactSeverity > 2
                 ? theme.red1
-                : showAcceptChanges && trade.tradeType === TradeType.EXACT_INPUT
+                : showAcceptChanges && trade?.tradeType === TradeType.EXACT_INPUT
                 ? theme.primary1
                 : ''
             }
           >
-            {swapMode === 0 ? trade.outputAmount.toSignificant(6) : fusionSwap?.price}
+            {swapMode === 0 ? trade?.outputAmount.toSignificant(6) : fusionSwap?.price?.toSignificant(6)}
           </TruncatedText>
         </RowFixed>
         <RowFixed gap={'0px'}>
@@ -108,13 +114,18 @@ export default function SwapModalHeader({
         </SwapShowAcceptChanges>
       ) : null}
       <AutoColumn justify="flex-start" gap="sm" style={{ padding: '12px 0 0 0px' }}>
-        {trade.tradeType === TradeType.EXACT_INPUT ? (
+        {trade?.tradeType === TradeType.EXACT_INPUT || swapMode === 1 ? (
           <TYPE.italic textAlign="left" style={{ width: '100%' }}>
             {`Output is estimated. You will receive at least `}
             <b>
               {swapMode === 0
                 ? slippageAdjustedAmounts[Field.OUTPUT]?.toSignificant(6)
-                : (fusionSwap?.price / (1 + allowedSlippage / 10000) ?? 0).toFixed(6)}
+                : fusionSwap.price
+                ? new TokenAmount(
+                    fusionSwap.price.token,
+                    calculateSlippageAmount(fusionSwap.price, allowedSlippage)[0]
+                  ).toSignificant(6)
+                : '0'}
               {tradeOutputCurrency?.symbol}
             </b>
             {' or the transaction will revert.'}

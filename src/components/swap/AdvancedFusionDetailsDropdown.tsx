@@ -42,7 +42,7 @@ export default function AdvancedFusionDetailsDropdown({
 
   return (
     <AdvancedDetailsFooter show={Boolean(swap)}>
-      {swap && swap.type === 0 && (
+      {swap && swap.type === 0 && swap.price && (
         <AutoColumn style={{ padding: '0 30px' }}>
           <Row>
             <RowFixed style={{ padding: '10px', borderRadius: '50%', background: theme.bg3 }}>
@@ -52,7 +52,7 @@ export default function AdvancedFusionDetailsDropdown({
               <RowFixed>
                 <Text fontSize={15} color={theme.green1} fontWeight={600}>
                   {(
-                    ((swap?.price ?? 0) - (swap?.maxMultihop?.trade?.outputAmount?.toExact() ?? 0)) *
+                    parseFloat(swap.price.subtract(swap.maxMultihop.trade.outputAmount).toExact()) *
                     (price === 0 ? 1 : price)
                   ).toFixed(3) +
                     ' ' +
