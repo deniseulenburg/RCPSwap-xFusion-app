@@ -1,5 +1,5 @@
 import { BLOCKED_PRICE_IMPACT_NON_EXPERT } from '../constants'
-import { CurrencyAmount, Fraction, JSBI, Percent, TokenAmount, Trade, Currency } from '@venomswap/sdk'
+import { CurrencyAmount, Fraction, JSBI, Percent, TokenAmount, Trade, Currency, Price } from '@venomswap/sdk'
 import { ALLOWED_PRICE_IMPACT_HIGH, ALLOWED_PRICE_IMPACT_LOW, ALLOWED_PRICE_IMPACT_MEDIUM } from '../constants'
 import { Field } from '../state/swap/actions'
 import { basisPointsToPercent } from './index'
@@ -91,14 +91,26 @@ export function formatBlockchainAdjustedExecutionPrice(
         swapMode === 0
           ? trade?.executionPrice.invert().toSignificant(6)
           : fusionSwap.amountIn && fusionSwap.price
-          ? new Fraction(fusionSwap.amountIn.raw, fusionSwap.price.raw).toSignificant(6)
+          ? new Price(
+              fusionSwap.amountIn.currency,
+              fusionSwap.price.currency,
+              fusionSwap.amountIn.raw,
+              fusionSwap.price.raw
+            )
+              .invert()
+              .toSignificant(6)
           : ''
       } ${tradeInputCurrency.symbol} / ${tradeOutputCurrency.symbol}`
     : `${
         swapMode === 0
           ? trade?.executionPrice.toSignificant(6)
           : fusionSwap.amountIn && fusionSwap.price
-          ? new Fraction(fusionSwap.price.raw, fusionSwap.amountIn.raw).toSignificant(6)
+          ? new Price(
+              fusionSwap.amountIn.currency,
+              fusionSwap.price.currency,
+              fusionSwap.amountIn.raw,
+              fusionSwap.price.raw
+            ).toSignificant(6)
           : ''
       } ${tradeOutputCurrency.symbol} / ${tradeInputCurrency.symbol}`
 }

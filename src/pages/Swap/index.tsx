@@ -1,6 +1,6 @@
 import { CurrencyAmount, JSBI, Percent, Token, TokenAmount, Trade } from '@venomswap/sdk'
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { ArrowDown, Type } from 'react-feather'
+import { ArrowDown } from 'react-feather'
 import ReactGA from 'react-ga'
 import { Text } from 'rebass'
 import { ThemeContext } from 'styled-components'
@@ -25,12 +25,7 @@ import { BIPS_BASE, INITIAL_ALLOWED_SLIPPAGE } from '../../constants'
 import { getTradeVersion } from '../../data/V1'
 import { useActiveWeb3React } from '../../hooks'
 import { useCurrency, useAllTokens } from '../../hooks/Tokens'
-import {
-  ApprovalState,
-  useApproveCallbackFromTrade,
-  useDexList,
-  useFusionApproveCallback
-} from '../../hooks/useApproveCallback'
+import { ApprovalState, useApproveCallbackFromTrade, useFusionApproveCallback } from '../../hooks/useApproveCallback'
 import useENSAddress from '../../hooks/useENSAddress'
 import { useSwapCallback } from '../../hooks/useSwapCallback'
 import useToggledVersion, { DEFAULT_VERSION, Version } from '../../hooks/useToggledVersion'
@@ -56,10 +51,11 @@ import UnsupportedCurrencyFooter from 'components/swap/UnsupportedCurrencyFooter
 import { isTradeBetter } from 'utils/trades'
 import FusionPrice from 'components/swap/FusionPrice'
 import { ethers } from 'ethers'
-import { FUSION_CONTRACT, SWAP_CONTRACT } from 'contracts'
+import { FUSION_CONTRACT } from 'contracts'
 import AdvancedFusionDetailsDropdown from 'components/swap/AdvancedFusionDetailsDropdown'
 import { useTokenPrice } from 'hooks/useTokenPrice'
 import { calculateSlippageAmount } from 'utils'
+import { useDexList } from 'hooks/useForeginDexes'
 
 export default function Swap() {
   const loadedUrlParams = useDefaultsFromURLSearch()
@@ -195,6 +191,7 @@ export default function Swap() {
   )
   const noRoute = !route
   const dexes = useDexList()
+
   // check whether the user has approved the router on the input token
   const [approval, approveCallback] = useApproveCallbackFromTrade(trade, allowedSlippage)
   const [fusionApproval, fusionApproveCallback] = useFusionApproveCallback(bestSwap)
@@ -584,10 +581,9 @@ export default function Swap() {
             swapErrorMessage={swapErrorMessage}
             onDismiss={handleConfirmDismiss}
             outPrice={tokenOutPrice}
-            loading={swapMode === 0 ? false : bestLoading}
+            loading={swapMode === 0 ? false : bestLoading ?? true}
             dexes={dexes}
           />
-          {bestSwap?.maxMultihop && bestSwap?.price?.subtract(bestSwap.maxMultihop?.trade.outputAmount).toExact}
 
           <AutoColumn gap={'md'}>
             <CurrencyInputPanel
@@ -675,7 +671,7 @@ export default function Swap() {
                         />
                       ) : (
                         <FusionPrice
-                          loading={bestLoading}
+                          loading={!bestSwap || bestLoading}
                           fusionSwap={bestSwap}
                           showInverted={showInverted}
                           setShowInverted={setShowInverted}

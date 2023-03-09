@@ -3,7 +3,7 @@ import { Text } from 'rebass'
 import { StyledBalanceMaxMini } from './styleds'
 import { Repeat } from 'react-feather'
 import { ThemeContext } from 'styled-components'
-import { Currency, CurrencyAmount, Fraction } from '@venomswap/sdk'
+import { Currency, Fraction, JSBI, Price } from '@venomswap/sdk'
 
 interface FusionPriceProps {
   fusionSwap: any
@@ -26,12 +26,25 @@ export default function FusionPrice({
   const formattedPrice =
     fusionSwap && fusionSwap.price && fusionSwap.amountIn
       ? showInverted
-        ? new Fraction(fusionSwap?.price.raw, fusionSwap?.amountIn.raw).toFixed(6)
-        : new Fraction(fusionSwap?.amountIn.raw, fusionSwap?.price.raw).toFixed(6)
+        ? new Price(
+            fusionSwap.price.currency,
+            fusionSwap.amountIn.currency,
+            fusionSwap.price.raw,
+            fusionSwap.amountIn.raw
+          )
+            .invert()
+            .toSignificant(6)
+        : new Price(
+            fusionSwap.price.currency,
+            fusionSwap.amountIn.currency,
+            fusionSwap.price.raw,
+            fusionSwap.amountIn.raw
+          ).toSignificant(6)
       : undefined
   const label = showInverted
     ? `${tokenOut?.symbol} per ${tokenIn?.symbol}`
     : `${tokenIn?.symbol} per ${tokenOut?.symbol}`
+    
   return (
     <Text
       fontWeight={500}

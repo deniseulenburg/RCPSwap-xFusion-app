@@ -11,6 +11,60 @@ import { useActiveWeb3React } from './index'
 import { useUnsupportedTokens } from './Tokens'
 import { useUserSingleHopOnly } from 'state/user/hooks'
 
+export function useAllTokenCombinations(currencyA?: Currency, currencyB?: Currency): [Token, Token][] {
+  const { chainId } = useActiveWeb3React()
+
+  const bases: Token[] = chainId ? BASES_TO_CHECK_TRADES_AGAINST[chainId] : []
+
+  const [tokenA, tokenB] = chainId
+    ? [wrappedCurrency(currencyA, chainId), wrappedCurrency(currencyB, chainId)]
+    : [undefined, undefined]
+
+  const basePairs: [Token, Token][] = useMemo(
+    () =>
+      flatMap(bases, (base): [Token, Token][] => bases.map(otherBase => [base, otherBase])).filter(
+        ([t0, t1]) => t0.address !== t1.address
+      ),
+    [bases]
+  )
+
+  const allPairCombinations: [Token, Token][] = useMemo(
+    () =>
+      tokenA && tokenB
+        ? [
+            // the direct pair
+            [tokenA, tokenB],
+            // token A against all bases
+            ...bases.map((base): [Token, Token] => [tokenA, base]),
+            // token B against all bases
+            ...bases.map((base): [Token, Token] => [tokenB, base]),
+            // each base against all bases
+            ...basePairs
+          ]
+            .filter((tokens): tokens is [Token, Token] => Boolean(tokens[0] && tokens[1]))
+            .filter(([t0, t1]) => t0.address !== t1.address)
+            .filter(([tokenA, tokenB]) => {
+              if (!chainId) return true
+              const customBases = CUSTOM_BASES[chainId]
+              if (!customBases) return true
+
+              const customBasesA: Token[] | undefined = customBases[tokenA.address]
+              const customBasesB: Token[] | undefined = customBases[tokenB.address]
+
+              if (!customBasesA && !customBasesB) return true
+
+              if (customBasesA && !customBasesA.find(base => tokenB.equals(base))) return false
+              if (customBasesB && !customBasesB.find(base => tokenA.equals(base))) return false
+
+              return true
+            })
+        : [],
+    [tokenA, tokenB, bases, basePairs, chainId]
+  )
+
+  return allPairCombinations
+}
+
 function useAllCommonPairs(currencyA?: Currency, currencyB?: Currency): Pair[] {
   const { chainId } = useActiveWeb3React()
 
