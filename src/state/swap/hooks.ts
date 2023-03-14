@@ -31,7 +31,14 @@ import { BASE_CURRENCY } from '../../connectors'
 import useBlockchain from '../../hooks/useBlockchain'
 import getBlockchainAdjustedCurrency from '../../utils/getBlockchainAdjustedCurrency'
 import { WETH } from '@venomswap/sdk'
-import { useBestMultihops, useFusionMixSwap, useFusionTimer } from 'hooks/useForeginDexes'
+import {
+  useAllDexPairs,
+  useAllPools,
+  useAllTokens,
+  useBestMultihops,
+  useFusionMixSwap,
+  useFusionTimer
+} from 'hooks/useForeginDexes'
 import { useFusionFee } from 'hooks/useFusionFee'
 
 export function useSwapState(): AppState['swap'] {
@@ -353,13 +360,20 @@ export function useFusionSwap(swapConfirm: boolean) {
 
   const feeRate = useFusionFee()
 
+  const pools = useAllPools()
+
+  const tokens = useAllTokens()
+
   const update = useFusionTimer(swapConfirm)
+
+  const pairs = useAllDexPairs(pools, tokens, update)
 
   const parsedAmount = tryParseAmount(typedValue, inputCurrency ?? undefined)
 
-  const { result: mixSwap, loading: mixLoading } = useFusionMixSwap(parsedAmount, update, swapConfirm)
+  const { result: mixSwap, loading: mixLoading } = useFusionMixSwap(pairs, parsedAmount, update, swapConfirm)
 
   const { result: bestMultihops, loading: mhLoading } = useBestMultihops(
+    pairs,
     parsedAmount,
     outputCurrency ?? undefined,
     update,
