@@ -481,7 +481,7 @@ export default function Swap() {
           attemptingTxn: false,
           tradeToConfirm,
           showConfirm,
-          swapErrorMessage: JSON.stringify(err), //(err as any)?.message ?? JSON.stringify(err),
+          swapErrorMessage: 'Transaction failed, this can be caused by prices changes - try increasing slippage', //(err as any)?.message ?? JSON.stringify(err),
           txHash: undefined
         })
       }
