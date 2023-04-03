@@ -374,7 +374,8 @@ export default function Header() {
             {t('pool')}
           </StyledNavLink>
           <StyledNavLink
-            style={{ color: '#C3C5CB', fontWeight: 500 }}
+            // style={{ color: '#C3C5CB', fontWeight: 500 }}
+            isActive={() => false}
             id={`#`}
             to={'#'}
             onClick={() => window.open('https://bridge.arbitrum.io')}

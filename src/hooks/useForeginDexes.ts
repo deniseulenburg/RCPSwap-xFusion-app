@@ -227,6 +227,7 @@ export function useFusionMixSwap(pairs: any, amountIn: CurrencyAmount | undefine
                 : undefined
             )
           })
+          console.log(data)
           if (data.status === 200 && data.data) {
             const tokenIn = data.data.tokenIn
               ? new Token(
@@ -268,7 +269,6 @@ export function useFusionMixSwap(pairs: any, amountIn: CurrencyAmount | undefine
       }
       setLoading(false)
     }
-    console.log(update)
     if (update > 0) getFusionMixSwap()
   }, [inputCurrencyId, outputCurrencyId, typedValue, swapMode, update, pairs])
 
