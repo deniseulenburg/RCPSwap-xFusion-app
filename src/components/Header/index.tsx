@@ -35,6 +35,8 @@ import GovTokenBalanceContent from './GovTokenBalanceContent'
 import { BASE_CURRENCY, BLOCKCHAIN } from '../../connectors'
 import useGovernanceToken from '../../hooks/useGovernanceToken'
 
+import NovaLogo from '../../assets/images/networks/42170.png'
+
 const HeaderFrame = styled.div`
   display: grid;
   grid-template-columns: 1fr 120px;
@@ -180,9 +182,14 @@ const NetworkCard = styled(YellowCard)`
 `
 
 const BalanceText = styled(Text)`
+  display: flex;
   ${({ theme }) => theme.mediaWidth.upToExtraSmall`
     display: none;
   `};
+`
+
+const NetworkLogo = styled.img`
+  margin-right: 6px;
 `
 
 const Title = styled.a`
@@ -434,6 +441,7 @@ export default function Header() {
           <AccountElement active={!!account} style={{ pointerEvents: 'auto' }}>
             {account && userEthBalance ? (
               <BalanceText style={{ flexShrink: 0 }} pl="0.75rem" pr="0.5rem" fontWeight={500}>
+                <NetworkLogo src={NovaLogo} alt="nova" width={'20px'} />
                 {userEthBalance?.toSignificant(4)} {BASE_CURRENCY.symbol}
               </BalanceText>
             ) : null}
