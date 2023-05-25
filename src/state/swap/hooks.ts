@@ -40,6 +40,8 @@ import {
   useFusionTimer
 } from 'hooks/useForeginDexes'
 import { useFusionFee } from 'hooks/useFusionFee'
+import { useAllDexCommonPairs, useBestDexTrade, useXFusionDex } from 'hooks/useXFusionDex'
+import { EXTERNAL_DEX_ADDRESSES } from 'constants/index'
 
 export function useSwapState(): AppState['swap'] {
   return useSelector<AppState, AppState['swap']>(state => state.swap)
@@ -345,6 +347,66 @@ export function useDefaultsFromURLSearch():
   }, [dispatch, chainId])
 
   return result
+}
+
+export function useXFusionSwap() {
+  const {
+    typedValue,
+    [Field.INPUT]: { currencyId: inputCurrencyId },
+    [Field.OUTPUT]: { currencyId: outputCurrencyId }
+  } = useSwapState()
+
+  const inputCurrency = useCurrency(inputCurrencyId)
+  const outputCurrency = useCurrency(outputCurrencyId)
+
+  const pairs = useAllDexCommonPairs(inputCurrency!, outputCurrency!)
+
+  const parsedAmount = tryParseAmount(typedValue, inputCurrency ?? undefined)
+
+  const bestTrade = useBestDexTrade(parsedAmount, outputCurrency ?? undefined, pairs)
+
+  const currencies: { [field in Field]?: Currency } = {
+    [Field.INPUT]: inputCurrency ?? undefined,
+    [Field.OUTPUT]: outputCurrency ?? undefined
+  }
+
+  const { result, routes } = useXFusionDex(inputCurrency!, outputCurrency!, parsedAmount, pairs)
+  
+  if (bestTrade && bestTrade.trade && result && routes) {
+    if (!bestTrade.trade.outputAmount.lessThan(result)) {
+      return {
+        swap: {
+          currencies,
+          parsedAmount,
+          result: bestTrade.trade.outputAmount as TokenAmount,
+          routes: [
+            {
+              dex: {
+                name: EXTERNAL_DEX_ADDRESSES[bestTrade.id].name,
+                factory: EXTERNAL_DEX_ADDRESSES[bestTrade.id].factory,
+                router: EXTERNAL_DEX_ADDRESSES[bestTrade.id].router
+              },
+              path: bestTrade.trade.route.path.map(path => path.address),
+              amount: parsedAmount as TokenAmount
+            }
+          ],
+          bestTrade,
+          fee: false
+        }
+      }
+    }
+  }
+
+  return {
+    swap: {
+      currencies,
+      parsedAmount,
+      result,
+      routes,
+      bestTrade,
+      fee: true
+    }
+  }
 }
 
 export function useFusionSwap(swapConfirm: boolean) {

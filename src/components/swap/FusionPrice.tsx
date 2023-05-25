@@ -11,7 +11,6 @@ interface FusionPriceProps {
   setShowInverted: (s: boolean) => void
   tokenIn?: Currency
   tokenOut?: Currency
-  loading: boolean
 }
 
 export default function FusionPrice({
@@ -19,28 +18,35 @@ export default function FusionPrice({
   showInverted,
   setShowInverted,
   tokenIn,
-  tokenOut,
-  loading
+  tokenOut
 }: FusionPriceProps) {
   const theme = useContext(ThemeContext)
-  const formattedPrice =
-    fusionSwap && fusionSwap.price && fusionSwap.amountIn
-      ? showInverted
-        ? new Price(
-            fusionSwap.price.currency,
-            fusionSwap.amountIn.currency,
-            fusionSwap.price.raw,
-            fusionSwap.amountIn.raw
-          )
-            .invert()
-            .toSignificant(6)
-        : new Price(
-            fusionSwap.price.currency,
-            fusionSwap.amountIn.currency,
-            fusionSwap.price.raw,
-            fusionSwap.amountIn.raw
-          ).toSignificant(6)
-      : undefined
+
+  const formattedPrice = () => {
+    if (fusionSwap && fusionSwap.result && fusionSwap.parsedAmount) {
+      try {
+        return showInverted
+          ? new Price(
+              fusionSwap.result.currency,
+              fusionSwap.parsedAmount.currency,
+              fusionSwap.result.raw,
+              fusionSwap.parsedAmount.raw
+            )
+              .invert()
+              .toSignificant(6)
+          : new Price(
+              fusionSwap.result.currency,
+              fusionSwap.parsedAmount.currency,
+              fusionSwap.result.raw,
+              fusionSwap.parsedAmount.raw
+            ).toSignificant(6)
+      } catch (err) {
+        return undefined
+      }
+    }
+    return undefined
+  }
+
   const label = showInverted
     ? `${tokenOut?.symbol} per ${tokenIn?.symbol}`
     : `${tokenIn?.symbol} per ${tokenOut?.symbol}`
@@ -52,10 +58,10 @@ export default function FusionPrice({
       color={theme.text2}
       style={{ justifyContent: 'center', alignItems: 'center', display: 'flex' }}
     >
-      {fusionSwap && fusionSwap.amountIn && fusionSwap.price && !loading ? (
+      {fusionSwap && fusionSwap.parsedAmount && fusionSwap.result ? (
         <>
           <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'end' }}>
-            <div>{formattedPrice ?? '-'}</div> <div>{label}</div>
+            <div>{formattedPrice() ?? '-'}</div> <div>{label}</div>
           </div>
           <StyledBalanceMaxMini onClick={() => setShowInverted(!showInverted)}>
             <Repeat size={14} />

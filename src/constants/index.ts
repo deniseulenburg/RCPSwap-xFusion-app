@@ -176,11 +176,28 @@ export const BRICK = new Token(
   'BRICK',
   'Bricks'
 )
+export const ARB = new Token(
+  ChainId.HARMONY_MAINNET,
+  '0xf823c3cd3cebe0a1fa952ba88dc9eef8e0bf46ad',
+  18,
+  'ARB',
+  'Arbitrum'
+)
+export const WBTC = {
+  [ChainId.MAINNET]: new Token(ChainId.MAINNET, '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', 8, 'WBTC', 'Wrapped BTC'),
+
+  [ChainId.HARMONY_MAINNET]: new Token(
+    ChainId.HARMONY_MAINNET,
+    '0x1d05e4e72cd994cdf976181cfb0707345763564d',
+    8,
+    'WBTC',
+    'Wrapped BTC'
+  )
+}
 
 export const COMP = new Token(ChainId.MAINNET, '0xc00e94Cb662C3520282E6f5717214004A7f26888', 18, 'COMP', 'Compound')
 export const MKR = new Token(ChainId.MAINNET, '0x9f8F72aA9304c8B593d555F12eF6589cC3A579A2', 18, 'MKR', 'Maker')
 export const AMPL = new Token(ChainId.MAINNET, '0xD46bA6D942050d489DBd938a2C909A5d5039A161', 9, 'AMPL', 'Ampleforth')
-export const WBTC = new Token(ChainId.MAINNET, '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', 8, 'WBTC', 'Wrapped BTC')
 
 // Block time here is slightly higher (~1s) than average in order to avoid ongoing proposals past the displayed timeimage.png
 export const AVERAGE_BLOCK_TIME_IN_SECS = 13
@@ -214,7 +231,7 @@ const WETH_ONLY: ChainTokenList = {
 // used to construct intermediary pairs for trading
 export const BASES_TO_CHECK_TRADES_AGAINST: ChainTokenList = {
   ...WETH_ONLY,
-  [ChainId.MAINNET]: [...WETH_ONLY[ChainId.MAINNET], DAI, USDC, USDT, COMP, MKR, WBTC],
+  [ChainId.MAINNET]: [...WETH_ONLY[ChainId.MAINNET], DAI, USDC, USDT, COMP, MKR, WBTC[ChainId.MAINNET]],
   [ChainId.HARMONY_MAINNET]: [
     ...WETH_ONLY[ChainId.HARMONY_MAINNET],
     DAI,
@@ -222,7 +239,8 @@ export const BASES_TO_CHECK_TRADES_AGAINST: ChainTokenList = {
     USDC,
     MOON,
     BRICK,
-    getTokenWithDefault(ChainId.HARMONY_MAINNET, '1ETH')
+    ARB,
+    WBTC[ChainId.HARMONY_MAINNET]
   ]
 }
 
@@ -239,14 +257,14 @@ export const CUSTOM_BASES: { [chainId in ChainId]?: { [tokenAddress: string]: To
 // used for display in the default list when adding liquidity
 export const SUGGESTED_BASES: ChainTokenList = {
   ...WETH_ONLY,
-  [ChainId.MAINNET]: [...WETH_ONLY[ChainId.MAINNET], DAI, USDC, USDT, WBTC],
+  [ChainId.MAINNET]: [...WETH_ONLY[ChainId.MAINNET], DAI, USDC, USDT, WBTC[ChainId.MAINNET]],
   [ChainId.HARMONY_MAINNET]: [...WETH_ONLY[ChainId.HARMONY_MAINNET], DAI, USDT, USDC, MOON, BRICK]
 }
 
 // used to construct the list of all pairs we consider by default in the frontend
 export const BASES_TO_TRACK_LIQUIDITY_FOR: ChainTokenList = {
   ...WETH_ONLY,
-  [ChainId.MAINNET]: [...WETH_ONLY[ChainId.MAINNET], DAI, USDC, USDT, WBTC],
+  [ChainId.MAINNET]: [...WETH_ONLY[ChainId.MAINNET], DAI, USDC, USDT, WBTC[ChainId.MAINNET]],
   [ChainId.HARMONY_MAINNET]: [...WETH_ONLY[ChainId.HARMONY_MAINNET], DAI, USDT, USDC, MOON, BRICK]
 }
 
@@ -271,6 +289,13 @@ export interface WalletInfo {
   primary?: true
   mobile?: true
   mobileOnly?: true
+}
+
+export interface DexInfo {
+  name: string
+  factory: string
+  router: string
+  initCode: string
 }
 
 export const SUPPORTED_WALLETS: { [key: string]: WalletInfo } = {
@@ -375,4 +400,33 @@ export const BLOCKED_ADDRESSES: string[] = [
   '0x901bb9583b24D97e995513C6778dc6888AB6870e',
   '0xA7e5d5A720f06526557c513402f2e6B5fA20b008',
   '0x8576aCC5C05D6Ce88f4e49bf65BdF0C62F91353C'
+]
+
+// used to construct intermediary pairs for trading
+export const BASES_TO_CHECK_FUSION_TRADES: ChainTokenList = {
+  ...WETH_ONLY,
+  [ChainId.MAINNET]: [...WETH_ONLY[ChainId.MAINNET], DAI, USDC, USDT, COMP, MKR, WBTC[ChainId.MAINNET]],
+  [ChainId.HARMONY_MAINNET]: [...WETH_ONLY[ChainId.HARMONY_MAINNET], DAI, USDT, USDC]
+}
+
+// external DEXs for xFusion swap
+export const EXTERNAL_DEX_ADDRESSES: DexInfo[] = [
+  {
+    name: 'SushiSwap',
+    factory: '0xc35DADB65012eC5796536bD9864eD8773aBc74C4',
+    router: '0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506',
+    initCode: '0xe18a34eb0e04b04f7a0ac29a6e80748dca96319b42c54d679cb821dca90c6303'
+  },
+  {
+    name: 'ArbSwap',
+    factory: '0xf6239423FcF1c19ED2791D9648A90836074242Fd',
+    router: '0xEe01c0CD76354C383B8c7B4e65EA88D00B06f36f',
+    initCode: '0x70b19cf85a176c6b86e2d324be179104bdc8fafee13d548ae07d28b9f53cbc71'
+  },
+  {
+    name: 'RCPSwap',
+    factory: '0xF9901551B4fDb1FE8d5617B5deB6074Bb8E1F6FB',
+    router: '0x28e0f3ebab59a998C4f1019358388B5E2ca92cfA',
+    initCode: '0x8455b0f8e468580a0ae3f8afe8b676f72e1a9d93425122526501153d3647ea6f'
+  }
 ]

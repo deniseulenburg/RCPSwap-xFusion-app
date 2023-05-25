@@ -21,7 +21,7 @@ import TokenWarningModal from '../../components/TokenWarningModal'
 import ProgressSteps from '../../components/ProgressSteps'
 import SwapHeader from '../../components/swap/SwapHeader'
 
-import { BIPS_BASE, INITIAL_ALLOWED_SLIPPAGE } from '../../constants'
+import { BIPS_BASE, EXTERNAL_DEX_ADDRESSES, INITIAL_ALLOWED_SLIPPAGE } from '../../constants'
 import { getTradeVersion } from '../../data/V1'
 import { useActiveWeb3React } from '../../hooks'
 import { useCurrency, useAllTokens } from '../../hooks/Tokens'
@@ -37,7 +37,8 @@ import {
   useDefaultsFromURLSearch,
   useDerivedSwapInfo,
   useSwapActionHandlers,
-  useSwapState
+  useSwapState,
+  useXFusionSwap
 } from '../../state/swap/hooks'
 import { useExpertModeManager, useUserSlippageTolerance, useUserSingleHopOnly } from '../../state/user/hooks'
 import { LinkStyledButton, TYPE } from '../../theme'
@@ -112,6 +113,9 @@ export default function Swap() {
     currencies,
     inputError: swapInputError
   } = useDerivedSwapInfo()
+
+  const { swap: fusionSwap } = useXFusionSwap()
+
   const { wrapType, execute: onWrap, inputError: wrapInputError } = useWrapCallback(
     currencies[Field.INPUT],
     currencies[Field.OUTPUT],
@@ -176,7 +180,7 @@ export default function Swap() {
     txHash: undefined
   })
 
-  const { bestSwap, loading: bestLoading } = useFusionSwap(showConfirm)
+  // const { fusionSwap, loading: bestLoading } = useFusionSwap(showConfirm)
 
   const formattedAmounts = {
     [independentField]: typedValue,
@@ -190,16 +194,16 @@ export default function Swap() {
     currencies[Field.INPUT] && currencies[Field.OUTPUT] && parsedAmounts[independentField]?.greaterThan(JSBI.BigInt(0))
   )
   const noRoute = !route
-  const dexes = useDexList()
+  // const dexes = useDexList()
 
   // check whether the user has approved the router on the input token
   const [approval, approveCallback] = useApproveCallbackFromTrade(trade, allowedSlippage)
-  const [fusionApproval, fusionApproveCallback] = useFusionApproveCallback(bestSwap)
+  const [fusionApproval, fusionApproveCallback] = useFusionApproveCallback(fusionSwap)
 
   // check if user has gone through approval process, used to show two step buttons, reset on token change
   const [approvalSubmitted, setApprovalSubmitted] = useState<boolean>(false)
 
-  const tokenOutPrice = useTokenPrice(bestSwap?.tokenOut, swapMode === 1)
+  const tokenOutPrice = useTokenPrice(fusionSwap.result?.currency, swapMode === 1)
 
   // mark when a user has submitted an approval, reset onTokenSelection for input field
   useEffect(() => {
@@ -277,206 +281,165 @@ export default function Swap() {
           FUSION_CONTRACT.abi,
           library?.getSigner(account ?? undefined)
         )
-        if (bestSwap?.type === 0) {
-          if (inputCurrencyId === 'ETH') {
-            console.log(
-              bestSwap.amounts?.map(amount => amount.raw.toString()),
-              outputCurrencyId,
-              bestSwap.price
-                ? new TokenAmount(
-                    (bestSwap.price as TokenAmount).token,
-                    calculateSlippageAmount(bestSwap.price, allowedSlippage)[0]
-                  ).raw.toString()
-                : 0,
-              bestSwap.maxMultihop?.index,
-              bestSwap.maxMultihop?.trade.route.path.map(path => path.address),
-              { value: parsedAmount?.raw.toString() }
-            )
 
-            const tx = await fusionContract.swapExactETHForTokensWithMultiDex(
-              bestSwap.amounts?.map(amount => amount.raw.toString()),
-              outputCurrencyId,
-              bestSwap.price
-                ? new TokenAmount(
-                    (bestSwap.price as TokenAmount).token,
-                    calculateSlippageAmount(bestSwap.price, allowedSlippage)[0]
-                  ).raw.toString()
-                : 0,
-              bestSwap.maxMultihop?.index,
-              bestSwap.maxMultihop?.trade.route.path.map(path => path.address),
-              { value: parsedAmount?.raw.toString() }
-            )
-            await tx.wait()
-            setSwapState({
-              attemptingTxn: false,
-              tradeToConfirm,
-              showConfirm,
-              swapErrorMessage: undefined,
-              txHash: tx.hash
-            })
-          } else if (outputCurrencyId === 'ETH') {
-            console.log(
-              bestSwap.amounts?.map(amount => amount.raw.toString()),
-              inputCurrencyId,
-              parsedAmount?.raw.toString(),
-              bestSwap.price
-                ? new TokenAmount(
-                    (bestSwap.price as TokenAmount).token,
-                    calculateSlippageAmount(bestSwap.price, allowedSlippage)[0]
-                  ).raw.toString()
-                : 0,
-              bestSwap.maxMultihop?.index,
-              bestSwap.maxMultihop?.trade.route.path.map(path => path.address)
-            )
-
-            const tx = await fusionContract.swapExactTokensForETHWithMultiDex(
-              bestSwap.amounts?.map(amount => amount.raw.toString()),
-              inputCurrencyId,
-              parsedAmount?.raw.toString(),
-              bestSwap.price
-                ? new TokenAmount(
-                    (bestSwap.price as TokenAmount).token,
-                    calculateSlippageAmount(bestSwap.price, allowedSlippage)[0]
-                  ).raw.toString()
-                : 0,
-              bestSwap.maxMultihop?.index,
-              bestSwap.maxMultihop?.trade.route.path.map(path => path.address)
-            )
-            await tx.wait()
-            setSwapState({
-              attemptingTxn: false,
-              tradeToConfirm,
-              showConfirm,
-              swapErrorMessage: undefined,
-              txHash: tx.hash
-            })
-          } else {
-            console.log(
-              bestSwap.amounts?.map(amount => amount.raw.toString()),
-              inputCurrencyId,
-              outputCurrencyId,
-              parsedAmount?.raw.toString(),
-              bestSwap.price
-                ? new TokenAmount(
-                    (bestSwap.price as TokenAmount).token,
-                    calculateSlippageAmount(bestSwap.price, allowedSlippage)[0]
-                  ).raw.toString()
-                : 0,
-              bestSwap.maxMultihop?.index,
-              bestSwap.maxMultihop?.trade.route.path.map(path => path.address)
-            )
-
-            const tx = await fusionContract.swapExactTokensForTokensWithMultiDex(
-              bestSwap.amounts?.map(amount => amount.raw.toString()),
-              inputCurrencyId,
-              outputCurrencyId,
-              parsedAmount?.raw.toString(),
-              bestSwap.price
-                ? new TokenAmount(
-                    (bestSwap.price as TokenAmount).token,
-                    calculateSlippageAmount(bestSwap.price, allowedSlippage)[0]
-                  ).raw.toString()
-                : 0,
-              bestSwap.maxMultihop?.index,
-              bestSwap.maxMultihop?.trade.route.path.map(path => path.address)
-            )
-            await tx.wait()
-            setSwapState({
-              attemptingTxn: false,
-              tradeToConfirm,
-              showConfirm,
-              swapErrorMessage: undefined,
-              txHash: tx.hash
-            })
-          }
-        } else if (bestSwap?.type === 1) {
-          if (inputCurrencyId === 'ETH') {
-            console.log(
-              bestSwap.maxMultihop?.trade
-                .minimumAmountOut(new Percent(JSBI.BigInt(allowedSlippage), BIPS_BASE))
-                .raw.toString(),
-              bestSwap.dex,
-              bestSwap.trade,
-              parsedAmount?.raw.toString()
-            )
-
-            const tx = await fusionContract.swapExactETHForTokensWithMultiHops(
-              bestSwap.maxMultihop?.trade
-                .minimumAmountOut(new Percent(JSBI.BigInt(allowedSlippage), BIPS_BASE))
-                .raw.toString(),
-              bestSwap.dex,
-              bestSwap.trade,
-              {
-                value: parsedAmount?.raw.toString()
-              }
-            )
-            await tx.wait()
-            setSwapState({
-              attemptingTxn: false,
-              tradeToConfirm,
-              showConfirm,
-              swapErrorMessage: undefined,
-              txHash: tx.hash
-            })
-          } else if (outputCurrencyId === 'ETH') {
-            console.log(
-              (bestSwap.amountIn as TokenAmount).token.address,
-              parsedAmount?.raw.toString(),
-              bestSwap.maxMultihop?.trade
-                .minimumAmountOut(new Percent(JSBI.BigInt(allowedSlippage), BIPS_BASE))
-                .raw.toString(),
-              bestSwap.dex,
-              bestSwap.trade
-            )
-
-            const tx = await fusionContract.swapExactTokensForETHWithMultiHops(
-              (bestSwap.amountIn as TokenAmount).token.address,
-              parsedAmount?.raw.toString(),
-              bestSwap.maxMultihop?.trade
-                .minimumAmountOut(new Percent(JSBI.BigInt(allowedSlippage), BIPS_BASE))
-                .raw.toString(),
-              bestSwap.dex,
-              bestSwap.trade
-            )
-            await tx.wait()
-            setSwapState({
-              attemptingTxn: false,
-              tradeToConfirm,
-              showConfirm,
-              swapErrorMessage: undefined,
-              txHash: tx.hash
-            })
-          } else {
-            console.log(
-              (bestSwap.amountIn as TokenAmount).token.address,
-              parsedAmount?.raw.toString(),
-              bestSwap.maxMultihop?.trade
-                .minimumAmountOut(new Percent(JSBI.BigInt(allowedSlippage), BIPS_BASE))
-                .raw.toString(),
-              bestSwap.dex,
-              bestSwap.trade
-            )
-
-            const tx = await fusionContract.swapExactTokensForTokensWithMultiHops(
-              (bestSwap.amountIn as TokenAmount).token.address,
-              parsedAmount?.raw.toString(),
-              bestSwap.maxMultihop?.trade
-                .minimumAmountOut(new Percent(JSBI.BigInt(allowedSlippage), BIPS_BASE))
-                .raw.toString(),
-              bestSwap.dex,
-              bestSwap.trade
-            )
-            await tx.wait()
-            setSwapState({
-              attemptingTxn: false,
-              tradeToConfirm,
-              showConfirm,
-              swapErrorMessage: undefined,
-              txHash: tx.hash
-            })
-          }
+        if (inputCurrencyId === 'ETH') {
+          console.log(
+            outputCurrencyId,
+            fusionSwap?.routes?.map((route: any) => ({
+              router: route.dex.router,
+              path: route.path,
+              amount: route.amount.raw.toString()
+            })),
+            fusionSwap.result
+              ? new TokenAmount(
+                  (fusionSwap.result as TokenAmount).token,
+                  calculateSlippageAmount(fusionSwap.result, allowedSlippage)[0]
+                ).raw.toString()
+              : 0,
+            {
+              router: EXTERNAL_DEX_ADDRESSES[fusionSwap.bestTrade?.id ?? 0].router,
+              path: fusionSwap.bestTrade?.trade?.route.path.map(path => path.address),
+              amount: fusionSwap.bestTrade?.trade?.inputAmount.raw.toString()
+            },
+            fusionSwap.fee,
+            { value: parsedAmount?.raw.toString() }
+          )
+          const tx = await fusionContract.swapExactETHForTokens(
+            outputCurrencyId,
+            fusionSwap?.routes?.map((route: any) => ({
+              router: route.dex.router,
+              path: route.path,
+              amount: route.amount.raw.toString()
+            })),
+            fusionSwap.result
+              ? new TokenAmount(
+                  (fusionSwap.result as TokenAmount).token,
+                  calculateSlippageAmount(fusionSwap.result, allowedSlippage)[0]
+                ).raw.toString()
+              : 0,
+            {
+              router: EXTERNAL_DEX_ADDRESSES[fusionSwap.bestTrade?.id ?? 0].router,
+              path: fusionSwap.bestTrade?.trade?.route.path.map(path => path.address),
+              amount: fusionSwap.bestTrade?.trade?.inputAmount.raw.toString()
+            },
+            fusionSwap.fee,
+            { value: parsedAmount?.raw.toString() }
+          )
+          await tx.wait()
+          setSwapState({
+            attemptingTxn: false,
+            tradeToConfirm,
+            showConfirm,
+            swapErrorMessage: undefined,
+            txHash: tx.hash
+          })
+        } else if (outputCurrencyId === 'ETH') {
+          console.log(
+            inputCurrencyId,
+            fusionSwap?.routes?.map((route: any) => ({
+              router: route.dex.router,
+              path: route.path,
+              amount: route.amount.raw.toString()
+            })),
+            parsedAmount?.raw?.toString(),
+            fusionSwap.result
+              ? new TokenAmount(
+                  (fusionSwap.result as TokenAmount).token,
+                  calculateSlippageAmount(fusionSwap.result, allowedSlippage)[0]
+                ).raw.toString()
+              : 0,
+            {
+              router: EXTERNAL_DEX_ADDRESSES[fusionSwap.bestTrade?.id ?? 0].router,
+              path: fusionSwap.bestTrade?.trade?.route.path.map(path => path.address),
+              amount: fusionSwap.bestTrade?.trade?.inputAmount.raw.toString()
+            },
+            fusionSwap.fee
+          )
+          const tx = await fusionContract.swapExactTokensForETH(
+            inputCurrencyId,
+            fusionSwap?.routes?.map((route: any) => ({
+              router: route.dex.router,
+              path: route.path,
+              amount: route.amount.raw.toString()
+            })),
+            parsedAmount?.raw?.toString(),
+            fusionSwap.result
+              ? new TokenAmount(
+                  (fusionSwap.result as TokenAmount).token,
+                  calculateSlippageAmount(fusionSwap.result, allowedSlippage)[0]
+                ).raw.toString()
+              : 0,
+            {
+              router: EXTERNAL_DEX_ADDRESSES[fusionSwap.bestTrade?.id ?? 0].router,
+              path: fusionSwap.bestTrade?.trade?.route.path.map(path => path.address),
+              amount: fusionSwap.bestTrade?.trade?.inputAmount.raw.toString()
+            },
+            fusionSwap.fee
+          )
+          await tx.wait()
+          setSwapState({
+            attemptingTxn: false,
+            tradeToConfirm,
+            showConfirm,
+            swapErrorMessage: undefined,
+            txHash: tx.hash
+          })
+        } else {
+          console.log(
+            inputCurrencyId,
+            outputCurrencyId,
+            fusionSwap?.routes?.map((route: any) => ({
+              router: route.dex.router,
+              path: route.path,
+              amount: route.amount.raw.toString()
+            })),
+            parsedAmount?.raw?.toString(),
+            fusionSwap.result
+              ? new TokenAmount(
+                  (fusionSwap.result as TokenAmount).token,
+                  calculateSlippageAmount(fusionSwap.result, allowedSlippage)[0]
+                ).raw.toString()
+              : 0,
+            {
+              router: EXTERNAL_DEX_ADDRESSES[fusionSwap.bestTrade?.id ?? 0].router,
+              path: fusionSwap.bestTrade?.trade?.route.path.map(path => path.address),
+              amount: fusionSwap.bestTrade?.trade?.inputAmount.raw.toString()
+            },
+            fusionSwap.fee
+          )
+          const tx = await fusionContract.swapExactTokensForTokens(
+            inputCurrencyId,
+            outputCurrencyId,
+            fusionSwap?.routes?.map((route: any) => ({
+              router: route.dex.router,
+              path: route.path,
+              amount: route.amount.raw.toString()
+            })),
+            parsedAmount?.raw?.toString(),
+            fusionSwap.result
+              ? new TokenAmount(
+                  (fusionSwap.result as TokenAmount).token,
+                  calculateSlippageAmount(fusionSwap.result, allowedSlippage)[0]
+                ).raw.toString()
+              : 0,
+            {
+              router: EXTERNAL_DEX_ADDRESSES[fusionSwap.bestTrade?.id ?? 0].router,
+              path: fusionSwap.bestTrade?.trade?.route.path.map(path => path.address),
+              amount: fusionSwap.bestTrade?.trade?.inputAmount.raw.toString()
+            },
+            fusionSwap.fee
+          )
+          await tx.wait()
+          setSwapState({
+            attemptingTxn: false,
+            tradeToConfirm,
+            showConfirm,
+            swapErrorMessage: undefined,
+            txHash: tx.hash
+          })
         }
       } catch (err) {
+        console.log(err)
         setSwapState({
           attemptingTxn: false,
           tradeToConfirm,
@@ -513,6 +476,7 @@ export default function Swap() {
         approval === ApprovalState.PENDING ||
         (approvalSubmitted && approval === ApprovalState.APPROVED))) ||
       (swapMode === 1 &&
+        fusionSwap.result?.greaterThan('0') &&
         (fusionApproval === ApprovalState.NOT_APPROVED ||
           fusionApproval === ApprovalState.PENDING ||
           (approvalSubmitted && fusionApproval === ApprovalState.APPROVED)))) &&
@@ -568,7 +532,7 @@ export default function Swap() {
         <Wrapper id="swap-page">
           <ConfirmSwapModal
             swapMode={swapMode}
-            fusionSwap={bestSwap}
+            fusionSwap={fusionSwap}
             isOpen={showConfirm}
             trade={trade}
             originalTrade={tradeToConfirm}
@@ -581,8 +545,6 @@ export default function Swap() {
             swapErrorMessage={swapErrorMessage}
             onDismiss={handleConfirmDismiss}
             outPrice={tokenOutPrice}
-            loading={swapMode === 0 ? false : bestLoading ?? true}
-            dexes={dexes}
           />
 
           <AutoColumn gap={'md'}>
@@ -607,8 +569,8 @@ export default function Swap() {
                       onSwitchTokens(
                         swapMode === 1 && !showWrap ? 1 : undefined,
                         swapMode === 1 && !showWrap
-                          ? bestSwap?.price
-                            ? bestSwap.price.toExact()
+                          ? fusionSwap.result
+                            ? fusionSwap.result.toExact()
                             : undefined
                           : undefined
                       )
@@ -624,13 +586,7 @@ export default function Swap() {
               </AutoRow>
             </AutoColumn>
             <CurrencyInputPanel
-              value={
-                swapMode === 0 || showWrap
-                  ? formattedAmounts[Field.OUTPUT]
-                  : bestLoading
-                  ? '0'
-                  : bestSwap?.price?.toExact() ?? '0'
-              }
+              value={swapMode === 0 || showWrap ? formattedAmounts[Field.OUTPUT] : fusionSwap?.result?.toExact() ?? '0'}
               onUserInput={handleTypeOutput}
               label={independentField === Field.INPUT && !showWrap && trade ? 'To (estimated)' : 'To'}
               showMaxButton={false}
@@ -671,12 +627,11 @@ export default function Swap() {
                         />
                       ) : (
                         <FusionPrice
-                          loading={!bestSwap || bestLoading}
-                          fusionSwap={bestSwap}
+                          fusionSwap={fusionSwap}
                           showInverted={showInverted}
                           setShowInverted={setShowInverted}
-                          tokenIn={bestSwap?.tokenIn}
-                          tokenOut={bestSwap?.tokenOut}
+                          tokenIn={fusionSwap?.currencies.INPUT}
+                          tokenOut={fusionSwap?.currencies.OUTPUT}
                         ></FusionPrice>
                       )}
                     </RowBetween>
@@ -707,11 +662,8 @@ export default function Swap() {
                 {wrapInputError ??
                   (wrapType === WrapType.WRAP ? 'Wrap' : wrapType === WrapType.UNWRAP ? 'Unwrap' : null)}
               </ButtonPrimary>
-            ) : swapMode === 1 && (bestLoading || bestSwap?.type === -1) ? (
-              <ButtonPrimary disabled={true}>
-                <TYPE.main mb="4px">Loading</TYPE.main>
-              </ButtonPrimary>
-            ) : swapMode === 0 && noRoute && userHasSpecifiedInputOutput ? (
+            ) : (swapMode === 0 && noRoute && userHasSpecifiedInputOutput) ||
+              (swapMode === 1 && fusionSwap.result?.equalTo('0')) ? (
               <GreyCard style={{ textAlign: 'center' }}>
                 <TYPE.main mb="4px">Insufficient liquidity for this trade.</TYPE.main>
                 {singleHopOnly && <TYPE.main mb="4px">Try enabling multi-hop trades.</TYPE.main>}
@@ -837,8 +789,8 @@ export default function Swap() {
         ) : (
           <UnsupportedCurrencyFooter show={swapIsUnsupported} currencies={[currencies.INPUT, currencies.OUTPUT]} />
         )
-      ) : swapMode === 1 && bestSwap?.type === 0 ? (
-        <AdvancedFusionDetailsDropdown swap={bestSwap} price={tokenOutPrice} dexes={dexes} />
+      ) : swapMode === 1 && fusionSwap.result?.greaterThan('0') ? (
+        <AdvancedFusionDetailsDropdown swap={fusionSwap} price={tokenOutPrice} />
       ) : null}
     </>
   )

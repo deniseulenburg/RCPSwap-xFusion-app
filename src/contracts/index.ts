@@ -1,23 +1,11 @@
 export const FUSION_CONTRACT = {
-  address: '0x3644F266cdBD6e4dD6eeB45E860E10f8EF3eB46C',
+  address: '0xAcF31F20Cc0C4a830C48a4d798315Ea5FEd261Ab',
   abi: [
     {
       inputs: [
-        {
-          internalType: 'address',
-          name: '_weth',
-          type: 'address'
-        },
-        {
-          internalType: 'address',
-          name: '_feeAddress',
-          type: 'address'
-        },
-        {
-          internalType: 'uint256',
-          name: '_fee',
-          type: 'uint256'
-        }
+        { internalType: 'address', name: '_weth', type: 'address' },
+        { internalType: 'address', name: '_feeAddress', type: 'address' },
+        { internalType: 'uint256', name: '_fee', type: 'uint256' }
       ],
       stateMutability: 'nonpayable',
       type: 'constructor'
@@ -25,56 +13,8 @@ export const FUSION_CONTRACT = {
     {
       anonymous: false,
       inputs: [
-        {
-          indexed: true,
-          internalType: 'address',
-          name: 'factory',
-          type: 'address'
-        },
-        {
-          indexed: true,
-          internalType: 'address',
-          name: 'router',
-          type: 'address'
-        }
-      ],
-      name: 'DexAdded',
-      type: 'event'
-    },
-    {
-      anonymous: false,
-      inputs: [
-        {
-          indexed: true,
-          internalType: 'address',
-          name: 'factory',
-          type: 'address'
-        },
-        {
-          indexed: true,
-          internalType: 'address',
-          name: 'router',
-          type: 'address'
-        }
-      ],
-      name: 'DexRemoved',
-      type: 'event'
-    },
-    {
-      anonymous: false,
-      inputs: [
-        {
-          indexed: true,
-          internalType: 'address',
-          name: 'previousOwner',
-          type: 'address'
-        },
-        {
-          indexed: true,
-          internalType: 'address',
-          name: 'newOwner',
-          type: 'address'
-        }
+        { indexed: true, internalType: 'address', name: 'previousOwner', type: 'address' },
+        { indexed: true, internalType: 'address', name: 'newOwner', type: 'address' }
       ],
       name: 'OwnershipTransferred',
       type: 'event'
@@ -82,138 +22,41 @@ export const FUSION_CONTRACT = {
     {
       inputs: [],
       name: 'WETH',
-      outputs: [
-        {
-          internalType: 'address',
-          name: '',
-          type: 'address'
-        }
-      ],
-      stateMutability: 'view',
-      type: 'function'
-    },
-    {
-      inputs: [
-        {
-          internalType: 'address',
-          name: '_factory',
-          type: 'address'
-        },
-        {
-          internalType: 'address',
-          name: '_router',
-          type: 'address'
-        }
-      ],
-      name: 'addDex',
-      outputs: [],
-      stateMutability: 'nonpayable',
-      type: 'function'
-    },
-    {
-      inputs: [
-        {
-          internalType: 'uint256',
-          name: '',
-          type: 'uint256'
-        }
-      ],
-      name: 'dexList',
-      outputs: [
-        {
-          internalType: 'address',
-          name: 'factory',
-          type: 'address'
-        },
-        {
-          internalType: 'address',
-          name: 'router',
-          type: 'address'
-        }
-      ],
+      outputs: [{ internalType: 'address', name: '', type: 'address' }],
       stateMutability: 'view',
       type: 'function'
     },
     {
       inputs: [],
       name: 'fee',
-      outputs: [
-        {
-          internalType: 'uint256',
-          name: '',
-          type: 'uint256'
-        }
-      ],
+      outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
       stateMutability: 'view',
       type: 'function'
     },
     {
       inputs: [],
       name: 'feeAddress',
-      outputs: [
-        {
-          internalType: 'address',
-          name: '',
-          type: 'address'
-        }
-      ],
+      outputs: [{ internalType: 'address', name: '', type: 'address' }],
       stateMutability: 'view',
       type: 'function'
     },
     {
       inputs: [],
       name: 'owner',
-      outputs: [
-        {
-          internalType: 'address',
-          name: '',
-          type: 'address'
-        }
-      ],
+      outputs: [{ internalType: 'address', name: '', type: 'address' }],
       stateMutability: 'view',
       type: 'function'
     },
+    { inputs: [], name: 'renounceOwnership', outputs: [], stateMutability: 'nonpayable', type: 'function' },
     {
-      inputs: [
-        {
-          internalType: 'uint256',
-          name: '_index',
-          type: 'uint256'
-        }
-      ],
-      name: 'removeDex',
-      outputs: [],
-      stateMutability: 'nonpayable',
-      type: 'function'
-    },
-    {
-      inputs: [],
-      name: 'renounceOwnership',
-      outputs: [],
-      stateMutability: 'nonpayable',
-      type: 'function'
-    },
-    {
-      inputs: [
-        {
-          internalType: 'uint256',
-          name: '_fee',
-          type: 'uint256'
-        }
-      ],
+      inputs: [{ internalType: 'uint256', name: '_fee', type: 'uint256' }],
       name: 'setFee',
       outputs: [],
       stateMutability: 'nonpayable',
       type: 'function'
     },
     {
-      inputs: [
-        {
-          internalType: 'address',
-          name: '_feeAddress',
-          type: 'address'
-        }
-      ],
+      inputs: [{ internalType: 'address', name: '_feeAddress', type: 'address' }],
       name: 'setFeeAddress',
       outputs: [],
       stateMutability: 'nonpayable',
@@ -221,260 +64,118 @@ export const FUSION_CONTRACT = {
     },
     {
       inputs: [
+        { internalType: 'address', name: 'tokenOut', type: 'address' },
         {
-          internalType: 'uint256[]',
-          name: 'amounts',
-          type: 'uint256[]'
+          components: [
+            { internalType: 'uint256', name: 'amount', type: 'uint256' },
+            { internalType: 'address[]', name: 'path', type: 'address[]' },
+            { internalType: 'address', name: 'router', type: 'address' }
+          ],
+          internalType: 'struct FusionSwap.SwapInfo[]',
+          name: 'swapInfo',
+          type: 'tuple[]'
         },
+        { internalType: 'uint256', name: 'amountOutMin', type: 'uint256' },
         {
-          internalType: 'address',
-          name: 'tokenOut',
-          type: 'address'
+          components: [
+            { internalType: 'uint256', name: 'amount', type: 'uint256' },
+            { internalType: 'address[]', name: 'path', type: 'address[]' },
+            { internalType: 'address', name: 'router', type: 'address' }
+          ],
+          internalType: 'struct FusionSwap.SwapInfo',
+          name: 'bestSwapInfo',
+          type: 'tuple'
         },
-        {
-          internalType: 'uint256',
-          name: 'amountOutMin',
-          type: 'uint256'
-        },
-        {
-          internalType: 'uint256',
-          name: 'dexIndex',
-          type: 'uint256'
-        },
-        {
-          internalType: 'address[]',
-          name: 'path_',
-          type: 'address[]'
-        }
+        { internalType: 'bool', name: 'isFee', type: 'bool' }
       ],
-      name: 'swapExactETHForTokensWithMultiDex',
-      outputs: [
-        {
-          internalType: 'uint256',
-          name: 'amountOut',
-          type: 'uint256'
-        }
-      ],
+      name: 'swapExactETHForTokens',
+      outputs: [],
       stateMutability: 'payable',
       type: 'function'
     },
     {
       inputs: [
+        { internalType: 'address', name: 'tokenIn', type: 'address' },
         {
-          internalType: 'uint256',
-          name: 'amountOutMin',
-          type: 'uint256'
+          components: [
+            { internalType: 'uint256', name: 'amount', type: 'uint256' },
+            { internalType: 'address[]', name: 'path', type: 'address[]' },
+            { internalType: 'address', name: 'router', type: 'address' }
+          ],
+          internalType: 'struct FusionSwap.SwapInfo[]',
+          name: 'swapInfo',
+          type: 'tuple[]'
         },
+        { internalType: 'uint256', name: 'amountIn', type: 'uint256' },
+        { internalType: 'uint256', name: 'amountOutMin', type: 'uint256' },
         {
-          internalType: 'uint256',
-          name: 'dexIndex',
-          type: 'uint256'
+          components: [
+            { internalType: 'uint256', name: 'amount', type: 'uint256' },
+            { internalType: 'address[]', name: 'path', type: 'address[]' },
+            { internalType: 'address', name: 'router', type: 'address' }
+          ],
+          internalType: 'struct FusionSwap.SwapInfo',
+          name: 'bestSwapInfo',
+          type: 'tuple'
         },
-        {
-          internalType: 'address[]',
-          name: 'path_',
-          type: 'address[]'
-        }
+        { internalType: 'bool', name: 'isFee', type: 'bool' }
       ],
-      name: 'swapExactETHForTokensWithMultiHops',
-      outputs: [
-        {
-          internalType: 'uint256',
-          name: 'amountOut',
-          type: 'uint256'
-        }
-      ],
-      stateMutability: 'payable',
-      type: 'function'
-    },
-    {
-      inputs: [
-        {
-          internalType: 'uint256[]',
-          name: 'amounts',
-          type: 'uint256[]'
-        },
-        {
-          internalType: 'address',
-          name: 'tokenIn',
-          type: 'address'
-        },
-        {
-          internalType: 'uint256',
-          name: 'amountIn',
-          type: 'uint256'
-        },
-        {
-          internalType: 'uint256',
-          name: 'amountOutMin',
-          type: 'uint256'
-        },
-        {
-          internalType: 'uint256',
-          name: 'dexIndex',
-          type: 'uint256'
-        },
-        {
-          internalType: 'address[]',
-          name: 'path_',
-          type: 'address[]'
-        }
-      ],
-      name: 'swapExactTokensForETHWithMultiDex',
-      outputs: [
-        {
-          internalType: 'uint256',
-          name: 'amountOut',
-          type: 'uint256'
-        }
-      ],
+      name: 'swapExactTokensForETH',
+      outputs: [],
       stateMutability: 'nonpayable',
       type: 'function'
     },
     {
       inputs: [
+        { internalType: 'address', name: 'tokenIn', type: 'address' },
+        { internalType: 'address', name: 'tokenOut', type: 'address' },
         {
-          internalType: 'address',
-          name: 'tokenIn',
-          type: 'address'
+          components: [
+            { internalType: 'uint256', name: 'amount', type: 'uint256' },
+            { internalType: 'address[]', name: 'path', type: 'address[]' },
+            { internalType: 'address', name: 'router', type: 'address' }
+          ],
+          internalType: 'struct FusionSwap.SwapInfo[]',
+          name: 'swapInfo',
+          type: 'tuple[]'
         },
+        { internalType: 'uint256', name: 'amountIn', type: 'uint256' },
+        { internalType: 'uint256', name: 'amountOutMin', type: 'uint256' },
         {
-          internalType: 'uint256',
-          name: 'amountIn',
-          type: 'uint256'
+          components: [
+            { internalType: 'uint256', name: 'amount', type: 'uint256' },
+            { internalType: 'address[]', name: 'path', type: 'address[]' },
+            { internalType: 'address', name: 'router', type: 'address' }
+          ],
+          internalType: 'struct FusionSwap.SwapInfo',
+          name: 'bestSwapInfo',
+          type: 'tuple'
         },
-        {
-          internalType: 'uint256',
-          name: 'amountOutMin',
-          type: 'uint256'
-        },
-        {
-          internalType: 'uint256',
-          name: 'dexIndex',
-          type: 'uint256'
-        },
-        {
-          internalType: 'address[]',
-          name: 'path_',
-          type: 'address[]'
-        }
+        { internalType: 'bool', name: 'isFee', type: 'bool' }
       ],
-      name: 'swapExactTokensForETHWithMultiHops',
-      outputs: [
-        {
-          internalType: 'uint256',
-          name: 'amountOut',
-          type: 'uint256'
-        }
-      ],
+      name: 'swapExactTokensForTokens',
+      outputs: [],
       stateMutability: 'nonpayable',
       type: 'function'
     },
     {
-      inputs: [
-        {
-          internalType: 'uint256[]',
-          name: 'amounts',
-          type: 'uint256[]'
-        },
-        {
-          internalType: 'address',
-          name: 'tokenIn',
-          type: 'address'
-        },
-        {
-          internalType: 'address',
-          name: 'tokenOut',
-          type: 'address'
-        },
-        {
-          internalType: 'uint256',
-          name: 'amountIn',
-          type: 'uint256'
-        },
-        {
-          internalType: 'uint256',
-          name: 'amountOutMin',
-          type: 'uint256'
-        },
-        {
-          internalType: 'uint256',
-          name: 'dexIndex',
-          type: 'uint256'
-        },
-        {
-          internalType: 'address[]',
-          name: 'path_',
-          type: 'address[]'
-        }
-      ],
-      name: 'swapExactTokensForTokensWithMultiDex',
-      outputs: [
-        {
-          internalType: 'uint256',
-          name: 'amountOut',
-          type: 'uint256'
-        }
-      ],
-      stateMutability: 'nonpayable',
-      type: 'function'
-    },
-    {
-      inputs: [
-        {
-          internalType: 'address',
-          name: 'tokenIn',
-          type: 'address'
-        },
-        {
-          internalType: 'uint256',
-          name: 'amountIn',
-          type: 'uint256'
-        },
-        {
-          internalType: 'uint256',
-          name: 'amountOutMin',
-          type: 'uint256'
-        },
-        {
-          internalType: 'uint256',
-          name: 'dexIndex',
-          type: 'uint256'
-        },
-        {
-          internalType: 'address[]',
-          name: 'path_',
-          type: 'address[]'
-        }
-      ],
-      name: 'swapExactTokensForTokensWithMultiHops',
-      outputs: [
-        {
-          internalType: 'uint256',
-          name: 'amountOut',
-          type: 'uint256'
-        }
-      ],
-      stateMutability: 'nonpayable',
-      type: 'function'
-    },
-    {
-      inputs: [
-        {
-          internalType: 'address',
-          name: 'newOwner',
-          type: 'address'
-        }
-      ],
+      inputs: [{ internalType: 'address', name: 'newOwner', type: 'address' }],
       name: 'transferOwnership',
       outputs: [],
       stateMutability: 'nonpayable',
       type: 'function'
     },
     {
-      stateMutability: 'payable',
-      type: 'receive'
-    }
+      inputs: [
+        { internalType: 'address', name: 'token', type: 'address' },
+        { internalType: 'uint256', name: 'amount', type: 'uint256' }
+      ],
+      name: 'withdraw',
+      outputs: [],
+      stateMutability: 'nonpayable',
+      type: 'function'
+    },
+    { stateMutability: 'payable', type: 'receive' }
   ]
 }
 

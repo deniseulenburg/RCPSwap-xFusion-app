@@ -1,4 +1,4 @@
-import { TokenAmount, Trade, TradeType } from '@venomswap/sdk'
+import { Token, TokenAmount, Trade, TradeType } from '@venomswap/sdk'
 import React, { useContext, useMemo } from 'react'
 import { ArrowDown, AlertTriangle } from 'react-feather'
 import { Text } from 'rebass'
@@ -43,11 +43,11 @@ export default function SwapModalHeader({
 
   const tradeInputCurrency = getBlockchainAdjustedCurrency(
     blockchain,
-    trade?.inputAmount.currency ?? fusionSwap.tokenIn
+    trade?.inputAmount.currency ?? fusionSwap?.currencies?.INPUT
   )
   const tradeOutputCurrency = getBlockchainAdjustedCurrency(
     blockchain,
-    trade?.outputAmount.currency ?? fusionSwap.tokenOut
+    trade?.outputAmount.currency ?? fusionSwap?.currencies?.OUTPUT
   )
 
   const theme = useContext(ThemeContext)
@@ -62,7 +62,7 @@ export default function SwapModalHeader({
             fontWeight={500}
             color={showAcceptChanges && trade?.tradeType === TradeType.EXACT_OUTPUT ? theme.primary1 : ''}
           >
-            {trade?.inputAmount.toSignificant(6) ?? fusionSwap?.amountIn?.toSignificant(6)}
+            {trade?.inputAmount.toSignificant(6) ?? fusionSwap?.parsedAmount?.toSignificant(6)}
           </TruncatedText>
         </RowFixed>
         <RowFixed gap={'0px'}>
@@ -88,7 +88,7 @@ export default function SwapModalHeader({
                 : ''
             }
           >
-            {swapMode === 0 ? trade?.outputAmount.toSignificant(6) : fusionSwap?.price?.toSignificant(6)}
+            {swapMode === 0 ? trade?.outputAmount.toSignificant(6) : fusionSwap?.result?.toSignificant(6)}
           </TruncatedText>
         </RowFixed>
         <RowFixed gap={'0px'}>
@@ -120,10 +120,10 @@ export default function SwapModalHeader({
             <b>
               {swapMode === 0
                 ? slippageAdjustedAmounts[Field.OUTPUT]?.toSignificant(6)
-                : fusionSwap.price
+                : fusionSwap.result
                 ? new TokenAmount(
-                    fusionSwap.price.token,
-                    calculateSlippageAmount(fusionSwap.price, allowedSlippage)[0]
+                    fusionSwap.result.currency as Token,
+                    calculateSlippageAmount(fusionSwap.result, allowedSlippage)[0]
                   ).toSignificant(6)
                 : '0'}
               {tradeOutputCurrency?.symbol}

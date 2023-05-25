@@ -113,5 +113,5 @@ export function useApproveCallbackFromTrade(trade?: Trade, allowedSlippage = 0) 
 }
 
 export function useFusionApproveCallback(fusionSwap: any) {
-  return useApproveCallback(fusionSwap?.amountIn, FUSION_CONTRACT.address)
+  return useApproveCallback(fusionSwap?.parsedAmount, FUSION_CONTRACT.address)
 }

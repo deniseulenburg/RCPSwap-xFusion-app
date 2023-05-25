@@ -39,9 +39,7 @@ export default function ConfirmSwapModal({
   txHash,
   swapMode,
   fusionSwap,
-  outPrice,
-  loading,
-  dexes
+  outPrice
 }: {
   isOpen: boolean
   trade: Trade | undefined
@@ -57,8 +55,6 @@ export default function ConfirmSwapModal({
   swapMode: number
   fusionSwap: any
   outPrice: number
-  loading: boolean
-  dexes: any
 }) {
   const blockchain = useBlockchain()
 
@@ -92,25 +88,23 @@ export default function ConfirmSwapModal({
         swapErrorMessage={swapErrorMessage}
         allowedSlippage={allowedSlippage}
         outPrice={outPrice}
-        loading={loading}
-        dexes={dexes}
       />
     ) : null
   }, [allowedSlippage, onConfirm, showAcceptChanges, swapErrorMessage, trade])
 
   const adjustedInputCurrency = getBlockchainAdjustedCurrency(
     blockchain,
-    trade?.inputAmount?.currency ?? fusionSwap?.tokenIn
+    trade?.inputAmount?.currency ?? fusionSwap?.currencies?.INPUT
   )
   const adjustedOutputCurrency = getBlockchainAdjustedCurrency(
     blockchain,
-    trade?.outputAmount?.currency ?? fusionSwap?.tokenOut
+    trade?.outputAmount?.currency ?? fusionSwap?.currencies?.OUTPUT
   )
 
   // text to show while loading
   const pendingText = `Swapping ${trade?.inputAmount?.toSignificant(6) ?? fusionSwap?.amountIn?.toSignificant(6)} ${
     adjustedInputCurrency?.symbol
-  } for ${swapMode === 0 ? trade?.outputAmount?.toSignificant(6) : fusionSwap?.price?.toSignificant(6)} ${
+  } for ${swapMode === 0 ? trade?.outputAmount?.toSignificant(6) : fusionSwap?.result?.toSignificant(6)} ${
     adjustedOutputCurrency?.symbol
   }`
 

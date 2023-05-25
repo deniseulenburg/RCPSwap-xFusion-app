@@ -86,31 +86,35 @@ export function formatBlockchainAdjustedExecutionPrice(
   if ((swapMode === 0 && !trade) || !tradeInputCurrency || !tradeOutputCurrency) {
     return ''
   }
-  return inverted
-    ? `${
-        swapMode === 0
-          ? trade?.executionPrice.invert().toSignificant(6)
-          : fusionSwap.amountIn && fusionSwap.price
-          ? new Price(
-              fusionSwap.amountIn.currency,
-              fusionSwap.price.currency,
-              fusionSwap.amountIn.raw,
-              fusionSwap.price.raw
-            )
-              .invert()
-              .toSignificant(6)
-          : ''
-      } ${tradeInputCurrency.symbol} / ${tradeOutputCurrency.symbol}`
-    : `${
-        swapMode === 0
-          ? trade?.executionPrice.toSignificant(6)
-          : fusionSwap.amountIn && fusionSwap.price
-          ? new Price(
-              fusionSwap.amountIn.currency,
-              fusionSwap.price.currency,
-              fusionSwap.amountIn.raw,
-              fusionSwap.price.raw
-            ).toSignificant(6)
-          : ''
-      } ${tradeOutputCurrency.symbol} / ${tradeInputCurrency.symbol}`
+  try {
+    return inverted
+      ? `${
+          swapMode === 0
+            ? trade?.executionPrice.invert().toSignificant(6)
+            : fusionSwap.parsedAmount && fusionSwap.result
+            ? new Price(
+                fusionSwap.parsedAmount.currency,
+                fusionSwap.result.currency,
+                fusionSwap.parsedAmount.raw,
+                fusionSwap.result.raw
+              )
+                .invert()
+                .toSignificant(6)
+            : ''
+        } ${tradeInputCurrency.symbol} / ${tradeOutputCurrency.symbol}`
+      : `${
+          swapMode === 0
+            ? trade?.executionPrice.toSignificant(6)
+            : fusionSwap.parsedAmount && fusionSwap.result
+            ? new Price(
+                fusionSwap.parsedAmount.currency,
+                fusionSwap.result.currency,
+                fusionSwap.parsedAmount.raw,
+                fusionSwap.result.raw
+              ).toSignificant(6)
+            : ''
+        } ${tradeOutputCurrency.symbol} / ${tradeInputCurrency.symbol}`
+  } catch (err) {
+    return '-'
+  }
 }

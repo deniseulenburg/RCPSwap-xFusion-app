@@ -19,6 +19,7 @@ import FormattedPriceImpact from './FormattedPriceImpact'
 import { StyledBalanceMaxMini, SwapCallbackError } from './styleds'
 import useBlockchain from '../../hooks/useBlockchain'
 import getBlockchainAdjustedCurrency from '../../utils/getBlockchainAdjustedCurrency'
+import { EXTERNAL_DEX_ADDRESSES } from 'constants/index'
 
 export default function SwapModalFooter({
   trade,
@@ -28,9 +29,7 @@ export default function SwapModalFooter({
   disabledConfirm,
   swapMode,
   fusionSwap,
-  outPrice,
-  loading,
-  dexes
+  outPrice
 }: {
   trade: Trade | undefined
   swapMode: number
@@ -40,8 +39,6 @@ export default function SwapModalFooter({
   swapErrorMessage: string | undefined
   disabledConfirm: boolean
   outPrice: number
-  loading: boolean
-  dexes: any
 }) {
   const blockchain = useBlockchain()
 
@@ -56,11 +53,11 @@ export default function SwapModalFooter({
 
   const tradeInputCurrency = getBlockchainAdjustedCurrency(
     blockchain,
-    trade?.inputAmount.currency ?? fusionSwap.tokenIn
+    trade?.inputAmount.currency ?? fusionSwap?.currencies?.INPUT
   )
   const tradeOutputCurrency = getBlockchainAdjustedCurrency(
     blockchain,
-    trade?.outputAmount.currency ?? fusionSwap.tokenOut
+    trade?.outputAmount.currency ?? fusionSwap?.currencies?.OUTPUT
   )
 
   return (
@@ -131,40 +128,45 @@ export default function SwapModalFooter({
             <FormattedPriceImpact priceImpact={priceImpactWithoutFee} />
           </RowBetween>
         )}
-        {swapMode === 1 && fusionSwap.type === 0 && fusionSwap.fee && (
-          <RowBetween>
-            <RowFixed>
-              <TYPE.black color={theme.text2} fontSize={14} fontWeight={400}>
-                {dexes[fusionSwap?.maxMultihop?.index ?? 0].name} Price
-              </TYPE.black>
-              <QuestionHelper text="The best price found on any Dexes on Nova." />
-            </RowFixed>
-            <Text
-              fontWeight={500}
-              fontSize={14}
-              color={theme.text1}
-              style={{
-                justifyContent: 'center',
-                alignItems: 'center',
-                display: 'flex',
-                textAlign: 'right',
-                paddingLeft: '10px'
-              }}
-            >
-              {formatBlockchainAdjustedExecutionPrice(
-                0,
-                null,
-                fusionSwap.maxMultihop.trade,
-                tradeInputCurrency,
-                tradeOutputCurrency,
-                showInverted
-              )}
-              <StyledBalanceMaxMini onClick={() => setShowInverted(!showInverted)}>
-                <Repeat size={14} />
-              </StyledBalanceMaxMini>
-            </Text>
-          </RowBetween>
-        )}
+        {swapMode === 1 &&
+          fusionSwap.fee &&
+          fusionSwap.result &&
+          fusionSwap.routes &&
+          fusionSwap.bestTrade &&
+          fusionSwap.bestTrade.trade && (
+            <RowBetween>
+              <RowFixed>
+                <TYPE.black color={theme.text2} fontSize={14} fontWeight={400}>
+                  {EXTERNAL_DEX_ADDRESSES[fusionSwap.bestTrade.id ?? 0].name} Price
+                </TYPE.black>
+                <QuestionHelper text="The best price found on any Dexes on Nova." />
+              </RowFixed>
+              <Text
+                fontWeight={500}
+                fontSize={14}
+                color={theme.text1}
+                style={{
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  display: 'flex',
+                  textAlign: 'right',
+                  paddingLeft: '10px'
+                }}
+              >
+                {formatBlockchainAdjustedExecutionPrice(
+                  0,
+                  null,
+                  fusionSwap.bestTrade.trade,
+                  tradeInputCurrency,
+                  tradeOutputCurrency,
+                  showInverted
+                )}
+                <StyledBalanceMaxMini onClick={() => setShowInverted(!showInverted)}>
+                  <Repeat size={14} />
+                </StyledBalanceMaxMini>
+              </Text>
+            </RowBetween>
+          )}
         {swapMode === 0 && (
           <RowBetween>
             <RowFixed>
@@ -180,36 +182,44 @@ export default function SwapModalFooter({
             </TYPE.black>
           </RowBetween>
         )}
-        {swapMode === 1 && fusionSwap.type === 0 && fusionSwap.price && (
-          <RowBetween>
-            <RowFixed>
-              <Text fontSize={14} fontWeight={400} color={theme.green1}>
-                Saving
-              </Text>
-              <QuestionHelper text={`Saving compared with the best price found on any DEX on Nova.`} />
-            </RowFixed>
-            <TYPE.black fontSize={14}>
-              {(
-                parseFloat(fusionSwap.price.subtract(fusionSwap.maxMultihop.trade.outputAmount).toExact()) *
-                (outPrice === 0 ? 1 : outPrice)
-              ).toFixed(6) +
-                ' ' +
-                (outPrice === 0 ? tradeOutputCurrency?.symbol : '$')}
-            </TYPE.black>
-          </RowBetween>
-        )}
+        {swapMode === 1 &&
+          fusionSwap.fee &&
+          fusionSwap.result &&
+          fusionSwap.routes &&
+          fusionSwap.bestTrade &&
+          fusionSwap.bestTrade.trade && (
+            <RowBetween>
+              <RowFixed>
+                <Text fontSize={14} fontWeight={400} color={theme.green1}>
+                  Saving
+                </Text>
+                <QuestionHelper text={`Saving compared with the best price found on any DEX on Nova.`} />
+              </RowFixed>
+              <TYPE.black fontSize={14}>
+                {(
+                  Math.max(
+                    parseFloat(fusionSwap.result.toExact()) -
+                      parseFloat(fusionSwap.bestTrade.trade.executionPrice.toFixed()),
+                    0
+                  ) * (outPrice === 0 ? 1 : outPrice)
+                ).toFixed(6) +
+                  ' ' +
+                  (outPrice === 0 ? tradeOutputCurrency?.symbol : '$')}
+              </TYPE.black>
+            </RowBetween>
+          )}
       </AutoColumn>
 
       <AutoRow>
         <ButtonError
           onClick={onConfirm}
-          disabled={disabledConfirm || loading}
+          disabled={disabledConfirm}
           error={severity > 2}
           style={{ margin: '10px 0 0 0' }}
           id="confirm-swap-or-send"
         >
           <Text fontSize={20} fontWeight={500}>
-            {loading ? 'Loading' : severity > 2 ? 'Swap Anyway' : 'Confirm Swap'}
+            {severity > 2 ? 'Swap Anyway' : 'Confirm Swap'}
           </Text>
         </ButtonError>
 
