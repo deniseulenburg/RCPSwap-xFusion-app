@@ -4,7 +4,6 @@ import { CoinSVG } from 'components/svgs'
 import React, { useContext } from 'react'
 import styled, { ThemeContext } from 'styled-components'
 import { Text } from 'rebass'
-import { Fraction, Token, TokenAmount, Trade } from '@venomswap/sdk'
 import { EXTERNAL_DEX_ADDRESSES } from 'constants/index'
 
 const AdvancedDetailsFooter = styled.div<{ show: boolean }>`
@@ -31,13 +30,7 @@ const DexLogo = styled.img`
   margin: 1px 6px 0;
 `
 
-export default function AdvancedFusionDetailsDropdown({
-  swap,
-  price
-}: {
-  swap: any
-  price: number
-}) {
+export default function AdvancedFusionDetailsDropdown({ swap, price }: { swap: any; price: number }) {
   const theme = useContext(ThemeContext)
 
   return swap.fee ? (

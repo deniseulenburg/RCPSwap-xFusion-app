@@ -33,7 +33,6 @@ import useWrapCallback, { WrapType } from '../../hooks/useWrapCallback'
 import { useToggleSettingsMenu, useWalletModalToggle } from '../../state/application/hooks'
 import { Field } from '../../state/swap/actions'
 import {
-  useFusionSwap,
   useDefaultsFromURLSearch,
   useDerivedSwapInfo,
   useSwapActionHandlers,
@@ -56,7 +55,6 @@ import { FUSION_CONTRACT } from 'contracts'
 import AdvancedFusionDetailsDropdown from 'components/swap/AdvancedFusionDetailsDropdown'
 import { useTokenPrice } from 'hooks/useTokenPrice'
 import { calculateSlippageAmount } from 'utils'
-import { useDexList } from 'hooks/useForeginDexes'
 
 export default function Swap() {
   const loadedUrlParams = useDefaultsFromURLSearch()

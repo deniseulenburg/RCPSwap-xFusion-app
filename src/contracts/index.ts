@@ -1,5 +1,5 @@
 export const FUSION_CONTRACT = {
-  address: '0xAcF31F20Cc0C4a830C48a4d798315Ea5FEd261Ab',
+  address: '0x18b968b55b59d21add1166D49B7F2E12934ebaAA',
   abi: [
     {
       inputs: [

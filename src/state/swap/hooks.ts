@@ -30,16 +30,7 @@ import { computeSlippageAdjustedAmounts } from '../../utils/prices'
 import { BASE_CURRENCY } from '../../connectors'
 import useBlockchain from '../../hooks/useBlockchain'
 import getBlockchainAdjustedCurrency from '../../utils/getBlockchainAdjustedCurrency'
-import { WETH } from '@venomswap/sdk'
-import {
-  useAllDexPairs,
-  useAllPools,
-  useAllTokens,
-  useBestMultihops,
-  useFusionMixSwap,
-  useFusionTimer
-} from 'hooks/useForeginDexes'
-import { useFusionFee } from 'hooks/useFusionFee'
+
 import { useAllDexCommonPairs, useBestDexTrade, useXFusionDex } from 'hooks/useXFusionDex'
 import { EXTERNAL_DEX_ADDRESSES } from 'constants/index'
 
@@ -359,7 +350,7 @@ export function useXFusionSwap() {
   const inputCurrency = useCurrency(inputCurrencyId)
   const outputCurrency = useCurrency(outputCurrencyId)
 
-  const pairs = useAllDexCommonPairs(inputCurrency!, outputCurrency!)
+  const pairs = useAllDexCommonPairs(inputCurrency ?? undefined, outputCurrency ?? undefined)
 
   const parsedAmount = tryParseAmount(typedValue, inputCurrency ?? undefined)
 
@@ -370,8 +361,8 @@ export function useXFusionSwap() {
     [Field.OUTPUT]: outputCurrency ?? undefined
   }
 
-  const { result, routes } = useXFusionDex(inputCurrency!, outputCurrency!, parsedAmount, pairs)
-  
+  const { result, routes } = useXFusionDex(inputCurrency ?? undefined, outputCurrency ?? undefined, parsedAmount, pairs)
+
   if (bestTrade && bestTrade.trade && result && routes) {
     if (!bestTrade.trade.outputAmount.lessThan(result)) {
       return {
@@ -397,6 +388,8 @@ export function useXFusionSwap() {
     }
   }
 
+  console.log(result?.toExact(), bestTrade?.trade?.outputAmount.toFixed())
+
   return {
     swap: {
       currencies,
@@ -407,96 +400,4 @@ export function useXFusionSwap() {
       fee: true
     }
   }
-}
-
-export function useFusionSwap(swapConfirm: boolean) {
-  const {
-    typedValue,
-    [Field.INPUT]: { currencyId: inputCurrencyId },
-    [Field.OUTPUT]: { currencyId: outputCurrencyId }
-  } = useSwapState()
-
-  const inputCurrency = useCurrency(inputCurrencyId)
-
-  const outputCurrency = useCurrency(outputCurrencyId)
-
-  const feeRate = useFusionFee()
-
-  const pools = useAllPools()
-
-  const tokens = useAllTokens()
-
-  const update = useFusionTimer(swapConfirm)
-
-  const pairs = useAllDexPairs(pools, tokens, update)
-
-  const parsedAmount = tryParseAmount(typedValue, inputCurrency ?? undefined)
-
-  const { result: mixSwap, loading: mixLoading } = useFusionMixSwap(pairs, parsedAmount, update, swapConfirm)
-
-  const { result: bestMultihops, loading: mhLoading } = useBestMultihops(
-    pairs,
-    parsedAmount,
-    outputCurrency ?? undefined,
-    update,
-    swapConfirm
-  )
-
-  if (
-    !update ||
-    !bestMultihops ||
-    !bestMultihops.trade ||
-    (!swapConfirm && (bestMultihops.index === -1 || mixLoading || mhLoading))
-  ) {
-    return {
-      bestSwap: {
-        type: -1,
-        amountIn: parsedAmount,
-        tokenIn: inputCurrency ?? undefined,
-        tokenOut: outputCurrency ?? undefined
-      },
-      loading: false
-    }
-  } else if (
-    !mixSwap ||
-    !mixSwap.result ||
-    !mixSwap.tokenOut ||
-    mixSwap.result.lessThan(bestMultihops.trade.outputAmount)
-  ) {
-    return {
-      bestSwap: {
-        type: 1,
-        price: bestMultihops.trade.outputAmount,
-        amountIn: parsedAmount,
-        dex: bestMultihops.index,
-        trade: bestMultihops.trade.route.path.map((path: any) => path.address),
-        tokenIn: inputCurrency ?? undefined,
-        tokenOut: outputCurrency ?? undefined,
-        maxMultihop: { trade: bestMultihops.trade, index: bestMultihops.index }
-      },
-      loading: false
-    }
-  } else if (mixSwap.result.greaterThan(bestMultihops.trade.outputAmount)) {
-    const fee = new TokenAmount(
-      mixSwap.tokenOut,
-      new Fraction(feeRate ?? '0', '1000').multiply(
-        JSBI.subtract(mixSwap.result.raw, bestMultihops.trade.outputAmount.raw)
-      ).quotient
-    )
-    return {
-      bestSwap: {
-        type: 0,
-        amountIn: parsedAmount,
-        price: mixSwap.result.subtract(fee),
-        amounts: mixSwap.amounts,
-        tokenIn: inputCurrency ?? undefined,
-        tokenOut: outputCurrency ?? undefined,
-        maxMultihop: { trade: bestMultihops.trade, index: bestMultihops.index },
-        fee
-      },
-      loading: false
-    }
-  }
-
-  return { bestSwap: undefined, loading: mhLoading || mixLoading }
 }
