@@ -33,6 +33,7 @@ import getBlockchainAdjustedCurrency from '../../utils/getBlockchainAdjustedCurr
 
 import { useAllDexCommonPairs, useBestDexTrade, useXFusionDex } from 'hooks/useXFusionDex'
 import { EXTERNAL_DEX_ADDRESSES } from 'constants/index'
+import { wrappedCurrency } from 'utils/wrappedCurrency'
 
 export function useSwapState(): AppState['swap'] {
   return useSelector<AppState, AppState['swap']>(state => state.swap)
@@ -341,6 +342,8 @@ export function useDefaultsFromURLSearch():
 }
 
 export function useXFusionSwap() {
+  const { chainId } = useActiveWeb3React()
+
   const {
     typedValue,
     [Field.INPUT]: { currencyId: inputCurrencyId },
@@ -369,7 +372,10 @@ export function useXFusionSwap() {
         swap: {
           currencies,
           parsedAmount,
-          result: bestTrade.trade.outputAmount as TokenAmount,
+          result: new TokenAmount(
+            wrappedCurrency(outputCurrency ?? undefined, chainId) ?? (bestTrade.trade.outputAmount.currency as Token),
+            bestTrade.trade.outputAmount.raw
+          ),
           routes: [
             {
               dex: {
@@ -387,8 +393,6 @@ export function useXFusionSwap() {
       }
     }
   }
-
-  console.log(result?.toExact(), bestTrade?.trade?.outputAmount.toFixed())
 
   return {
     swap: {

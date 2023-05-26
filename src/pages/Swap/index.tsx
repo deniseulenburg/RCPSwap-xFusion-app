@@ -333,19 +333,14 @@ export default function Swap() {
           })
         } else if (outputCurrencyId === 'ETH') {
           console.log(
-            inputCurrencyId,
-            fusionSwap?.routes?.map((route: any) => ({
-              router: route.dex.router,
-              path: route.path,
-              amount: route.amount.raw.toString()
-            })),
-            parsedAmount?.raw?.toString(),
+            fusionSwap.result,
             fusionSwap.result
               ? new TokenAmount(
                   (fusionSwap.result as TokenAmount).token,
                   calculateSlippageAmount(fusionSwap.result, allowedSlippage)[0]
                 ).raw.toString()
               : 0,
+            parsedAmount?.raw?.toString(),
             {
               router: EXTERNAL_DEX_ADDRESSES[fusionSwap.bestTrade?.id ?? 0].router,
               path: fusionSwap.bestTrade?.trade?.route.path.map(path => path.address),

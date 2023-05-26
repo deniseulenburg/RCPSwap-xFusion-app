@@ -46,7 +46,7 @@ export default function AdvancedFusionDetailsDropdown({ swap, price }: { swap: a
                 <Text fontSize={15} color={theme.green1} fontWeight={600}>
                   {(
                     Math.max(
-                      parseFloat(swap.result.toExact()) - parseFloat(swap.bestTrade.trade.executionPrice.toFixed()),
+                      parseFloat(swap.result.toExact()) - parseFloat(swap.bestTrade.trade.outputAmount.toExact()),
                       0
                     ) * (price === 0 ? 1 : price)
                   ).toFixed(3) +
