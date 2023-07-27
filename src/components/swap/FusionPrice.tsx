@@ -3,41 +3,40 @@ import { Text } from 'rebass'
 import { StyledBalanceMaxMini } from './styleds'
 import { Repeat } from 'react-feather'
 import { ThemeContext } from 'styled-components'
-import { Currency, Fraction, JSBI, Price } from '@venomswap/sdk'
+import { Price } from '@venomswap/sdk'
+import { XFusionSwapType } from 'state/swap/hooks'
 
 interface FusionPriceProps {
-  fusionSwap: any
+  fusionSwap: XFusionSwapType
   showInverted: boolean
   setShowInverted: (s: boolean) => void
-  tokenIn?: Currency
-  tokenOut?: Currency
 }
 
-export default function FusionPrice({
-  fusionSwap,
-  showInverted,
-  setShowInverted,
-  tokenIn,
-  tokenOut
-}: FusionPriceProps) {
+export default function FusionPrice({ fusionSwap, showInverted, setShowInverted }: FusionPriceProps) {
   const theme = useContext(ThemeContext)
 
   const formattedPrice = () => {
-    if (fusionSwap && fusionSwap.result && fusionSwap.parsedAmount) {
+    if (
+      fusionSwap &&
+      fusionSwap?.result &&
+      fusionSwap?.parsedAmount &&
+      fusionSwap?.currencies?.INPUT &&
+      fusionSwap?.currencies?.OUTPUT
+    ) {
       try {
         return showInverted
           ? new Price(
-              fusionSwap.result.currency,
-              fusionSwap.parsedAmount.currency,
-              fusionSwap.result.raw,
+              fusionSwap.currencies?.OUTPUT,
+              fusionSwap.currencies?.INPUT,
+              fusionSwap.result.route?.amountOutBN ?? '0',
               fusionSwap.parsedAmount.raw
             )
               .invert()
               .toSignificant(6)
           : new Price(
-              fusionSwap.result.currency,
-              fusionSwap.parsedAmount.currency,
-              fusionSwap.result.raw,
+              fusionSwap.currencies?.OUTPUT,
+              fusionSwap.currencies?.INPUT,
+              fusionSwap.result.route?.amountOutBN ?? '0',
               fusionSwap.parsedAmount.raw
             ).toSignificant(6)
       } catch (err) {
@@ -48,8 +47,8 @@ export default function FusionPrice({
   }
 
   const label = showInverted
-    ? `${tokenOut?.symbol} per ${tokenIn?.symbol}`
-    : `${tokenIn?.symbol} per ${tokenOut?.symbol}`
+    ? `${fusionSwap.currencies?.OUTPUT?.symbol} per ${fusionSwap.currencies?.INPUT?.symbol}`
+    : `${fusionSwap.currencies?.INPUT?.symbol} per ${fusionSwap.currencies?.OUTPUT?.symbol}`
 
   return (
     <Text
@@ -61,7 +60,7 @@ export default function FusionPrice({
       {fusionSwap && fusionSwap.parsedAmount && fusionSwap.result ? (
         <>
           <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'end' }}>
-            <div>{formattedPrice() ?? '-'}</div> <div>{label}</div>
+            <div>{formattedPrice() ?? '-'}</div>&nbsp;<div>{label}</div>
           </div>
           <StyledBalanceMaxMini onClick={() => setShowInverted(!showInverted)}>
             <Repeat size={14} />

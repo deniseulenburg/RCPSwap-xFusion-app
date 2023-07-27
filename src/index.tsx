@@ -4,6 +4,7 @@ import React, { StrictMode } from 'react'
 import { isMobile } from 'react-device-detect'
 import ReactDOM from 'react-dom'
 import ReactGA from 'react-ga'
+import { QueryClientProvider, QueryClient } from '@tanstack/react-query'
 import { Provider } from 'react-redux'
 import { HashRouter } from 'react-router-dom'
 import Blocklist from './components/Blocklist'
@@ -43,6 +44,8 @@ window.addEventListener('error', error => {
   })
 })
 
+const queryClient = new QueryClient({ defaultOptions: { queries: { cacheTime: 1000 * 60 * 60 * 24 } } })
+
 function Updaters() {
   return (
     <>
@@ -60,17 +63,19 @@ ReactDOM.render(
     <FixedGlobalStyle />
     <Web3ReactProvider getLibrary={getLibrary}>
       <Web3ProviderNetwork getLibrary={getLibrary}>
-        <Blocklist>
-          <Provider store={store}>
-            <Updaters />
-            <ThemeProvider>
-              <ThemedGlobalStyle />
-              <HashRouter>
-                <App />
-              </HashRouter>
-            </ThemeProvider>
-          </Provider>
-        </Blocklist>
+        <QueryClientProvider client={queryClient}>
+          <Blocklist>
+            <Provider store={store}>
+              <Updaters />
+              <ThemeProvider>
+                <ThemedGlobalStyle />
+                <HashRouter>
+                  <App />
+                </HashRouter>
+              </ThemeProvider>
+            </Provider>
+          </Blocklist>
+        </QueryClientProvider>
       </Web3ProviderNetwork>
     </Web3ReactProvider>
   </StrictMode>,

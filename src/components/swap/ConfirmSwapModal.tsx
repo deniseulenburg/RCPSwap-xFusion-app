@@ -1,4 +1,4 @@
-import { currencyEquals, Trade } from '@venomswap/sdk'
+import { currencyEquals, Token, TokenAmount, Trade } from '@venomswap/sdk'
 import React, { useCallback, useMemo } from 'react'
 import TransactionConfirmationModal, {
   ConfirmationModalContent,
@@ -9,6 +9,7 @@ import SwapModalHeader from './SwapModalHeader'
 
 import useBlockchain from '../../hooks/useBlockchain'
 import getBlockchainAdjustedCurrency from '../../utils/getBlockchainAdjustedCurrency'
+import { XFusionSwapType } from 'state/swap/hooks'
 
 /**
  * Returns true if the trade requires a confirmation of details before we can submit it
@@ -53,7 +54,7 @@ export default function ConfirmSwapModal({
   swapErrorMessage: string | undefined
   onDismiss: () => void
   swapMode: number
-  fusionSwap: any
+  fusionSwap: XFusionSwapType
   outPrice: number
 }) {
   const blockchain = useBlockchain()
@@ -102,11 +103,18 @@ export default function ConfirmSwapModal({
   )
 
   // text to show while loading
-  const pendingText = `Swapping ${trade?.inputAmount?.toSignificant(6) ?? fusionSwap?.amountIn?.toSignificant(6)} ${
+  const pendingText = `Swapping ${trade?.inputAmount?.toSignificant(6) ?? fusionSwap.parsedAmount?.toSignificant(6)} ${
     adjustedInputCurrency?.symbol
-  } for ${swapMode === 0 ? trade?.outputAmount?.toSignificant(6) : fusionSwap?.result?.toSignificant(6)} ${
-    adjustedOutputCurrency?.symbol
-  }`
+  } for ${
+    swapMode === 0
+      ? trade?.outputAmount?.toSignificant(6)
+      : fusionSwap.currencies?.OUTPUT
+      ? new TokenAmount(
+          fusionSwap.currencies?.OUTPUT as Token,
+          fusionSwap?.result.route?.amountOutBN ?? '0'
+        ).toSignificant(6)
+      : '0'
+  } ${adjustedOutputCurrency?.symbol}`
 
   const confirmationContent = useCallback(() => {
     return swapErrorMessage ? (

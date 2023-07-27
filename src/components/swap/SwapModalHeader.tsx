@@ -1,4 +1,4 @@
-import { Token, TokenAmount, Trade, TradeType } from '@venomswap/sdk'
+import { CurrencyAmount, Token, TokenAmount, Trade, TradeType } from '@venomswap/sdk'
 import React, { useContext, useMemo } from 'react'
 import { ArrowDown, AlertTriangle } from 'react-feather'
 import { Text } from 'rebass'
@@ -15,6 +15,7 @@ import { TruncatedText, SwapShowAcceptChanges } from './styleds'
 
 import useBlockchain from '../../hooks/useBlockchain'
 import getBlockchainAdjustedCurrency from '../../utils/getBlockchainAdjustedCurrency'
+import { XFusionSwapType } from 'state/swap/hooks'
 
 export default function SwapModalHeader({
   trade,
@@ -27,7 +28,7 @@ export default function SwapModalHeader({
 }: {
   trade: Trade | undefined
   swapMode: number
-  fusionSwap: any
+  fusionSwap: XFusionSwapType
   allowedSlippage: number
   recipient: string | null
   showAcceptChanges: boolean
@@ -88,7 +89,14 @@ export default function SwapModalHeader({
                 : ''
             }
           >
-            {swapMode === 0 ? trade?.outputAmount.toSignificant(6) : fusionSwap?.result?.toSignificant(6)}
+            {swapMode === 0
+              ? trade?.outputAmount.toSignificant(6)
+              : fusionSwap.currencies?.OUTPUT
+              ? new TokenAmount(
+                  fusionSwap.currencies?.OUTPUT as Token,
+                  fusionSwap?.result.route?.amountOutBN ?? '0'
+                ).toSignificant(6)
+              : '0'}
           </TruncatedText>
         </RowFixed>
         <RowFixed gap={'0px'}>
@@ -97,7 +105,7 @@ export default function SwapModalHeader({
           </Text>
         </RowFixed>
       </RowBetween>
-      {showAcceptChanges ? (
+      {showAcceptChanges && swapMode === 0 ? (
         <SwapShowAcceptChanges justify="flex-start" gap={'0px'}>
           <RowBetween>
             <RowFixed>
@@ -121,10 +129,18 @@ export default function SwapModalHeader({
               {swapMode === 0
                 ? slippageAdjustedAmounts[Field.OUTPUT]?.toSignificant(6)
                 : fusionSwap.result
-                ? new TokenAmount(
-                    fusionSwap.result.currency as Token,
-                    calculateSlippageAmount(fusionSwap.result, allowedSlippage)[0]
-                  ).toSignificant(6)
+                ? fusionSwap.currencies?.OUTPUT
+                  ? new TokenAmount(
+                      fusionSwap.currencies?.OUTPUT as Token,
+                      calculateSlippageAmount(
+                        new TokenAmount(
+                          fusionSwap.currencies?.OUTPUT as Token,
+                          fusionSwap.result.route?.amountOutBN ?? '0'
+                        ),
+                        allowedSlippage
+                      )[0]
+                    ).toSignificant(6)
+                  : '0'
                 : '0'}
               {tradeOutputCurrency?.symbol}
             </b>

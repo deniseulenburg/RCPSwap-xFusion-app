@@ -3,6 +3,7 @@ import { CurrencyAmount, Fraction, JSBI, Percent, TokenAmount, Trade, Currency, 
 import { ALLOWED_PRICE_IMPACT_HIGH, ALLOWED_PRICE_IMPACT_LOW, ALLOWED_PRICE_IMPACT_MEDIUM } from '../constants'
 import { Field } from '../state/swap/actions'
 import { basisPointsToPercent } from './index'
+import { XFusionSwapType } from 'state/swap/hooks'
 
 const BASE_FEE = new Percent(JSBI.BigInt(30), JSBI.BigInt(10000))
 const ONE_HUNDRED_PERCENT = new Percent(JSBI.BigInt(10000), JSBI.BigInt(10000))
@@ -77,7 +78,7 @@ export function formatExecutionPrice(trade?: Trade, inverted?: boolean): string 
 
 export function formatBlockchainAdjustedExecutionPrice(
   swapMode: number,
-  fusionSwap?: any,
+  fusionSwap?: XFusionSwapType,
   trade?: Trade,
   tradeInputCurrency?: Currency | undefined,
   tradeOutputCurrency?: Currency | undefined,
@@ -91,12 +92,12 @@ export function formatBlockchainAdjustedExecutionPrice(
       ? `${
           swapMode === 0
             ? trade?.executionPrice.invert().toSignificant(6)
-            : fusionSwap.parsedAmount && fusionSwap.result
+            : fusionSwap?.result.route && fusionSwap.parsedAmount && fusionSwap.result && fusionSwap.currencies?.OUTPUT
             ? new Price(
                 fusionSwap.parsedAmount.currency,
-                fusionSwap.result.currency,
+                fusionSwap.currencies?.OUTPUT,
                 fusionSwap.parsedAmount.raw,
-                fusionSwap.result.raw
+                fusionSwap.result.route.amountOutBN ?? '0'
               )
                 .invert()
                 .toSignificant(6)
@@ -105,12 +106,12 @@ export function formatBlockchainAdjustedExecutionPrice(
       : `${
           swapMode === 0
             ? trade?.executionPrice.toSignificant(6)
-            : fusionSwap.parsedAmount && fusionSwap.result
+            : fusionSwap?.result.route && fusionSwap.parsedAmount && fusionSwap.result && fusionSwap.currencies?.OUTPUT
             ? new Price(
                 fusionSwap.parsedAmount.currency,
-                fusionSwap.result.currency,
+                fusionSwap.currencies?.OUTPUT,
                 fusionSwap.parsedAmount.raw,
-                fusionSwap.result.raw
+                fusionSwap.result.route.amountOutBN ?? '0'
               ).toSignificant(6)
             : ''
         } ${tradeOutputCurrency.symbol} / ${tradeInputCurrency.symbol}`

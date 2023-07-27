@@ -4,7 +4,8 @@ import { CoinSVG } from 'components/svgs'
 import React, { useContext } from 'react'
 import styled, { ThemeContext } from 'styled-components'
 import { Text } from 'rebass'
-import { EXTERNAL_DEX_ADDRESSES } from 'constants/index'
+import { XFusionSwapType } from 'state/swap/hooks'
+import { Token, TokenAmount, Trade } from '@venomswap/sdk'
 
 const AdvancedDetailsFooter = styled.div<{ show: boolean }>`
   padding-top: 16px;
@@ -30,12 +31,26 @@ const DexLogo = styled.img`
   margin: 1px 6px 0;
 `
 
-export default function AdvancedFusionDetailsDropdown({ swap, price }: { swap: any; price: number }) {
+export default function AdvancedFusionDetailsDropdown({
+  swap,
+  trade,
+  price
+}: {
+  swap: XFusionSwapType
+  trade: Trade | undefined
+  price: number
+}) {
   const theme = useContext(ThemeContext)
 
-  return swap.fee ? (
-    <AdvancedDetailsFooter show={Boolean(swap)}>
-      {swap && swap.result && swap.routes && swap.bestTrade && swap.bestTrade.trade && (
+  const fee =
+    !swap?.result?.route?.legs
+      ?.map(item => item.poolName[0])
+      ?.filter(item => item !== 'W' && item !== 'U')
+      ?.every((cur, _, a) => cur === a[0]) ?? false
+
+  return fee ? (
+    <AdvancedDetailsFooter show={Boolean(swap && swap?.result && swap?.result?.route)}>
+      {swap && swap?.result && swap.result?.route && swap.result.route?.amountOut && (
         <AutoColumn style={{ padding: '0 30px' }}>
           <Row>
             <RowFixed style={{ padding: '10px', borderRadius: '50%', background: theme.bg3 }}>
@@ -46,7 +61,12 @@ export default function AdvancedFusionDetailsDropdown({ swap, price }: { swap: a
                 <Text fontSize={15} color={theme.green1} fontWeight={600}>
                   {(
                     Math.max(
-                      parseFloat(swap.result.toExact()) - parseFloat(swap.bestTrade.trade.outputAmount.toExact()),
+                      parseFloat(
+                        new TokenAmount(
+                          swap.currencies?.OUTPUT as Token,
+                          swap.result.route.amountOutBN ?? '0'
+                        ).toExact()
+                      ) - parseFloat(trade?.outputAmount.toExact() ?? '0'),
                       0
                     ) * (price === 0 ? 1 : price)
                   ).toFixed(3) +
@@ -62,15 +82,9 @@ export default function AdvancedFusionDetailsDropdown({ swap, price }: { swap: a
                   Compared to
                 </Text>
                 {/* eslint-disable */}
-                <DexLogo
-                  src={
-                    require(`../../assets/dex/${EXTERNAL_DEX_ADDRESSES[
-                      swap.bestTrade?.id ?? 0
-                    ].name.toLowerCase()}.png`).default
-                  }
-                ></DexLogo>
+                <DexLogo src={require(`../../assets/dex/rcpswap.png`).default}></DexLogo>
                 <Text fontSize={14} color={theme.text2}>
-                  {EXTERNAL_DEX_ADDRESSES[swap.bestTrade?.id ?? 0].name}.
+                  RCPSwap.
                 </Text>
               </RowFixed>
             </AutoColumn>

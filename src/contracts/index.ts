@@ -1,11 +1,11 @@
 export const FUSION_CONTRACT = {
-  address: '0xD94Ff233edf3f569842a3ef9763ED3e732055FAA',
+  address: '0x7d1F37dD0a80F513b4456F0DfeFddFB85f4377a6',
   abi: [
     {
       inputs: [
-        { internalType: 'address', name: '_weth', type: 'address' },
-        { internalType: 'address', name: '_feeAddress', type: 'address' },
-        { internalType: 'uint256', name: '_fee', type: 'uint256' }
+        { internalType: 'uint256', name: '_fee', type: 'uint256' },
+        { internalType: 'address', name: '_feeWallet', type: 'address' },
+        { internalType: 'address[]', name: 'priviledgedUserList', type: 'address[]' }
       ],
       stateMutability: 'nonpayable',
       type: 'constructor'
@@ -20,11 +20,18 @@ export const FUSION_CONTRACT = {
       type: 'event'
     },
     {
-      inputs: [],
-      name: 'WETH',
-      outputs: [{ internalType: 'address', name: '', type: 'address' }],
-      stateMutability: 'view',
-      type: 'function'
+      anonymous: false,
+      inputs: [
+        { indexed: true, internalType: 'address', name: 'from', type: 'address' },
+        { indexed: false, internalType: 'address', name: 'to', type: 'address' },
+        { indexed: true, internalType: 'address', name: 'tokenIn', type: 'address' },
+        { indexed: true, internalType: 'address', name: 'tokenOut', type: 'address' },
+        { indexed: false, internalType: 'uint256', name: 'amountIn', type: 'uint256' },
+        { indexed: false, internalType: 'uint256', name: 'amountOutMin', type: 'uint256' },
+        { indexed: false, internalType: 'uint256', name: 'amountOut', type: 'uint256' }
+      ],
+      name: 'Route',
+      type: 'event'
     },
     {
       inputs: [],
@@ -35,7 +42,7 @@ export const FUSION_CONTRACT = {
     },
     {
       inputs: [],
-      name: 'feeAddress',
+      name: 'feeWallet',
       outputs: [{ internalType: 'address', name: '', type: 'address' }],
       stateMutability: 'view',
       type: 'function'
@@ -47,7 +54,34 @@ export const FUSION_CONTRACT = {
       stateMutability: 'view',
       type: 'function'
     },
+    { inputs: [], name: 'pause', outputs: [], stateMutability: 'nonpayable', type: 'function' },
+    {
+      inputs: [
+        { internalType: 'address', name: 'tokenIn', type: 'address' },
+        { internalType: 'uint256', name: 'amountIn', type: 'uint256' },
+        { internalType: 'address', name: 'tokenOut', type: 'address' },
+        { internalType: 'uint256', name: 'amountOutMin', type: 'uint256' },
+        { internalType: 'address', name: 'to', type: 'address' },
+        { internalType: 'bytes', name: 'route', type: 'bytes' },
+        {
+          components: [
+            { internalType: 'uint256', name: 'amount', type: 'uint256' },
+            { internalType: 'address[]', name: 'path', type: 'address[]' },
+            { internalType: 'address', name: 'router', type: 'address' }
+          ],
+          internalType: 'struct RouteProcessor.SwapInfo',
+          name: 'bestTrade',
+          type: 'tuple'
+        },
+        { internalType: 'bool', name: 'isFee', type: 'bool' }
+      ],
+      name: 'processRoute',
+      outputs: [{ internalType: 'uint256', name: 'amountOut', type: 'uint256' }],
+      stateMutability: 'payable',
+      type: 'function'
+    },
     { inputs: [], name: 'renounceOwnership', outputs: [], stateMutability: 'nonpayable', type: 'function' },
+    { inputs: [], name: 'resume', outputs: [], stateMutability: 'nonpayable', type: 'function' },
     {
       inputs: [{ internalType: 'uint256', name: '_fee', type: 'uint256' }],
       name: 'setFee',
@@ -56,104 +90,11 @@ export const FUSION_CONTRACT = {
       type: 'function'
     },
     {
-      inputs: [{ internalType: 'address', name: '_feeAddress', type: 'address' }],
-      name: 'setFeeAddress',
-      outputs: [],
-      stateMutability: 'nonpayable',
-      type: 'function'
-    },
-    {
       inputs: [
-        { internalType: 'address', name: 'tokenOut', type: 'address' },
-        {
-          components: [
-            { internalType: 'uint256', name: 'amount', type: 'uint256' },
-            { internalType: 'address[]', name: 'path', type: 'address[]' },
-            { internalType: 'address', name: 'router', type: 'address' }
-          ],
-          internalType: 'struct FusionSwap.SwapInfo[]',
-          name: 'swapInfo',
-          type: 'tuple[]'
-        },
-        { internalType: 'uint256', name: 'amountOutMin', type: 'uint256' },
-        {
-          components: [
-            { internalType: 'uint256', name: 'amount', type: 'uint256' },
-            { internalType: 'address[]', name: 'path', type: 'address[]' },
-            { internalType: 'address', name: 'router', type: 'address' }
-          ],
-          internalType: 'struct FusionSwap.SwapInfo',
-          name: 'bestSwapInfo',
-          type: 'tuple'
-        },
-        { internalType: 'bool', name: 'isFee', type: 'bool' }
+        { internalType: 'address', name: 'user', type: 'address' },
+        { internalType: 'bool', name: 'priviledge', type: 'bool' }
       ],
-      name: 'swapExactETHForTokens',
-      outputs: [],
-      stateMutability: 'payable',
-      type: 'function'
-    },
-    {
-      inputs: [
-        { internalType: 'address', name: 'tokenIn', type: 'address' },
-        {
-          components: [
-            { internalType: 'uint256', name: 'amount', type: 'uint256' },
-            { internalType: 'address[]', name: 'path', type: 'address[]' },
-            { internalType: 'address', name: 'router', type: 'address' }
-          ],
-          internalType: 'struct FusionSwap.SwapInfo[]',
-          name: 'swapInfo',
-          type: 'tuple[]'
-        },
-        { internalType: 'uint256', name: 'amountIn', type: 'uint256' },
-        { internalType: 'uint256', name: 'amountOutMin', type: 'uint256' },
-        {
-          components: [
-            { internalType: 'uint256', name: 'amount', type: 'uint256' },
-            { internalType: 'address[]', name: 'path', type: 'address[]' },
-            { internalType: 'address', name: 'router', type: 'address' }
-          ],
-          internalType: 'struct FusionSwap.SwapInfo',
-          name: 'bestSwapInfo',
-          type: 'tuple'
-        },
-        { internalType: 'bool', name: 'isFee', type: 'bool' }
-      ],
-      name: 'swapExactTokensForETH',
-      outputs: [],
-      stateMutability: 'nonpayable',
-      type: 'function'
-    },
-    {
-      inputs: [
-        { internalType: 'address', name: 'tokenIn', type: 'address' },
-        { internalType: 'address', name: 'tokenOut', type: 'address' },
-        {
-          components: [
-            { internalType: 'uint256', name: 'amount', type: 'uint256' },
-            { internalType: 'address[]', name: 'path', type: 'address[]' },
-            { internalType: 'address', name: 'router', type: 'address' }
-          ],
-          internalType: 'struct FusionSwap.SwapInfo[]',
-          name: 'swapInfo',
-          type: 'tuple[]'
-        },
-        { internalType: 'uint256', name: 'amountIn', type: 'uint256' },
-        { internalType: 'uint256', name: 'amountOutMin', type: 'uint256' },
-        {
-          components: [
-            { internalType: 'uint256', name: 'amount', type: 'uint256' },
-            { internalType: 'address[]', name: 'path', type: 'address[]' },
-            { internalType: 'address', name: 'router', type: 'address' }
-          ],
-          internalType: 'struct FusionSwap.SwapInfo',
-          name: 'bestSwapInfo',
-          type: 'tuple'
-        },
-        { internalType: 'bool', name: 'isFee', type: 'bool' }
-      ],
-      name: 'swapExactTokensForTokens',
+      name: 'setPriviledge',
       outputs: [],
       stateMutability: 'nonpayable',
       type: 'function'
@@ -167,10 +108,38 @@ export const FUSION_CONTRACT = {
     },
     {
       inputs: [
-        { internalType: 'address', name: 'token', type: 'address' },
-        { internalType: 'uint256', name: 'amount', type: 'uint256' }
+        { internalType: 'address payable', name: 'transferValueTo', type: 'address' },
+        { internalType: 'uint256', name: 'amountValueTransfer', type: 'uint256' },
+        { internalType: 'address', name: 'tokenIn', type: 'address' },
+        { internalType: 'uint256', name: 'amountIn', type: 'uint256' },
+        { internalType: 'address', name: 'tokenOut', type: 'address' },
+        { internalType: 'uint256', name: 'amountOutMin', type: 'uint256' },
+        { internalType: 'address', name: 'to', type: 'address' },
+        { internalType: 'bytes', name: 'route', type: 'bytes' },
+        {
+          components: [
+            { internalType: 'uint256', name: 'amount', type: 'uint256' },
+            { internalType: 'address[]', name: 'path', type: 'address[]' },
+            { internalType: 'address', name: 'router', type: 'address' }
+          ],
+          internalType: 'struct RouteProcessor.SwapInfo',
+          name: 'bestTrade',
+          type: 'tuple'
+        },
+        { internalType: 'bool', name: 'isFee', type: 'bool' }
       ],
-      name: 'withdraw',
+      name: 'transferValueAndprocessRoute',
+      outputs: [{ internalType: 'uint256', name: 'amountOut', type: 'uint256' }],
+      stateMutability: 'payable',
+      type: 'function'
+    },
+    {
+      inputs: [
+        { internalType: 'int256', name: 'amount0Delta', type: 'int256' },
+        { internalType: 'int256', name: 'amount1Delta', type: 'int256' },
+        { internalType: 'bytes', name: 'data', type: 'bytes' }
+      ],
+      name: 'uniswapV3SwapCallback',
       outputs: [],
       stateMutability: 'nonpayable',
       type: 'function'

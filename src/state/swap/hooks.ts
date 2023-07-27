@@ -1,6 +1,7 @@
 import useENS from '../../hooks/useENS'
 import { Version } from '../../hooks/useToggledVersion'
 import { parseUnits } from '@ethersproject/units'
+import { useQuery } from '@tanstack/react-query'
 import { Currency, CurrencyAmount, JSBI, Token, TokenAmount, Trade, DEFAULT_CURRENCIES, Fraction } from '@venomswap/sdk'
 import { ParsedQs } from 'qs'
 import { useCallback, useEffect, useState } from 'react'
@@ -30,10 +31,7 @@ import { computeSlippageAdjustedAmounts } from '../../utils/prices'
 import { BASE_CURRENCY } from '../../connectors'
 import useBlockchain from '../../hooks/useBlockchain'
 import getBlockchainAdjustedCurrency from '../../utils/getBlockchainAdjustedCurrency'
-
-import { useAllDexCommonPairs, useBestDexTrade, useXFusionDex } from 'hooks/useXFusionDex'
-import { EXTERNAL_DEX_ADDRESSES } from 'constants/index'
-import { wrappedCurrency } from 'utils/wrappedCurrency'
+import axios from 'axios'
 
 export function useSwapState(): AppState['swap'] {
   return useSelector<AppState, AppState['swap']>(state => state.swap)
@@ -341,11 +339,74 @@ export function useDefaultsFromURLSearch():
   return result
 }
 
-export function useXFusionSwap() {
-  const { chainId } = useActiveWeb3React()
+export type XFusionToken = {
+  chainId: number
+  decimals: number
+  symbol: string
+  name: string
+  isNative?: boolean
+  isToken?: boolean
+  id?: string
+  address?: string
+  tokenId: string
+}
+
+export type RouteLeg = {
+  poolType: string
+  poolAddress: string
+  poolFee: number
+
+  tokenFrom: XFusionToken
+  tokenTo: XFusionToken
+  assumedAmountIn: number
+  assumedAmountOut: number
+
+  swapPortion: number
+  absolutePortion: number
+  poolName: string
+}
+
+export type RouteArgsParams = {
+  tokenIn: string
+  amountIn: string
+  tokenOut: string
+  amountOutMin: string
+  to: string
+  routeCode: string
+  value?: string
+}
+
+export type XFusionSwapType = {
+  error: boolean
+  currencies?: { [field in Field]?: Currency }
+  parsedAmount?: CurrencyAmount
+  result: {
+    route?: {
+      status?: string
+      fromToken?: XFusionToken
+      toToken?: XFusionToken
+      primaryPrice?: number
+      swapPrice?: number
+      amountIn?: number
+      amountInBN?: string
+      amountOut?: number
+      amountOutBN?: string
+      priceImpact?: number
+      totalAmountOut?: number
+      totalAmountOutBN?: string
+      gasSpent?: number
+      legs?: RouteLeg[]
+    }
+    args?: RouteArgsParams
+  }
+}
+
+export function useXFusionSwap(): XFusionSwapType {
+  const { account } = useActiveWeb3React()
 
   const {
     typedValue,
+    swapMode,
     [Field.INPUT]: { currencyId: inputCurrencyId },
     [Field.OUTPUT]: { currencyId: outputCurrencyId }
   } = useSwapState()
@@ -353,55 +414,45 @@ export function useXFusionSwap() {
   const inputCurrency = useCurrency(inputCurrencyId)
   const outputCurrency = useCurrency(outputCurrencyId)
 
-  const pairs = useAllDexCommonPairs(inputCurrency ?? undefined, outputCurrency ?? undefined)
-
   const parsedAmount = tryParseAmount(typedValue, inputCurrency ?? undefined)
-
-  const bestTrade = useBestDexTrade(parsedAmount, outputCurrency ?? undefined, pairs)
 
   const currencies: { [field in Field]?: Currency } = {
     [Field.INPUT]: inputCurrency ?? undefined,
     [Field.OUTPUT]: outputCurrency ?? undefined
   }
 
-  const { result, routes } = useXFusionDex(inputCurrency ?? undefined, outputCurrency ?? undefined, parsedAmount, pairs)
-
-  if (bestTrade && bestTrade.trade && result && routes) {
-    if (!bestTrade.trade.outputAmount.lessThan(result)) {
-      return {
-        swap: {
-          currencies,
-          parsedAmount,
-          result: new TokenAmount(
-            wrappedCurrency(outputCurrency ?? undefined, chainId) ?? (bestTrade.trade.outputAmount.currency as Token),
-            bestTrade.trade.outputAmount.raw
-          ),
-          routes: [
-            {
-              dex: {
-                name: EXTERNAL_DEX_ADDRESSES[bestTrade.id].name,
-                factory: EXTERNAL_DEX_ADDRESSES[bestTrade.id].factory,
-                router: EXTERNAL_DEX_ADDRESSES[bestTrade.id].router
-              },
-              path: bestTrade.trade.route.path.map(path => path.address),
-              amount: parsedAmount as TokenAmount
+  const { isError, data } = useQuery({
+    queryKey: ['xFusion', inputCurrencyId, outputCurrencyId, typedValue, swapMode],
+    queryFn: async () => {
+      try {
+        if (inputCurrencyId && outputCurrencyId && typedValue && swapMode === 1) {
+          const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/swap`, {
+            params: {
+              fromTokenId: inputCurrencyId,
+              toTokenId: outputCurrencyId,
+              amount: parsedAmount?.raw.toString() ?? '0',
+              gasPrice: 30e9,
+              to: account
             }
-          ],
-          bestTrade,
-          fee: false
+          })
+
+          return res.data
+        } else {
+          return {}
         }
+      } catch (err) {
+        throw new Error('Failed to fetch xFusion router')
       }
-    }
-  }
+    },
+    initialData: {},
+    refetchInterval: 10000,
+    retry: false
+  })
 
   return {
-    swap: {
-      currencies,
-      parsedAmount,
-      result,
-      routes,
-      bestTrade,
-      fee: true
-    }
+    error: isError,
+    currencies,
+    parsedAmount,
+    result: data ?? {}
   }
 }

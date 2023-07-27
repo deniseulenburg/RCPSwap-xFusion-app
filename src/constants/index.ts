@@ -408,25 +408,3 @@ export const BASES_TO_CHECK_FUSION_TRADES: ChainTokenList = {
   [ChainId.MAINNET]: [...WETH_ONLY[ChainId.MAINNET], DAI, USDC, USDT, COMP, MKR, WBTC[ChainId.MAINNET]],
   [ChainId.HARMONY_MAINNET]: [...WETH_ONLY[ChainId.HARMONY_MAINNET], DAI, USDT, USDC]
 }
-
-// external DEXs for xFusion swap
-export const EXTERNAL_DEX_ADDRESSES: DexInfo[] = [
-  {
-    name: 'SushiSwap',
-    factory: '0xc35DADB65012eC5796536bD9864eD8773aBc74C4',
-    router: '0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506',
-    initCode: '0xe18a34eb0e04b04f7a0ac29a6e80748dca96319b42c54d679cb821dca90c6303'
-  },
-  {
-    name: 'ArbSwap',
-    factory: '0xf6239423FcF1c19ED2791D9648A90836074242Fd',
-    router: '0xEe01c0CD76354C383B8c7B4e65EA88D00B06f36f',
-    initCode: '0x70b19cf85a176c6b86e2d324be179104bdc8fafee13d548ae07d28b9f53cbc71'
-  },
-  {
-    name: 'RCPSwap',
-    factory: '0xF9901551B4fDb1FE8d5617B5deB6074Bb8E1F6FB',
-    router: '0x28e0f3ebab59a998C4f1019358388B5E2ca92cfA',
-    initCode: '0x8455b0f8e468580a0ae3f8afe8b676f72e1a9d93425122526501153d3647ea6f'
-  }
-]

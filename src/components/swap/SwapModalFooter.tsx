@@ -1,4 +1,4 @@
-import { Currency, Token, Trade, TradeType } from '@venomswap/sdk'
+import { Currency, Token, TokenAmount, Trade, TradeType } from '@venomswap/sdk'
 import React, { useContext, useEffect, useMemo, useState } from 'react'
 import { Repeat, Type } from 'react-feather'
 import { Text } from 'rebass'
@@ -19,7 +19,7 @@ import FormattedPriceImpact from './FormattedPriceImpact'
 import { StyledBalanceMaxMini, SwapCallbackError } from './styleds'
 import useBlockchain from '../../hooks/useBlockchain'
 import getBlockchainAdjustedCurrency from '../../utils/getBlockchainAdjustedCurrency'
-import { EXTERNAL_DEX_ADDRESSES } from 'constants/index'
+import { XFusionSwapType } from 'state/swap/hooks'
 
 export default function SwapModalFooter({
   trade,
@@ -33,7 +33,7 @@ export default function SwapModalFooter({
 }: {
   trade: Trade | undefined
   swapMode: number
-  fusionSwap: any
+  fusionSwap: XFusionSwapType
   allowedSlippage: number
   onConfirm: () => void
   swapErrorMessage: string | undefined
@@ -59,6 +59,12 @@ export default function SwapModalFooter({
     blockchain,
     trade?.outputAmount.currency ?? fusionSwap?.currencies?.OUTPUT
   )
+
+  const fee =
+    !fusionSwap?.result?.route?.legs
+      ?.map(item => item.poolName[0])
+      ?.filter(item => item !== 'W' && item !== 'U')
+      ?.every((cur, _, a) => cur === a[0]) ?? false
 
   return (
     <>
@@ -128,45 +134,40 @@ export default function SwapModalFooter({
             <FormattedPriceImpact priceImpact={priceImpactWithoutFee} />
           </RowBetween>
         )}
-        {swapMode === 1 &&
-          fusionSwap.fee &&
-          fusionSwap.result &&
-          fusionSwap.routes &&
-          fusionSwap.bestTrade &&
-          fusionSwap.bestTrade.trade && (
-            <RowBetween>
-              <RowFixed>
-                <TYPE.black color={theme.text2} fontSize={14} fontWeight={400}>
-                  {EXTERNAL_DEX_ADDRESSES[fusionSwap.bestTrade.id ?? 0].name} Price
-                </TYPE.black>
-                <QuestionHelper text="The best price found on any Dexes on Nova." />
-              </RowFixed>
-              <Text
-                fontWeight={500}
-                fontSize={14}
-                color={theme.text1}
-                style={{
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  display: 'flex',
-                  textAlign: 'right',
-                  paddingLeft: '10px'
-                }}
-              >
-                {formatBlockchainAdjustedExecutionPrice(
-                  0,
-                  null,
-                  fusionSwap.bestTrade.trade,
-                  tradeInputCurrency,
-                  tradeOutputCurrency,
-                  showInverted
-                )}
-                <StyledBalanceMaxMini onClick={() => setShowInverted(!showInverted)}>
-                  <Repeat size={14} />
-                </StyledBalanceMaxMini>
-              </Text>
-            </RowBetween>
-          )}
+        {swapMode === 1 && fee && fusionSwap.result.route && (
+          <RowBetween>
+            <RowFixed>
+              <TYPE.black color={theme.text2} fontSize={14} fontWeight={400}>
+                RCPSwap Price
+              </TYPE.black>
+              <QuestionHelper text="The best price found on any Dexes on Nova." />
+            </RowFixed>
+            <Text
+              fontWeight={500}
+              fontSize={14}
+              color={theme.text1}
+              style={{
+                justifyContent: 'center',
+                alignItems: 'center',
+                display: 'flex',
+                textAlign: 'right',
+                paddingLeft: '10px'
+              }}
+            >
+              {formatBlockchainAdjustedExecutionPrice(
+                0,
+                undefined,
+                trade,
+                tradeInputCurrency,
+                tradeOutputCurrency,
+                showInverted
+              )}
+              <StyledBalanceMaxMini onClick={() => setShowInverted(!showInverted)}>
+                <Repeat size={14} />
+              </StyledBalanceMaxMini>
+            </Text>
+          </RowBetween>
+        )}
         {swapMode === 0 && (
           <RowBetween>
             <RowFixed>
@@ -182,32 +183,31 @@ export default function SwapModalFooter({
             </TYPE.black>
           </RowBetween>
         )}
-        {swapMode === 1 &&
-          fusionSwap.fee &&
-          fusionSwap.result &&
-          fusionSwap.routes &&
-          fusionSwap.bestTrade &&
-          fusionSwap.bestTrade.trade && (
-            <RowBetween>
-              <RowFixed>
-                <Text fontSize={14} fontWeight={400} color={theme.green1}>
-                  Saving
-                </Text>
-                <QuestionHelper text={`Saving compared with the best price found on any DEX on Nova.`} />
-              </RowFixed>
-              <TYPE.black fontSize={14}>
-                {(
-                  Math.max(
-                    parseFloat(fusionSwap.result.toExact()) -
-                      parseFloat(fusionSwap.bestTrade.trade.executionPrice.toFixed()),
-                    0
-                  ) * (outPrice === 0 ? 1 : outPrice)
-                ).toFixed(6) +
-                  ' ' +
-                  (outPrice === 0 ? tradeOutputCurrency?.symbol : '$')}
-              </TYPE.black>
-            </RowBetween>
-          )}
+        {swapMode === 1 && fee && fusionSwap.result.route && (
+          <RowBetween>
+            <RowFixed>
+              <Text fontSize={14} fontWeight={400} color={theme.green1}>
+                Saving
+              </Text>
+              <QuestionHelper text={`Saving compared with the best price found on any DEX on Nova.`} />
+            </RowFixed>
+            <TYPE.black fontSize={14}>
+              {(
+                Math.max(
+                  parseFloat(
+                    new TokenAmount(
+                      fusionSwap.currencies?.OUTPUT as Token,
+                      fusionSwap.result.route.amountOutBN ?? '0'
+                    ).toExact()
+                  ) - parseFloat(trade?.executionPrice.toFixed() ?? '0'),
+                  0
+                ) * (outPrice === 0 ? 1 : outPrice)
+              ).toFixed(6) +
+                ' ' +
+                (outPrice === 0 ? tradeOutputCurrency?.symbol : '$')}
+            </TYPE.black>
+          </RowBetween>
+        )}
       </AutoColumn>
 
       <AutoRow>
@@ -219,7 +219,7 @@ export default function SwapModalFooter({
           id="confirm-swap-or-send"
         >
           <Text fontSize={20} fontWeight={500}>
-            {severity > 2 ? 'Swap Anyway' : 'Confirm Swap'}
+            {severity > 2 && swapMode === 0 ? 'Swap Anyway' : 'Confirm Swap'}
           </Text>
         </ButtonError>
 
