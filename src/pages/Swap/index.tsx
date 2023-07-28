@@ -546,8 +546,6 @@ export default function Swap() {
 
   const swapIsUnsupported = useIsTransactionUnsupported(currencies?.INPUT, currencies?.OUTPUT)
 
-  console.log(fusionSwap)
-
   return (
     <>
       <TokenWarningModal
@@ -704,10 +702,17 @@ export default function Swap() {
                   (wrapType === WrapType.WRAP ? 'Wrap' : wrapType === WrapType.UNWRAP ? 'Unwrap' : null)}
               </ButtonPrimary>
             ) : (swapMode === 0 && noRoute && userHasSpecifiedInputOutput) ||
-              (swapMode === 1 && fusionSwap.result?.route?.amountOut === 0) ? (
+              (swapMode === 1 &&
+                (fusionSwap.result?.route?.amountOut === 0 || (fusionSwap.loading && !fusionSwap.result.route))) ? (
               <GreyCard style={{ textAlign: 'center' }}>
-                <TYPE.main mb="4px">Insufficient liquidity for this trade.</TYPE.main>
-                {singleHopOnly && <TYPE.main mb="4px">Try enabling multi-hop trades.</TYPE.main>}
+                {fusionSwap.result?.route?.amountOut === 0 ? (
+                  <>
+                    <TYPE.main mb="4px">Insufficient liquidity for this trade.</TYPE.main>
+                    {singleHopOnly && <TYPE.main mb="4px">Try enabling multi-hop trades.</TYPE.main>}
+                  </>
+                ) : (
+                  <TYPE.main mb={'4px'}>Fetching the best price.</TYPE.main>
+                )}
               </GreyCard>
             ) : showApproveFlow ? (
               <RowBetween>

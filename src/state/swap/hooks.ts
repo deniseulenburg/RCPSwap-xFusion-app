@@ -378,6 +378,7 @@ export type RouteArgsParams = {
 
 export type XFusionSwapType = {
   error: boolean
+  loading: boolean
   currencies?: { [field in Field]?: Currency }
   parsedAmount?: CurrencyAmount
   result: {
@@ -430,7 +431,7 @@ export function useXFusionSwap(): XFusionSwapType {
     [Field.OUTPUT]: outputCurrency ?? undefined
   }
 
-  const { isError, data } = useQuery({
+  const { isError, data, isFetching } = useQuery({
     queryKey: ['xFusion', inputCurrencyId, outputCurrencyId, typedValue, swapMode],
     queryFn: async () => {
       try {
@@ -454,12 +455,13 @@ export function useXFusionSwap(): XFusionSwapType {
       }
     },
     initialData: {},
-    refetchInterval: false,
+    refetchInterval: 15000,
     retry: false
   })
 
   return {
     error: isError,
+    loading: isFetching,
     currencies,
     parsedAmount,
     result: data ?? {}
