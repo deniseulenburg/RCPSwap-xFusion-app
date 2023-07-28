@@ -20,6 +20,7 @@ import { StyledBalanceMaxMini, SwapCallbackError } from './styleds'
 import useBlockchain from '../../hooks/useBlockchain'
 import getBlockchainAdjustedCurrency from '../../utils/getBlockchainAdjustedCurrency'
 import { XFusionSwapType } from 'state/swap/hooks'
+import { ethers } from 'ethers'
 
 export default function SwapModalFooter({
   trade,
@@ -59,12 +60,6 @@ export default function SwapModalFooter({
     blockchain,
     trade?.outputAmount.currency ?? fusionSwap?.currencies?.OUTPUT
   )
-
-  const fee =
-    !fusionSwap?.result?.route?.legs
-      ?.map(item => item.poolName[0])
-      ?.filter(item => item !== 'W' && item !== 'U')
-      ?.every((cur, _, a) => cur === a[0]) ?? false
 
   return (
     <>
@@ -134,40 +129,43 @@ export default function SwapModalFooter({
             <FormattedPriceImpact priceImpact={priceImpactWithoutFee} />
           </RowBetween>
         )}
-        {swapMode === 1 && fee && fusionSwap.result.route && (
-          <RowBetween>
-            <RowFixed>
-              <TYPE.black color={theme.text2} fontSize={14} fontWeight={400}>
-                RCPSwap Price
-              </TYPE.black>
-              <QuestionHelper text="The best price found on any Dexes on Nova." />
-            </RowFixed>
-            <Text
-              fontWeight={500}
-              fontSize={14}
-              color={theme.text1}
-              style={{
-                justifyContent: 'center',
-                alignItems: 'center',
-                display: 'flex',
-                textAlign: 'right',
-                paddingLeft: '10px'
-              }}
-            >
-              {formatBlockchainAdjustedExecutionPrice(
-                0,
-                undefined,
-                trade,
-                tradeInputCurrency,
-                tradeOutputCurrency,
-                showInverted
-              )}
-              <StyledBalanceMaxMini onClick={() => setShowInverted(!showInverted)}>
-                <Repeat size={14} />
-              </StyledBalanceMaxMini>
-            </Text>
-          </RowBetween>
-        )}
+        {swapMode === 1 &&
+          ethers.BigNumber.from(fusionSwap.result.route?.fee.amountOutBN ?? '0').gt('0') &&
+          fusionSwap.result.route && (
+            <RowBetween>
+              <RowFixed>
+                <TYPE.black color={theme.text2} fontSize={14} fontWeight={400}>
+                  {fusionSwap.result.route.singleProviderRoute?.provider ?? 'RCP'}Swap Price
+                </TYPE.black>
+                <QuestionHelper text="The best price found on any Dexes on Nova." />
+              </RowFixed>
+              <Text
+                fontWeight={500}
+                fontSize={14}
+                color={theme.text1}
+                style={{
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  display: 'flex',
+                  textAlign: 'right',
+                  paddingLeft: '10px'
+                }}
+              >
+                {formatBlockchainAdjustedExecutionPrice(
+                  1,
+                  fusionSwap,
+                  trade,
+                  tradeInputCurrency,
+                  tradeOutputCurrency,
+                  showInverted,
+                  true
+                )}
+                <StyledBalanceMaxMini onClick={() => setShowInverted(!showInverted)}>
+                  <Repeat size={14} />
+                </StyledBalanceMaxMini>
+              </Text>
+            </RowBetween>
+          )}
         {swapMode === 0 && (
           <RowBetween>
             <RowFixed>
@@ -183,31 +181,41 @@ export default function SwapModalFooter({
             </TYPE.black>
           </RowBetween>
         )}
-        {swapMode === 1 && fee && fusionSwap.result.route && (
-          <RowBetween>
-            <RowFixed>
-              <Text fontSize={14} fontWeight={400} color={theme.green1}>
-                Saving
-              </Text>
-              <QuestionHelper text={`Saving compared with the best price found on any DEX on Nova.`} />
-            </RowFixed>
-            <TYPE.black fontSize={14}>
-              {(
-                Math.max(
-                  parseFloat(
-                    new TokenAmount(
-                      fusionSwap.currencies?.OUTPUT as Token,
-                      fusionSwap.result.route.amountOutBN ?? '0'
-                    ).toExact()
-                  ) - parseFloat(trade?.executionPrice.toFixed() ?? '0'),
-                  0
-                ) * (outPrice === 0 ? 1 : outPrice)
-              ).toFixed(6) +
-                ' ' +
-                (outPrice === 0 ? tradeOutputCurrency?.symbol : '$')}
-            </TYPE.black>
-          </RowBetween>
-        )}
+        {swapMode === 1 &&
+          ethers.BigNumber.from(fusionSwap.result.route?.fee.amountOutBN ?? '0').gt('0') &&
+          fusionSwap.result.route && (
+            <RowBetween>
+              <RowFixed>
+                <Text fontSize={14} fontWeight={400} color={theme.green1}>
+                  Saving
+                </Text>
+                <QuestionHelper text={`Saving compared with the best price found on any DEX on Nova.`} />
+              </RowFixed>
+              <TYPE.black fontSize={14}>
+                {(
+                  Math.max(
+                    parseFloat(
+                      new TokenAmount(
+                        fusionSwap.currencies?.OUTPUT as Token,
+                        ethers.BigNumber.from(fusionSwap.result.route.amountOutBN ?? '0').toString()
+                      ).toExact()
+                    ) -
+                      parseFloat(
+                        new TokenAmount(
+                          fusionSwap.currencies?.OUTPUT as Token,
+                          ethers.BigNumber.from(
+                            fusionSwap.result.route.singleProviderRoute?.amountOutBN ?? '0'
+                          ).toString()
+                        ).toExact()
+                      ),
+                    0
+                  ) * (outPrice === 0 ? 1 : outPrice)
+                ).toFixed(6) +
+                  ' ' +
+                  (outPrice === 0 ? tradeOutputCurrency?.symbol : '$')}
+              </TYPE.black>
+            </RowBetween>
+          )}
       </AutoColumn>
 
       <AutoRow>

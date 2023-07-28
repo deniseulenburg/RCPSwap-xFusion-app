@@ -10,6 +10,7 @@ import SwapModalHeader from './SwapModalHeader'
 import useBlockchain from '../../hooks/useBlockchain'
 import getBlockchainAdjustedCurrency from '../../utils/getBlockchainAdjustedCurrency'
 import { XFusionSwapType } from 'state/swap/hooks'
+import { ethers } from 'ethers'
 
 /**
  * Returns true if the trade requires a confirmation of details before we can submit it
@@ -111,7 +112,7 @@ export default function ConfirmSwapModal({
       : fusionSwap.currencies?.OUTPUT
       ? new TokenAmount(
           fusionSwap.currencies?.OUTPUT as Token,
-          fusionSwap?.result.route?.amountOutBN ?? '0'
+          ethers.BigNumber.from(fusionSwap?.result.route?.amountOutBN ?? '0').toString()
         ).toSignificant(6)
       : '0'
   } ${adjustedOutputCurrency?.symbol}`

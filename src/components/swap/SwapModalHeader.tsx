@@ -16,6 +16,7 @@ import { TruncatedText, SwapShowAcceptChanges } from './styleds'
 import useBlockchain from '../../hooks/useBlockchain'
 import getBlockchainAdjustedCurrency from '../../utils/getBlockchainAdjustedCurrency'
 import { XFusionSwapType } from 'state/swap/hooks'
+import { ethers } from 'ethers'
 
 export default function SwapModalHeader({
   trade,
@@ -94,7 +95,7 @@ export default function SwapModalHeader({
               : fusionSwap.currencies?.OUTPUT
               ? new TokenAmount(
                   fusionSwap.currencies?.OUTPUT as Token,
-                  fusionSwap?.result.route?.amountOutBN ?? '0'
+                  ethers.BigNumber.from(fusionSwap?.result.route?.amountOutBN ?? '0').toString()
                 ).toSignificant(6)
               : '0'}
           </TruncatedText>
@@ -135,7 +136,7 @@ export default function SwapModalHeader({
                       calculateSlippageAmount(
                         new TokenAmount(
                           fusionSwap.currencies?.OUTPUT as Token,
-                          fusionSwap.result.route?.amountOutBN ?? '0'
+                          ethers.BigNumber.from(fusionSwap.result.route?.amountOutBN ?? '0').toString()
                         ),
                         allowedSlippage
                       )[0]

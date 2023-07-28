@@ -396,6 +396,15 @@ export type XFusionSwapType = {
       totalAmountOutBN?: string
       gasSpent?: number
       legs?: RouteLeg[]
+      singleProviderRoute?: {
+        provider: 'Sushi' | 'Arb' | 'RCP'
+        amountOut: number
+        amountOutBN: string
+      }
+      fee: {
+        amountOut: number
+        amountOutBN: string
+      }
     }
     args?: RouteArgsParams
   }
@@ -445,7 +454,7 @@ export function useXFusionSwap(): XFusionSwapType {
       }
     },
     initialData: {},
-    refetchInterval: 10000,
+    refetchInterval: false,
     retry: false
   })
 

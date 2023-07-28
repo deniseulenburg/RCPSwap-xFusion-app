@@ -5,7 +5,8 @@ import React, { useContext } from 'react'
 import styled, { ThemeContext } from 'styled-components'
 import { Text } from 'rebass'
 import { XFusionSwapType } from 'state/swap/hooks'
-import { Token, TokenAmount, Trade } from '@venomswap/sdk'
+import { Token, TokenAmount } from '@venomswap/sdk'
+import { ethers } from 'ethers'
 
 const AdvancedDetailsFooter = styled.div<{ show: boolean }>`
   padding-top: 16px;
@@ -31,26 +32,14 @@ const DexLogo = styled.img`
   margin: 1px 6px 0;
 `
 
-export default function AdvancedFusionDetailsDropdown({
-  swap,
-  trade,
-  price
-}: {
-  swap: XFusionSwapType
-  trade: Trade | undefined
-  price: number
-}) {
+export default function AdvancedFusionDetailsDropdown({ swap, price }: { swap: XFusionSwapType; price: number }) {
   const theme = useContext(ThemeContext)
 
-  const fee =
-    !swap?.result?.route?.legs
-      ?.map(item => item.poolName[0])
-      ?.filter(item => item !== 'W' && item !== 'U')
-      ?.every((cur, _, a) => cur === a[0]) ?? false
+  const fee = ethers.BigNumber.from(swap.result.route?.fee.amountOutBN ?? '0').gt('0')
 
   return fee ? (
     <AdvancedDetailsFooter show={Boolean(swap && swap?.result && swap?.result?.route)}>
-      {swap && swap?.result && swap.result?.route && swap.result.route?.amountOut && (
+      {swap && swap?.result && swap.result?.route && swap.result.route?.amountOut && swap.currencies?.OUTPUT && (
         <AutoColumn style={{ padding: '0 30px' }}>
           <Row>
             <RowFixed style={{ padding: '10px', borderRadius: '50%', background: theme.bg3 }}>
@@ -64,9 +53,15 @@ export default function AdvancedFusionDetailsDropdown({
                       parseFloat(
                         new TokenAmount(
                           swap.currencies?.OUTPUT as Token,
-                          swap.result.route.amountOutBN ?? '0'
+                          ethers.BigNumber.from(swap.result.route.amountOutBN ?? '0').toString()
                         ).toExact()
-                      ) - parseFloat(trade?.outputAmount.toExact() ?? '0'),
+                      ) -
+                        parseFloat(
+                          new TokenAmount(
+                            swap.currencies.OUTPUT as Token,
+                            ethers.BigNumber.from(swap.result.route.singleProviderRoute?.amountOutBN ?? '0').toString()
+                          ).toExact()
+                        ),
                       0
                     ) * (price === 0 ? 1 : price)
                   ).toFixed(3) +
@@ -82,9 +77,14 @@ export default function AdvancedFusionDetailsDropdown({
                   Compared to
                 </Text>
                 {/* eslint-disable */}
-                <DexLogo src={require(`../../assets/dex/rcpswap.png`).default}></DexLogo>
+                <DexLogo
+                  src={
+                    require(`../../assets/dex/${swap.result.route.singleProviderRoute?.provider?.toLowerCase() ??
+                      'rcp'}swap.png`).default
+                  }
+                ></DexLogo>
                 <Text fontSize={14} color={theme.text2}>
-                  RCPSwap.
+                  {swap.result.route.singleProviderRoute?.provider ?? 'RCP'}Swap.
                 </Text>
               </RowFixed>
             </AutoColumn>

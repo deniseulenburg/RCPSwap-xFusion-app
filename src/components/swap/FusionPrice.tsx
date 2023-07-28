@@ -5,6 +5,7 @@ import { Repeat } from 'react-feather'
 import { ThemeContext } from 'styled-components'
 import { Price } from '@venomswap/sdk'
 import { XFusionSwapType } from 'state/swap/hooks'
+import { ethers } from 'ethers'
 
 interface FusionPriceProps {
   fusionSwap: XFusionSwapType
@@ -28,7 +29,7 @@ export default function FusionPrice({ fusionSwap, showInverted, setShowInverted 
           ? new Price(
               fusionSwap.currencies?.OUTPUT,
               fusionSwap.currencies?.INPUT,
-              fusionSwap.result.route?.amountOutBN ?? '0',
+              ethers.BigNumber.from(fusionSwap.result.route?.amountOutBN ?? '0').toString(),
               fusionSwap.parsedAmount.raw
             )
               .invert()
@@ -36,7 +37,7 @@ export default function FusionPrice({ fusionSwap, showInverted, setShowInverted 
           : new Price(
               fusionSwap.currencies?.OUTPUT,
               fusionSwap.currencies?.INPUT,
-              fusionSwap.result.route?.amountOutBN ?? '0',
+              ethers.BigNumber.from(fusionSwap.result.route?.amountOutBN ?? '0').toString(),
               fusionSwap.parsedAmount.raw
             ).toSignificant(6)
       } catch (err) {

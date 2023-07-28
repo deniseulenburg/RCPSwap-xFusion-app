@@ -114,8 +114,6 @@ export default function Swap() {
 
   const fusionSwap = useXFusionSwap()
 
-  console.log(fusionSwap)
-
   const { wrapType, execute: onWrap, inputError: wrapInputError } = useWrapCallback(
     currencies[Field.INPUT],
     currencies[Field.OUTPUT],
@@ -283,12 +281,6 @@ export default function Swap() {
           library?.getSigner(account ?? undefined)
         )
 
-        const isFee =
-          !fusionSwap?.result?.route?.legs
-            ?.map(item => item.poolName[0])
-            ?.filter(item => item !== 'W' && item !== 'U')
-            ?.every((cur, _, a) => cur === a[0]) ?? false
-
         const tx = await fusionContract.processRoute(
           fusionSwap.result.args?.tokenIn,
           ethers.BigNumber.from(fusionSwap.result.args.amountIn ?? '0'),
@@ -303,14 +295,9 @@ export default function Swap() {
               allowedSlippage
             )[0]
           ).raw.toString(),
+          BigNumber.from(fusionSwap.result.route?.fee.amountOutBN ?? '0').toString(),
           fusionSwap.result.args.to,
           fusionSwap.result.args.routeCode,
-          {
-            router: ROUTER_ADDRESSES[ChainId.HARMONY_MAINNET],
-            amount: ethers.BigNumber.from(fusionSwap.result.args.amountIn ?? '0'),
-            path: trade?.route?.path?.map(path => path.address) ?? []
-          },
-          isFee,
           fusionSwap.result.route?.fromToken?.isNative && fusionSwap.result.args.amountIn
             ? { value: BigNumber.from(fusionSwap.result.args.amountIn) }
             : {}
@@ -559,6 +546,8 @@ export default function Swap() {
 
   const swapIsUnsupported = useIsTransactionUnsupported(currencies?.INPUT, currencies?.OUTPUT)
 
+  console.log(fusionSwap)
+
   return (
     <>
       <TokenWarningModal
@@ -613,7 +602,7 @@ export default function Swap() {
                             ? currencies.OUTPUT
                               ? new TokenAmount(
                                   currencies.OUTPUT as Token,
-                                  fusionSwap.result.route?.amountOutBN ?? '0'
+                                  ethers.BigNumber.from(fusionSwap.result.route?.amountOutBN ?? '0').toString()
                                 ).toExact()
                               : undefined
                             : undefined
@@ -635,7 +624,10 @@ export default function Swap() {
                 swapMode === 0 || showWrap
                   ? formattedAmounts[Field.OUTPUT]
                   : currencies.OUTPUT
-                  ? new TokenAmount(currencies.OUTPUT as Token, fusionSwap?.result?.route?.amountOutBN ?? '0').toExact()
+                  ? new TokenAmount(
+                      currencies.OUTPUT as Token,
+                      ethers.BigNumber.from(fusionSwap?.result?.route?.amountOutBN ?? '0').toString()
+                    ).toExact()
                   : '0'
               }
               onUserInput={handleTypeOutput}
@@ -839,7 +831,7 @@ export default function Swap() {
           <UnsupportedCurrencyFooter show={swapIsUnsupported} currencies={[currencies.INPUT, currencies.OUTPUT]} />
         )
       ) : swapMode === 1 ? (
-        <AdvancedFusionDetailsDropdown swap={fusionSwap} trade={trade} price={tokenOutPrice} />
+        <AdvancedFusionDetailsDropdown swap={fusionSwap} price={tokenOutPrice} />
       ) : null}
     </>
   )

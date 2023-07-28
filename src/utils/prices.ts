@@ -4,6 +4,7 @@ import { ALLOWED_PRICE_IMPACT_HIGH, ALLOWED_PRICE_IMPACT_LOW, ALLOWED_PRICE_IMPA
 import { Field } from '../state/swap/actions'
 import { basisPointsToPercent } from './index'
 import { XFusionSwapType } from 'state/swap/hooks'
+import { ethers } from 'ethers'
 
 const BASE_FEE = new Percent(JSBI.BigInt(30), JSBI.BigInt(10000))
 const ONE_HUNDRED_PERCENT = new Percent(JSBI.BigInt(10000), JSBI.BigInt(10000))
@@ -82,7 +83,8 @@ export function formatBlockchainAdjustedExecutionPrice(
   trade?: Trade,
   tradeInputCurrency?: Currency | undefined,
   tradeOutputCurrency?: Currency | undefined,
-  inverted?: boolean
+  inverted?: boolean,
+  providerPrice?: boolean
 ): string {
   if ((swapMode === 0 && !trade) || !tradeInputCurrency || !tradeOutputCurrency) {
     return ''
@@ -97,7 +99,11 @@ export function formatBlockchainAdjustedExecutionPrice(
                 fusionSwap.parsedAmount.currency,
                 fusionSwap.currencies?.OUTPUT,
                 fusionSwap.parsedAmount.raw,
-                fusionSwap.result.route.amountOutBN ?? '0'
+                ethers.BigNumber.from(
+                  providerPrice
+                    ? fusionSwap.result.route.singleProviderRoute?.amountOutBN
+                    : fusionSwap.result.route.amountOutBN ?? '0'
+                ).toString()
               )
                 .invert()
                 .toSignificant(6)
@@ -111,7 +117,11 @@ export function formatBlockchainAdjustedExecutionPrice(
                 fusionSwap.parsedAmount.currency,
                 fusionSwap.currencies?.OUTPUT,
                 fusionSwap.parsedAmount.raw,
-                fusionSwap.result.route.amountOutBN ?? '0'
+                ethers.BigNumber.from(
+                  providerPrice
+                    ? fusionSwap.result.route.singleProviderRoute?.amountOutBN
+                    : fusionSwap.result.route.amountOutBN ?? '0'
+                ).toString()
               ).toSignificant(6)
             : ''
         } ${tradeOutputCurrency.symbol} / ${tradeInputCurrency.symbol}`
