@@ -24,7 +24,7 @@ export interface SwapState {
 }
 
 const initialState: SwapState = {
-  swapMode: 0,
+  swapMode: 1,
   independentField: Field.INPUT,
   typedValue: '',
   [Field.INPUT]: {
@@ -94,6 +94,7 @@ export default createReducer<SwapState>(initialState, builder =>
       state.recipient = recipient
     })
     .addCase(switchSwapMode, state => {
+      console.log(state)
       return {
         ...state,
         swapMode: 1 - state.swapMode

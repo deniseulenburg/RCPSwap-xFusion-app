@@ -85,6 +85,7 @@ export function useSwapActionHandlers(): {
   )
 
   const onSwitchSwapMode = useCallback(() => {
+    console.log('-----------------')
     dispatch(switchSwapMode())
   }, [dispatch])
 
@@ -328,7 +329,7 @@ export function useDefaultsFromURLSearch():
         inputCurrencyId: parsed[Field.INPUT].currencyId,
         outputCurrencyId: parsed[Field.OUTPUT].currencyId,
         recipient: parsed.recipient,
-        swapMode: parsed.swapMode
+        swapMode: 1
       })
     )
 
@@ -412,7 +413,7 @@ export type XFusionSwapType = {
 }
 
 export function useXFusionSwap(): XFusionSwapType {
-  const { account } = useActiveWeb3React()
+  const { account, library } = useActiveWeb3React()
 
   const {
     typedValue,
@@ -436,15 +437,18 @@ export function useXFusionSwap(): XFusionSwapType {
     queryFn: async () => {
       try {
         if (inputCurrencyId && outputCurrencyId && typedValue && swapMode === 1) {
+          const gasPrice = parseInt((await library?.getGasPrice())?.toString() ?? '10000000')
+
           const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/swap`, {
             params: {
               fromTokenId: inputCurrencyId,
               toTokenId: outputCurrencyId,
               amount: parsedAmount?.raw.toString() ?? '0',
-              gasPrice: 30e9,
+              gasPrice: gasPrice,
               to: account
             }
           })
+          console.log(res.data)
 
           return res.data
         } else {

@@ -5,6 +5,7 @@ import { RowBetween } from '../Row'
 import { TYPE } from '../../theme'
 import { ExchangeSVG } from 'components/svgs'
 import { useSwapActionHandlers, useSwapState } from 'state/swap/hooks'
+import QuestionHelper from 'components/QuestionHelper'
 
 const StyledSwapHeader = styled.div`
   padding: 12px 1rem 0px 1.5rem;
@@ -25,6 +26,11 @@ const SwitchTitle = styled.div`
   cursor: pointer;
 `
 
+const FUSION_TEXT =
+  'xFusion is DEX Aggregator Algorithm that thrives to calculate the most efficient route possible for the trade you entered - giving you the best trade possible.'
+const SWAP_TEXT =
+  'When using the ‘Swap’ function, you’re directly interacting only with RCPswapV2 pools, Unlike xFusion where you get deeper liquidity by accessing multiple DEXs and Pools.'
+
 export default function SwapHeader() {
   const { swapMode } = useSwapState()
   const { onSwitchSwapMode } = useSwapActionHandlers()
@@ -32,13 +38,14 @@ export default function SwapHeader() {
     <StyledSwapHeader>
       <RowBetween>
         <SwitchTitle onClick={onSwitchSwapMode}>
-          <TYPE.black fontWeight={500} marginRight={'5px'}>
-            {swapMode === 0 ? 'Swap' : 'xFusion'}
-          </TYPE.black>
+          <TYPE.black fontWeight={500}>{swapMode === 0 ? 'Swap' : 'xFusion'}</TYPE.black>
+          <QuestionHelper text={swapMode === 0 ? SWAP_TEXT : FUSION_TEXT} />
+          &nbsp;
           <ExchangeSVG></ExchangeSVG>
           <PassiveTab fontWeight={500} marginLeft={'5px'}>
             {swapMode === 0 ? 'xFusion' : 'Swap'}
           </PassiveTab>
+          <QuestionHelper text={swapMode === 1 ? SWAP_TEXT : FUSION_TEXT} />
         </SwitchTitle>
         <Settings />
       </RowBetween>
