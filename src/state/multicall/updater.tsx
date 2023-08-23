@@ -38,10 +38,10 @@ async function fetchChunk(
     console.debug('Failed to fetch chunk inside retry', error)
     throw error
   }
-  if (resultsBlockNumber.toNumber() < minBlockNumber) {
-    console.debug(`Fetched results for old block number: ${resultsBlockNumber.toString()} vs. ${minBlockNumber}`)
-    throw new RetryableError('Fetched for old block number')
-  }
+  // if (resultsBlockNumber.toNumber() < minBlockNumber) {
+  //   console.debug(`Fetched results for old block number: ${resultsBlockNumber.toString()} vs. ${minBlockNumber}`)
+  //   throw new RetryableError('Fetched for old block number')
+  // }
   return { results: returnData, blockNumber: resultsBlockNumber.toNumber() }
 }
 

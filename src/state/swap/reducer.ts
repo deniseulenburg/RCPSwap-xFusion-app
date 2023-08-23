@@ -6,11 +6,13 @@ import {
   setRecipient,
   switchCurrencies,
   switchSwapMode,
+  switchUltraMode,
   typeInput
 } from './actions'
 
 export interface SwapState {
   readonly swapMode: number
+  readonly isUltra: boolean
   readonly independentField: Field
   readonly typedValue: string
   readonly [Field.INPUT]: {
@@ -25,6 +27,7 @@ export interface SwapState {
 
 const initialState: SwapState = {
   swapMode: 1,
+  isUltra: false,
   independentField: Field.INPUT,
   typedValue: '',
   [Field.INPUT]: {
@@ -40,7 +43,7 @@ export default createReducer<SwapState>(initialState, builder =>
   builder
     .addCase(
       replaceSwapState,
-      (state, { payload: { swapMode, typedValue, recipient, field, inputCurrencyId, outputCurrencyId } }) => {
+      (state, { payload: { isUltra, swapMode, typedValue, recipient, field, inputCurrencyId, outputCurrencyId } }) => {
         return {
           swapMode,
           [Field.INPUT]: {
@@ -51,7 +54,8 @@ export default createReducer<SwapState>(initialState, builder =>
           },
           independentField: field,
           typedValue: typedValue,
-          recipient
+          recipient,
+          isUltra: isUltra
         }
       }
     )
@@ -94,10 +98,15 @@ export default createReducer<SwapState>(initialState, builder =>
       state.recipient = recipient
     })
     .addCase(switchSwapMode, state => {
-      console.log(state)
       return {
         ...state,
         swapMode: 1 - state.swapMode
+      }
+    })
+    .addCase(switchUltraMode, state => {
+      return {
+        ...state,
+        isUltra: !state.isUltra
       }
     })
 )

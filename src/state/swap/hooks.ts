@@ -22,6 +22,7 @@ import {
   setRecipient,
   switchCurrencies,
   switchSwapMode,
+  switchUltraMode,
   typeInput
 } from './actions'
 import { SwapState } from './reducer'
@@ -32,6 +33,17 @@ import { BASE_CURRENCY } from '../../connectors'
 import useBlockchain from '../../hooks/useBlockchain'
 import getBlockchainAdjustedCurrency from '../../utils/getBlockchainAdjustedCurrency'
 import axios from 'axios'
+import { useToken } from 'package/tokens'
+import { usePoolsCodeMap } from 'package/pools/usePoolsCodeMap'
+import { RPParams, Router } from 'package/router'
+import { ChainId } from 'package/chain'
+import { useGasPrice } from 'hooks/useGasPrice'
+import { BigNumber } from 'ethers'
+import { LiquidityProviders } from 'package/router/liquidity-providers'
+import { RToken, RouteLeg, RouteStatus, getBetterRoute } from 'package/tines'
+import { routeProcessor3Address } from 'package/route-processor'
+import { Native } from 'package/currency'
+import { PoolCode } from 'package/router/pools/PoolCode'
 
 export function useSwapState(): AppState['swap'] {
   return useSelector<AppState, AppState['swap']>(state => state.swap)
@@ -43,6 +55,7 @@ export function useSwapActionHandlers(): {
   onUserInput: (field: Field, typedValue: string) => void
   onChangeRecipient: (recipient: string | null) => void
   onSwitchSwapMode: () => void
+  onSwitchUltraMode: () => void
 } {
   const dispatch = useDispatch<AppDispatch>()
   const onCurrencySelection = useCallback(
@@ -85,8 +98,11 @@ export function useSwapActionHandlers(): {
   )
 
   const onSwitchSwapMode = useCallback(() => {
-    console.log('-----------------')
     dispatch(switchSwapMode())
+  }, [dispatch])
+
+  const onSwitchUltraMode = useCallback(() => {
+    dispatch(switchUltraMode())
   }, [dispatch])
 
   return {
@@ -94,7 +110,8 @@ export function useSwapActionHandlers(): {
     onCurrencySelection,
     onUserInput,
     onChangeRecipient,
-    onSwitchSwapMode
+    onSwitchSwapMode,
+    onSwitchUltraMode
   }
 }
 
@@ -303,7 +320,8 @@ export function queryParametersToSwapState(parsedQs: ParsedQs): SwapState {
     typedValue: parseTokenAmountURLParameter(parsedQs.exactAmount),
     independentField: parseIndependentFieldURLParameter(parsedQs.exactField),
     swapMode: isFinite(swapMode) ? swapMode : 0,
-    recipient
+    recipient,
+    isUltra: false
   }
 }
 
@@ -329,7 +347,8 @@ export function useDefaultsFromURLSearch():
         inputCurrencyId: parsed[Field.INPUT].currencyId,
         outputCurrencyId: parsed[Field.OUTPUT].currencyId,
         recipient: parsed.recipient,
-        swapMode: 1
+        swapMode: 1,
+        isUltra: false
       })
     )
 
@@ -340,53 +359,16 @@ export function useDefaultsFromURLSearch():
   return result
 }
 
-export type XFusionToken = {
-  chainId: number
-  decimals: number
-  symbol: string
-  name: string
-  isNative?: boolean
-  isToken?: boolean
-  id?: string
-  address?: string
-  tokenId: string
-}
-
-export type RouteLeg = {
-  poolType: string
-  poolAddress: string
-  poolFee: number
-
-  tokenFrom: XFusionToken
-  tokenTo: XFusionToken
-  assumedAmountIn: number
-  assumedAmountOut: number
-
-  swapPortion: number
-  absolutePortion: number
-  poolName: string
-}
-
-export type RouteArgsParams = {
-  tokenIn: string
-  amountIn: string
-  tokenOut: string
-  amountOutMin: string
-  to: string
-  routeCode: string
-  value?: string
-}
-
 export type XFusionSwapType = {
   error: boolean
   loading: boolean
   currencies?: { [field in Field]?: Currency }
   parsedAmount?: CurrencyAmount
-  result: {
+  result?: {
     route?: {
-      status?: string
-      fromToken?: XFusionToken
-      toToken?: XFusionToken
+      status?: RouteStatus
+      fromToken?: Native | RToken
+      toToken?: Native | RToken
       primaryPrice?: number
       swapPrice?: number
       amountIn?: number
@@ -403,71 +385,271 @@ export type XFusionSwapType = {
         amountOut: number
         amountOutBN: string
       }
-      fee: {
+      fee?: {
         amountOut: number
         amountOutBN: string
+        isFusion: boolean
       }
     }
-    args?: RouteArgsParams
+    args?: RPParams
   }
 }
 
+function useUpdate() {
+  const [update, setUpdate] = useState(0)
+  const [loading, setLoading] = useState(false)
+
+  const { typedValue } = useSwapState()
+
+  let timerId = 0
+
+  const updater = async () => {
+    timerId = (setTimeout(() => {
+      setUpdate(prev => prev + 1)
+      setLoading(false)
+    }, 500) as unknown) as number
+  }
+
+  useEffect(() => {
+    if (typedValue.length > 0 && +typedValue > 0) {
+      setLoading(true)
+      updater()
+    } else {
+      setLoading(false)
+    }
+    return () => {
+      clearTimeout(timerId)
+    }
+  }, [typedValue])
+
+  return { update, loading }
+}
+
 export function useXFusionSwap(): XFusionSwapType {
-  const { account, library } = useActiveWeb3React()
+  const { account } = useActiveWeb3React()
 
   const {
     typedValue,
     swapMode,
     [Field.INPUT]: { currencyId: inputCurrencyId },
-    [Field.OUTPUT]: { currencyId: outputCurrencyId }
+    [Field.OUTPUT]: { currencyId: outputCurrencyId },
+    isUltra,
+    recipient
   } = useSwapState()
+
+  const { update, loading: isInputLoading } = useUpdate()
 
   const inputCurrency = useCurrency(inputCurrencyId)
   const outputCurrency = useCurrency(outputCurrencyId)
 
   const parsedAmount = tryParseAmount(typedValue, inputCurrency ?? undefined)
 
+  const { data: inputToken } = useToken(inputCurrencyId)
+  const { data: outputToken } = useToken(outputCurrencyId)
+
   const currencies: { [field in Field]?: Currency } = {
     [Field.INPUT]: inputCurrency ?? undefined,
     [Field.OUTPUT]: outputCurrency ?? undefined
   }
 
-  const { isError, data, isFetching } = useQuery({
-    queryKey: ['xFusion', inputCurrencyId, outputCurrencyId, typedValue, swapMode],
+  const { data: poolsCodeMap } = usePoolsCodeMap(inputToken ?? undefined, outputToken ?? undefined)
+  const gasPrice = useGasPrice()
+
+  const { isError, isFetching, data, isLoading } = useQuery({
+    queryKey: [
+      'useTrade',
+      { currencyA: inputCurrencyId, currencyB: outputCurrencyId, poolsCodeMap, isUltra, recipient, swapMode, update }
+    ],
     queryFn: async () => {
-      try {
-        if (inputCurrencyId && outputCurrencyId && typedValue && swapMode === 1) {
-          const gasPrice = parseInt((await library?.getGasPrice())?.toString() ?? '10000000')
-
-          const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/swap`, {
-            params: {
-              fromTokenId: inputCurrencyId,
-              toTokenId: outputCurrencyId,
-              amount: parsedAmount?.raw.toString() ?? '0',
-              gasPrice: gasPrice,
-              to: account
-            }
-          })
-          console.log(res.data)
-
-          return res.data
-        } else {
-          return {}
-        }
-      } catch (err) {
-        throw new Error('Failed to fetch xFusion router')
+      if (
+        !poolsCodeMap ||
+        !inputToken ||
+        !outputToken ||
+        typedValue.length === 0 ||
+        +typedValue === 0 ||
+        swapMode === 0 ||
+        update === 0
+      ) {
+        return {}
       }
+
+      const bestRoute = Router.findBestRoute(
+        poolsCodeMap,
+        ChainId.ARBITRUM_NOVA,
+        inputToken,
+        BigNumber.from(parsedAmount?.raw.toString() ?? '0'),
+        outputToken,
+        gasPrice ?? 10000000,
+        isUltra ? 1500 : 100
+      )
+
+      const sushiPoolsCodeMap = new Map<string, PoolCode>()
+
+      const sushiFilter = ['USDC', 'WETH', 'WBTC', 'USDT', 'DAI', 'ETH', inputToken.symbol, outputToken.symbol]
+
+      Array.from(poolsCodeMap.entries()).forEach(item => {
+        if (
+          sushiFilter.find(v => v === item[1].pool.token0.symbol) &&
+          sushiFilter.find(v => v === item[1].pool.token1.symbol)
+        ) {
+          sushiPoolsCodeMap.set(item[0], item[1])
+        }
+      })
+
+      const sushiBestRoute = Router.findBestRoute(
+        sushiPoolsCodeMap,
+        ChainId.ARBITRUM_NOVA,
+        inputToken,
+        BigNumber.from(parsedAmount?.raw.toString() ?? '0'),
+        outputToken,
+        gasPrice ?? 10000000,
+        100,
+        [LiquidityProviders.SushiSwapV2, LiquidityProviders.SushiSwapV3]
+      )
+
+      const arbBestRoute = Router.findBestRoute(
+        poolsCodeMap,
+        ChainId.ARBITRUM_NOVA,
+        inputToken,
+        BigNumber.from(parsedAmount?.raw.toString() ?? '0'),
+        outputToken,
+        gasPrice ?? 10000000,
+        1,
+        [LiquidityProviders.ArbSwap]
+      )
+
+      const rcpBestRoute = Router.findBestRoute(
+        poolsCodeMap,
+        ChainId.ARBITRUM_NOVA,
+        inputToken,
+        BigNumber.from(parsedAmount?.raw.toString() ?? '0'),
+        outputToken,
+        gasPrice ?? 10000000,
+        1,
+        [LiquidityProviders.RCPSwap]
+      )
+
+      const bestSingleProviderRoute = getBetterRoute(sushiBestRoute, getBetterRoute(arbBestRoute, rcpBestRoute))
+      const FEE_BP = parseInt(process.env?.REACT_APP_FEE_BP ?? '100')
+
+      console.log(bestSingleProviderRoute)
+
+      const feeAmountOut =
+        (bestRoute?.amountOut ?? 0) >= 0
+          ? (((bestRoute?.amountOut ?? 0) - (bestSingleProviderRoute?.amountOut ?? 0)) * FEE_BP) / 10000
+          : 0
+      const feeAmountOutBN = (bestRoute?.amountOutBN ?? BigNumber.from(0)).gte(
+        bestSingleProviderRoute?.amountOutBN ?? BigNumber.from(0)
+      )
+        ? (bestRoute?.amountOutBN ?? BigNumber.from(0))
+            .sub(bestSingleProviderRoute?.amountOutBN ?? BigNumber.from(0))
+            .mul(FEE_BP)
+            .div(10000)
+            .toString()
+        : '0'
+
+      return new Promise(res =>
+        setTimeout(
+          () =>
+            res({
+              route: {
+                status: bestRoute?.status,
+                fromToken:
+                  bestRoute?.fromToken?.address === '' ? Native.onChain(ChainId.ARBITRUM_NOVA) : bestRoute?.fromToken,
+                toToken:
+                  bestRoute?.toToken?.address === '' ? Native.onChain(ChainId.ARBITRUM_NOVA) : bestRoute?.toToken,
+                primaryPrice: bestRoute?.primaryPrice,
+                swapPrice: bestRoute?.swapPrice,
+                amountIn: bestRoute?.amountIn,
+                amountInBN: bestRoute?.amountInBN.toString(),
+                amountOut: bestRoute?.amountOut,
+                amountOutBN: bestRoute?.amountOutBN.toString(),
+                priceImpact: bestRoute?.priceImpact,
+                totalAmountOut: bestRoute?.totalAmountOut,
+                totalAmountOutBN: bestRoute?.totalAmountOutBN.toString(),
+                gasSpent: bestRoute?.gasSpent,
+                legs: bestRoute?.legs,
+                singleProviderRoute: {
+                  provider:
+                    bestSingleProviderRoute === sushiBestRoute
+                      ? 'Sushi'
+                      : bestSingleProviderRoute === arbBestRoute
+                      ? 'Arb'
+                      : 'RCP',
+                  amountOut: bestSingleProviderRoute?.amountOut ?? 0,
+                  amountOutBN: bestSingleProviderRoute?.amountOutBN?.toString() ?? '0'
+                },
+                fee: {
+                  amount: feeAmountOut === 0 ? (bestRoute.amountOut * 100) / 10000 : feeAmountOut,
+                  amountOutBN: BigNumber.from(feeAmountOutBN).isZero()
+                    ? BigNumber.from(bestRoute.amountOutBN)
+                        .mul(100)
+                        .div(10000)
+                    : feeAmountOutBN,
+                  isFusion: BigNumber.from(feeAmountOutBN).gt(0)
+                }
+              },
+              args:
+                recipient || account
+                  ? Router.routeProcessor2Params(
+                      poolsCodeMap,
+                      bestRoute,
+                      inputToken,
+                      outputToken,
+                      (recipient || account) ?? '',
+                      routeProcessor3Address[ChainId.ARBITRUM_NOVA]
+                    )
+                  : undefined
+            }),
+          0
+        )
+      )
     },
-    initialData: {},
     refetchInterval: 15000,
-    retry: false
+    refetchOnWindowFocus: false,
+    enabled: Boolean(poolsCodeMap && inputToken && outputToken && update > 0)
   })
+
+  // const { isError, data, isFetching } = useQuery({
+  //   queryKey: ['xFusion', update],
+  //   queryFn: async () => {
+  //     try {
+  //       if (inputCurrencyId && outputCurrencyId && typedValue && swapMode === 1) {
+  //         const gasPrice = parseInt((await library?.getGasPrice())?.toString() ?? '10000000')
+
+  //         const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/swap`, {
+  //           params: {
+  //             fromTokenId: inputCurrencyId,
+  //             toTokenId: outputCurrencyId,
+  //             amount: parsedAmount?.raw.toString() ?? '0',
+  //             gasPrice: gasPrice,
+  //             to: account,
+  //             isUltra
+  //           }
+  //         })
+  //         console.log(res.data)
+
+  //         return res.data
+  //       } else {
+  //         return {}
+  //       }
+  //     } catch (err) {
+  //       throw new Error('Failed to fetch xFusion router')
+  //     }
+  //   },
+  //   initialData: {},
+  //   refetchInterval: 30000,
+  //   retry: false
+  // })
 
   return {
     error: isError,
-    loading: isFetching,
+    loading:
+      isFetching ||
+      Boolean(isLoading && inputCurrencyId && outputCurrencyId && typedValue.length > 0 && +typedValue > 0) ||
+      Boolean(isInputLoading && inputCurrencyId && outputCurrencyId && typedValue.length > 0 && +typedValue > 0),
     currencies,
     parsedAmount,
-    result: data ?? {}
+    result: (data ?? {}) as any
   }
 }

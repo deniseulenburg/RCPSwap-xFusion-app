@@ -130,7 +130,7 @@ export default function SwapModalFooter({
           </RowBetween>
         )}
         {swapMode === 1 &&
-          ethers.BigNumber.from(fusionSwap.result.route?.fee.amountOutBN ?? '0').gt('0') &&
+          ethers.BigNumber.from(fusionSwap.result.route?.fee?.amountOutBN ?? '0').gt('0') &&
           fusionSwap.result.route && (
             <RowBetween>
               <RowFixed>
@@ -182,7 +182,7 @@ export default function SwapModalFooter({
           </RowBetween>
         )}
         {swapMode === 1 &&
-          ethers.BigNumber.from(fusionSwap.result.route?.fee.amountOutBN ?? '0').gt('0') &&
+          ethers.BigNumber.from(fusionSwap.result.route?.fee?.amountOutBN ?? '0').gt('0') &&
           fusionSwap.result.route && (
             <RowBetween>
               <RowFixed>
@@ -200,6 +200,12 @@ export default function SwapModalFooter({
                         ethers.BigNumber.from(fusionSwap.result.route.amountOutBN ?? '0').toString()
                       ).toExact()
                     ) -
+                      parseFloat(
+                        new TokenAmount(
+                          fusionSwap.currencies?.OUTPUT as Token,
+                          ethers.BigNumber.from(fusionSwap.result?.route.fee?.amountOutBN ?? '0').toString()
+                        ).toExact()
+                      ) -
                       parseFloat(
                         new TokenAmount(
                           fusionSwap.currencies?.OUTPUT as Token,

@@ -35,9 +35,7 @@ const DexLogo = styled.img`
 export default function AdvancedFusionDetailsDropdown({ swap, price }: { swap: XFusionSwapType; price: number }) {
   const theme = useContext(ThemeContext)
 
-  const fee = ethers.BigNumber.from(swap.result.route?.fee.amountOutBN ?? '0').gt('0')
-
-  return fee ? (
+  return swap.result?.route?.fee?.isFusion ? (
     <AdvancedDetailsFooter show={Boolean(swap && swap?.result && swap?.result?.route)}>
       {swap && swap?.result && swap.result?.route && swap.result.route?.amountOut && swap.currencies?.OUTPUT && (
         <AutoColumn style={{ padding: '0 30px' }}>
@@ -56,6 +54,12 @@ export default function AdvancedFusionDetailsDropdown({ swap, price }: { swap: X
                           ethers.BigNumber.from(swap.result.route.amountOutBN ?? '0').toString()
                         ).toExact()
                       ) -
+                        parseFloat(
+                          new TokenAmount(
+                            swap.currencies?.OUTPUT as Token,
+                            ethers.BigNumber.from(swap.result.route.fee.amountOutBN ?? '0').toString()
+                          ).toExact()
+                        ) -
                         parseFloat(
                           new TokenAmount(
                             swap.currencies.OUTPUT as Token,

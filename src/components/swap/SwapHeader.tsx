@@ -37,15 +37,18 @@ export default function SwapHeader() {
   return (
     <StyledSwapHeader>
       <RowBetween>
-        <SwitchTitle onClick={onSwitchSwapMode}>
-          <TYPE.black fontWeight={500}>{swapMode === 0 ? 'Swap' : 'xFusion'}</TYPE.black>
+        <SwitchTitle>
+          <TYPE.black fontWeight={500} onClick={onSwitchSwapMode}>
+            {swapMode === 0 ? 'Swap' : 'xFusion'}
+          </TYPE.black>
           <QuestionHelper text={swapMode === 0 ? SWAP_TEXT : FUSION_TEXT} />
           &nbsp;
-          <ExchangeSVG></ExchangeSVG>
-          <PassiveTab fontWeight={500} marginLeft={'5px'}>
+          <span onClick={onSwitchSwapMode} style={{ display: 'flex', alignItems: 'center' }}>
+            <ExchangeSVG></ExchangeSVG>
+          </span>
+          <PassiveTab fontWeight={500} marginLeft={'5px'} onClick={onSwitchSwapMode}>
             {swapMode === 0 ? 'xFusion' : 'Swap'}
           </PassiveTab>
-          <QuestionHelper text={swapMode === 1 ? SWAP_TEXT : FUSION_TEXT} />
         </SwitchTitle>
         <Settings />
       </RowBetween>

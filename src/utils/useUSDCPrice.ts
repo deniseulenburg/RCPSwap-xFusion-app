@@ -4,7 +4,7 @@ import { USDC } from '../constants'
 import { PairState, usePairs } from '../data/Reserves'
 import { useActiveWeb3React } from '../hooks'
 import { wrappedCurrency } from './wrappedCurrency'
-  
+
 /**
  * Returns the price in USDC of the input currency
  * @param currency currency to compute the USDC price of
@@ -22,7 +22,7 @@ export default function useUSDCPrice(currency?: Currency): Price | undefined {
       [chainId ? WETH[chainId] : undefined, chainId === ChainId.MAINNET ? USDC : undefined]
     ],
     [chainId, currency, wrapped]
-  ) 
+  )
   const [[ethPairState, ethPair], [usdcPairState, usdcPair], [usdcEthPairState, usdcEthPair]] = usePairs(tokenPairs)
 
   return useMemo(() => {

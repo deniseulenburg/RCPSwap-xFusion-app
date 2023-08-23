@@ -1,6 +1,6 @@
 import { ChainId, CurrencyAmount, Fraction, JSBI, Percent, Token, TokenAmount, Trade } from '@venomswap/sdk'
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { ArrowDown } from 'react-feather'
+import { ArrowDown, Repeat } from 'react-feather'
 import ReactGA from 'react-ga'
 import { Text } from 'rebass'
 import { ThemeContext } from 'styled-components'
@@ -11,11 +11,17 @@ import Column, { AutoColumn } from '../../components/Column'
 import ConfirmSwapModal from '../../components/swap/ConfirmSwapModal'
 import CurrencyInputPanel from '../../components/CurrencyInputPanel'
 import { SwapPoolTabs } from '../../components/NavigationTabs'
-import { AutoRow, RowBetween } from '../../components/Row'
+import Row, { AutoRow, RowBetween } from '../../components/Row'
 import AdvancedSwapDetailsDropdown from '../../components/swap/AdvancedSwapDetailsDropdown'
 import BetterTradeLink, { DefaultVersionLink } from '../../components/swap/BetterTradeLink'
 import confirmPriceImpactWithoutFee from '../../components/swap/confirmPriceImpactWithoutFee'
-import { ArrowWrapper, BottomGrouping, SwapCallbackError, Wrapper } from '../../components/swap/styleds'
+import {
+  ArrowWrapper,
+  BottomGrouping,
+  StyledBalanceMaxMini,
+  SwapCallbackError,
+  Wrapper
+} from '../../components/swap/styleds'
 import TradePrice from '../../components/swap/TradePrice'
 import TokenWarningModal from '../../components/TokenWarningModal'
 import ProgressSteps from '../../components/ProgressSteps'
@@ -40,7 +46,7 @@ import {
   useXFusionSwap
 } from '../../state/swap/hooks'
 import { useExpertModeManager, useUserSlippageTolerance, useUserSingleHopOnly } from '../../state/user/hooks'
-import { LinkStyledButton, TYPE } from '../../theme'
+import { LinkStyledButton, TYPE, ToggleStyledText } from '../../theme'
 import { maxAmountSpend } from '../../utils/maxAmountSpend'
 import { computeTradePriceBreakdown, warningSeverity } from '../../utils/prices'
 import AppBody from '../AppBody'
@@ -54,8 +60,10 @@ import { BigNumber, ethers } from 'ethers'
 import { FUSION_CONTRACT } from 'contracts'
 import AdvancedFusionDetailsDropdown from 'components/swap/AdvancedFusionDetailsDropdown'
 import { useTokenPrice } from 'hooks/useTokenPrice'
-import { calculateSlippageAmount } from 'utils'
+import { calculateSlippageAmount, isAddress, shortenAddress } from 'utils'
 import TailLoader from '../../components/Loader/TailLoader'
+import Toggle from 'components/Toggle'
+import { useTransactionAdder } from 'state/transactions/hooks'
 
 export default function Swap() {
   const loadedUrlParams = useDefaultsFromURLSearch()
@@ -102,7 +110,8 @@ export default function Swap() {
     recipient,
     swapMode,
     INPUT: { currencyId: inputCurrencyId },
-    OUTPUT: { currencyId: outputCurrencyId }
+    OUTPUT: { currencyId: outputCurrencyId },
+    isUltra
   } = useSwapState()
   const {
     v1Trade,
@@ -114,6 +123,8 @@ export default function Swap() {
   } = useDerivedSwapInfo()
 
   const fusionSwap = useXFusionSwap()
+
+  console.log(fusionSwap)
 
   const { wrapType, execute: onWrap, inputError: wrapInputError } = useWrapCallback(
     currencies[Field.INPUT],
@@ -143,7 +154,13 @@ export default function Swap() {
         [Field.OUTPUT]: independentField === Field.OUTPUT ? parsedAmount : trade?.outputAmount
       }
 
-  const { onSwitchTokens, onCurrencySelection, onUserInput, onChangeRecipient } = useSwapActionHandlers()
+  const {
+    onSwitchTokens,
+    onCurrencySelection,
+    onUserInput,
+    onChangeRecipient,
+    onSwitchUltraMode
+  } = useSwapActionHandlers()
   const isValid = !swapInputError
   const dependentField: Field = independentField === Field.INPUT ? Field.OUTPUT : Field.INPUT
 
@@ -153,6 +170,8 @@ export default function Swap() {
       if (index > -1 && value.length - index - 1 > (currencies[Field.INPUT]?.decimals ?? 10)) {
         value = parseInt(value) + '.' + value.slice(index + 1, index + (currencies[Field.INPUT]?.decimals ?? 10) + 1)
       }
+      console.log(value)
+
       onUserInput(Field.INPUT, value)
     },
     [onUserInput]
@@ -203,6 +222,8 @@ export default function Swap() {
   const [approvalSubmitted, setApprovalSubmitted] = useState<boolean>(false)
 
   const tokenOutPrice = useTokenPrice(fusionSwap.currencies?.OUTPUT, swapMode === 1)
+
+  const addTransaction = useTransactionAdder()
 
   // mark when a user has submitted an approval, reset onTokenSelection for input field
   useEffect(() => {
@@ -282,12 +303,6 @@ export default function Swap() {
           library?.getSigner(account ?? undefined)
         )
 
-        const fee = BigNumber.from(fusionSwap.result.route?.fee.amountOutBN ?? '0').isZero()
-          ? BigNumber.from(fusionSwap.result.route?.amountOutBN ?? '0')
-              .mul(3)
-              .div(1000)
-          : BigNumber.from(fusionSwap.result.route?.fee.amountOutBN ?? '0')
-
         const tx = await fusionContract.processRoute(
           fusionSwap.result.args?.tokenIn,
           ethers.BigNumber.from(fusionSwap.result.args.amountIn ?? '0'),
@@ -302,7 +317,7 @@ export default function Swap() {
               allowedSlippage
             )[0]
           ).raw.toString(),
-          fee.toString(),
+          fusionSwap.result.route?.fee?.amountOutBN ?? '0',
           fusionSwap.result.args.to,
           fusionSwap.result.args.routeCode,
           fusionSwap.result.route?.fromToken?.isNative && fusionSwap.result.args.amountIn
@@ -311,6 +326,25 @@ export default function Swap() {
         )
 
         await tx.wait()
+
+        const inputAmount = parsedAmount?.toSignificant(3)
+        const outputAmount = new TokenAmount(
+          currencies.OUTPUT as Token,
+          ethers.BigNumber.from(fusionSwap.result.route?.amountOutBN ?? '0')
+            .sub(fusionSwap.result.route?.fee?.amountOutBN ?? '0')
+            .toString()
+        ).toSignificant(3)
+
+        const base = `Swap ${inputAmount} ${currencies.INPUT?.symbol} for ${outputAmount} ${currencies.OUTPUT?.symbol}`
+        const withRecipient =
+          recipient === null || recipient === account
+            ? base
+            : `${base} to ${
+                recipientAddress && isAddress(recipientAddress) ? shortenAddress(recipientAddress) : recipientAddress
+              }`
+        const withVersion = `${withRecipient} on xFusion`
+
+        addTransaction(tx, { summary: withVersion })
 
         setSwapState({
           attemptingTxn: false,
@@ -411,6 +445,8 @@ export default function Swap() {
 
   const swapIsUnsupported = useIsTransactionUnsupported(currencies?.INPUT, currencies?.OUTPUT)
 
+  const isFusionFetching = swapMode === 1 && fusionSwap.loading && !account
+
   return (
     <>
       <TokenWarningModal
@@ -489,7 +525,13 @@ export default function Swap() {
                   : currencies.OUTPUT
                   ? new TokenAmount(
                       currencies.OUTPUT as Token,
-                      ethers.BigNumber.from(fusionSwap?.result?.route?.amountOutBN ?? '0').toString()
+                      ethers.BigNumber.from(fusionSwap?.result?.route?.amountOutBN ?? '0').gt(
+                        ethers.BigNumber.from(fusionSwap?.result?.route?.fee?.amountOutBN ?? '0')
+                      )
+                        ? ethers.BigNumber.from(fusionSwap?.result?.route?.amountOutBN ?? '0')
+                            .sub(ethers.BigNumber.from(fusionSwap?.result?.route?.fee?.amountOutBN ?? '0'))
+                            .toString()
+                        : '0'
                     ).toSignificant(6)
                   : '0'
               }
@@ -520,6 +562,12 @@ export default function Swap() {
             {showWrap ? null : (
               <Card padding={showWrap ? '.25rem 1rem 0 1rem' : '0px'} borderRadius={'20px'}>
                 <AutoColumn gap="8px" style={{ padding: '0 16px' }}>
+                  {swapMode === 1 && (
+                    <RowBetween>
+                      <ToggleStyledText disabled={!isUltra}>Ultra Saving </ToggleStyledText>
+                      <Toggle id="toggle-expert-mode-button" isActive={isUltra} toggle={() => onSwitchUltraMode()} />
+                    </RowBetween>
+                  )}
                   {Boolean(trade) && (
                     <RowBetween align="center">
                       <Text fontWeight={500} fontSize={14} color={theme.text2}>
@@ -550,6 +598,16 @@ export default function Swap() {
                       </ClickableText>
                     </RowBetween>
                   )}
+                  {isFusionFetching ? (
+                    <Row align="center" color={theme.text3} style={{ justifyContent: 'end' }}>
+                      <TailLoader r={8} />
+                      <TYPE.main color={theme.text3} style={{ marginLeft: '8px' }} fontSize={14}>
+                        Fetching the best price...
+                      </TYPE.main>
+                    </Row>
+                  ) : (
+                    ''
+                  )}
                 </AutoColumn>
               </Card>
             )}
@@ -567,19 +625,18 @@ export default function Swap() {
                   (wrapType === WrapType.WRAP ? 'Wrap' : wrapType === WrapType.UNWRAP ? 'Unwrap' : null)}
               </ButtonPrimary>
             ) : (swapMode === 0 && noRoute && userHasSpecifiedInputOutput) ||
-              (swapMode === 1 &&
-                (fusionSwap.result?.route?.amountOut === 0 || (fusionSwap.loading && !fusionSwap.result.route))) ? (
+              (swapMode === 1 && (fusionSwap.result?.route?.amountOut === 0 || fusionSwap.loading)) ? (
               <GreyCard style={{ textAlign: 'center' }}>
-                {fusionSwap.result?.route?.amountOut === 0 ? (
+                {swapMode === 1 && fusionSwap.loading ? (
+                  <TYPE.main display={'flex'} justifyContent={'center'} alignItems={'center'}>
+                    <TailLoader r={13} />
+                    <span style={{ marginLeft: '8px' }}>Fetching the best price.</span>
+                  </TYPE.main>
+                ) : (
                   <>
                     <TYPE.main mb="4px">Insufficient liquidity for this trade.</TYPE.main>
                     {singleHopOnly && <TYPE.main mb="4px">Try enabling multi-hop trades.</TYPE.main>}
                   </>
-                ) : (
-                  <TYPE.main display={'flex'} justifyContent={'center'} alignItems={'center'}>
-                    <TailLoader />
-                    <span style={{ marginLeft: '8px' }}>Fetching the best price.</span>
-                  </TYPE.main>
                 )}
               </GreyCard>
             ) : showApproveFlow ? (

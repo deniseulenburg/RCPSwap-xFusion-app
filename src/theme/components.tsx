@@ -95,6 +95,13 @@ export const LinkStyledButton = styled.button<{ disabled?: boolean }>`
   }
 `
 
+export const ToggleStyledText = styled.div<{ disabled?: boolean }>`
+  color: ${({ theme, disabled }) => (disabled ? theme.text3 : theme.green1)};
+  font-weight: ${({ disabled }) => (disabled ? '500' : '600')};
+  margin-right: 8px;
+  font-size: 15px;
+`
+
 // An internal link from the react-router-dom library that is correctly styled
 export const StyledInternalLink = styled(Link)`
   text-decoration: none;

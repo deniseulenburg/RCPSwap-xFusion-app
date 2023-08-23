@@ -95,7 +95,9 @@ export default function SwapModalHeader({
               : fusionSwap.currencies?.OUTPUT
               ? new TokenAmount(
                   fusionSwap.currencies?.OUTPUT as Token,
-                  ethers.BigNumber.from(fusionSwap?.result.route?.amountOutBN ?? '0').toString()
+                  ethers.BigNumber.from(fusionSwap?.result.route?.amountOutBN ?? '0')
+                    .sub(fusionSwap?.result?.route?.fee?.amountOutBN ?? '0')
+                    .toString()
                 ).toSignificant(6)
               : '0'}
           </TruncatedText>

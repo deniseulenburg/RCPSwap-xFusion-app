@@ -13,6 +13,7 @@ export const typeInput = createAction<{ field: Field; typedValue: string }>('swa
 export const switchSwapMode = createAction('swap/switchSwapMode')
 export const replaceSwapState = createAction<{
   field: Field
+  isUltra: boolean
   swapMode: number
   typedValue: string
   inputCurrencyId?: string
@@ -20,3 +21,4 @@ export const replaceSwapState = createAction<{
   recipient: string | null
 }>('swap/replaceSwapState')
 export const setRecipient = createAction<{ recipient: string | null }>('swap/setRecipient')
+export const switchUltraMode = createAction('swap/switchUltraMode')

@@ -1,8 +1,13 @@
 import React from 'react'
 
-export default function TailLoader() {
+export default function TailLoader({ r }: { r: number }) {
   return (
-    <svg width="28" height="28" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg">
+    <svg
+      width={`${r * 2 + 2}`}
+      height={`${r * 2 + 2}`}
+      viewBox={`0 0 ${r * 2 + 2} ${r * 2 + 2}`}
+      xmlns="http://www.w3.org/2000/svg"
+    >
       <defs>
         <linearGradient x1="8.042%" y1="0%" x2="65.682%" y2="23.865%" id="a">
           <stop stopColor="currentColor" stopOpacity="0" offset="0%" />
@@ -12,22 +17,22 @@ export default function TailLoader() {
       </defs>
       <g fill="none" fillRule="evenodd">
         <g transform="translate(1 1)">
-          <path d="M26 13c0-9.94-8.06-13-13-13" id="Oval-2" stroke="url(#a)" strokeWidth="2">
+          <path d={`M${r * 2} ${r}c0-9.94-8.06-${r}-${r}-${r}`} id="Oval-2" stroke="url(#a)" strokeWidth="2">
             <animateTransform
               attributeName="transform"
               type="rotate"
-              from="0 13 13"
-              to="360 13 13"
+              from={`0 ${r} ${r}`}
+              to={`360 ${r} ${r}`}
               dur="0.9s"
               repeatCount="indefinite"
             />
           </path>
-          <circle fill="currentColor" cx="26" cy="13" r="1">
+          <circle fill="currentColor" cx={`${r * 2}`} cy={`${r}`} r="1">
             <animateTransform
               attributeName="transform"
               type="rotate"
-              from="0 13 13"
-              to="360 13 13"
+              from={`0 ${r} ${r}`}
+              to={`360 ${r} ${r}`}
               dur="0.9s"
               repeatCount="indefinite"
             />

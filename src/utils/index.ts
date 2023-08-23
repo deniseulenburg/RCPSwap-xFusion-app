@@ -26,7 +26,7 @@ const ETHERSCAN_PREFIXES: { [chainId in ChainId]: string } = {
   42: 'kovan.',
   56: 'bscscan.com',
   97: 'testnet.bscscan.com',
-  42170: 'nova-explorer.arbitrum.io',
+  42170: 'nova.arbiscan.io',
   1666700000: 'explorer.testnet.harmony.one/#'
 }
 

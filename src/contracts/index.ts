@@ -1,18 +1,10 @@
 export const FUSION_CONTRACT = {
-  address: '0x7B6E7f1C7B205472E8C909a2D53b33fB89159509',
+  address: '0x9186bf4F5f4b3192fBAE5467758156Ec479b2b50',
   abi: [
     {
       inputs: [
-        {
-          internalType: 'address',
-          name: '_feeWallet',
-          type: 'address'
-        },
-        {
-          internalType: 'address[]',
-          name: 'priviledgedUserList',
-          type: 'address[]'
-        }
+        { internalType: 'address', name: '_feeWallet', type: 'address' },
+        { internalType: 'address[]', name: 'priviledgedUserList', type: 'address[]' }
       ],
       stateMutability: 'nonpayable',
       type: 'constructor'
@@ -20,18 +12,8 @@ export const FUSION_CONTRACT = {
     {
       anonymous: false,
       inputs: [
-        {
-          indexed: true,
-          internalType: 'address',
-          name: 'previousOwner',
-          type: 'address'
-        },
-        {
-          indexed: true,
-          internalType: 'address',
-          name: 'newOwner',
-          type: 'address'
-        }
+        { indexed: true, internalType: 'address', name: 'previousOwner', type: 'address' },
+        { indexed: true, internalType: 'address', name: 'newOwner', type: 'address' }
       ],
       name: 'OwnershipTransferred',
       type: 'event'
@@ -39,48 +21,13 @@ export const FUSION_CONTRACT = {
     {
       anonymous: false,
       inputs: [
-        {
-          indexed: true,
-          internalType: 'address',
-          name: 'from',
-          type: 'address'
-        },
-        {
-          indexed: false,
-          internalType: 'address',
-          name: 'to',
-          type: 'address'
-        },
-        {
-          indexed: true,
-          internalType: 'address',
-          name: 'tokenIn',
-          type: 'address'
-        },
-        {
-          indexed: true,
-          internalType: 'address',
-          name: 'tokenOut',
-          type: 'address'
-        },
-        {
-          indexed: false,
-          internalType: 'uint256',
-          name: 'amountIn',
-          type: 'uint256'
-        },
-        {
-          indexed: false,
-          internalType: 'uint256',
-          name: 'amountOutMin',
-          type: 'uint256'
-        },
-        {
-          indexed: false,
-          internalType: 'uint256',
-          name: 'amountOut',
-          type: 'uint256'
-        }
+        { indexed: true, internalType: 'address', name: 'from', type: 'address' },
+        { indexed: false, internalType: 'address', name: 'to', type: 'address' },
+        { indexed: true, internalType: 'address', name: 'tokenIn', type: 'address' },
+        { indexed: true, internalType: 'address', name: 'tokenOut', type: 'address' },
+        { indexed: false, internalType: 'uint256', name: 'amountIn', type: 'uint256' },
+        { indexed: false, internalType: 'uint256', name: 'amountOutMin', type: 'uint256' },
+        { indexed: false, internalType: 'uint256', name: 'amountOut', type: 'uint256' }
       ],
       name: 'Route',
       type: 'event'
@@ -88,111 +35,46 @@ export const FUSION_CONTRACT = {
     {
       inputs: [],
       name: 'feeWallet',
-      outputs: [
-        {
-          internalType: 'address',
-          name: '',
-          type: 'address'
-        }
-      ],
+      outputs: [{ internalType: 'address', name: '', type: 'address' }],
       stateMutability: 'view',
       type: 'function'
     },
     {
       inputs: [],
       name: 'owner',
-      outputs: [
-        {
-          internalType: 'address',
-          name: '',
-          type: 'address'
-        }
-      ],
+      outputs: [{ internalType: 'address', name: '', type: 'address' }],
       stateMutability: 'view',
       type: 'function'
     },
-    {
-      inputs: [],
-      name: 'pause',
-      outputs: [],
-      stateMutability: 'nonpayable',
-      type: 'function'
-    },
+    { inputs: [], name: 'pause', outputs: [], stateMutability: 'nonpayable', type: 'function' },
     {
       inputs: [
-        {
-          internalType: 'address',
-          name: 'tokenIn',
-          type: 'address'
-        },
-        {
-          internalType: 'uint256',
-          name: 'amountIn',
-          type: 'uint256'
-        },
-        {
-          internalType: 'address',
-          name: 'tokenOut',
-          type: 'address'
-        },
-        {
-          internalType: 'uint256',
-          name: 'amountOutMin',
-          type: 'uint256'
-        },
-        {
-          internalType: 'uint256',
-          name: 'estimatedFee',
-          type: 'uint256'
-        },
-        {
-          internalType: 'address',
-          name: 'to',
-          type: 'address'
-        },
-        {
-          internalType: 'bytes',
-          name: 'route',
-          type: 'bytes'
-        }
+        { internalType: 'address', name: 'tokenIn', type: 'address' },
+        { internalType: 'uint256', name: 'amountIn', type: 'uint256' },
+        { internalType: 'address', name: 'tokenOut', type: 'address' },
+        { internalType: 'uint256', name: 'amountOutMin', type: 'uint256' },
+        { internalType: 'uint256', name: 'estimatedFee', type: 'uint256' },
+        { internalType: 'address', name: 'to', type: 'address' },
+        { internalType: 'bytes', name: 'route', type: 'bytes' }
       ],
       name: 'processRoute',
-      outputs: [
-        {
-          internalType: 'uint256',
-          name: 'amountOut',
-          type: 'uint256'
-        }
-      ],
+      outputs: [{ internalType: 'uint256', name: 'amountOut', type: 'uint256' }],
       stateMutability: 'payable',
       type: 'function'
     },
+    { inputs: [], name: 'renounceOwnership', outputs: [], stateMutability: 'nonpayable', type: 'function' },
+    { inputs: [], name: 'resume', outputs: [], stateMutability: 'nonpayable', type: 'function' },
     {
-      inputs: [],
-      name: 'renounceOwnership',
-      outputs: [],
-      stateMutability: 'nonpayable',
-      type: 'function'
-    },
-    {
-      inputs: [],
-      name: 'resume',
+      inputs: [{ internalType: 'address', name: 'wallet', type: 'address' }],
+      name: 'setFeeWallet',
       outputs: [],
       stateMutability: 'nonpayable',
       type: 'function'
     },
     {
       inputs: [
-        {
-          internalType: 'address',
-          name: 'user',
-          type: 'address'
-        },
-        {
-          internalType: 'bool',
-          name: 'priviledge',
-          type: 'bool'
-        }
+        { internalType: 'address', name: 'user', type: 'address' },
+        { internalType: 'bool', name: 'priviledge', type: 'bool' }
       ],
       name: 'setPriviledge',
       outputs: [],
@@ -200,13 +82,7 @@ export const FUSION_CONTRACT = {
       type: 'function'
     },
     {
-      inputs: [
-        {
-          internalType: 'address',
-          name: 'newOwner',
-          type: 'address'
-        }
-      ],
+      inputs: [{ internalType: 'address', name: 'newOwner', type: 'address' }],
       name: 'transferOwnership',
       outputs: [],
       stateMutability: 'nonpayable',
@@ -214,90 +90,33 @@ export const FUSION_CONTRACT = {
     },
     {
       inputs: [
-        {
-          internalType: 'address payable',
-          name: 'transferValueTo',
-          type: 'address'
-        },
-        {
-          internalType: 'uint256',
-          name: 'amountValueTransfer',
-          type: 'uint256'
-        },
-        {
-          internalType: 'address',
-          name: 'tokenIn',
-          type: 'address'
-        },
-        {
-          internalType: 'uint256',
-          name: 'amountIn',
-          type: 'uint256'
-        },
-        {
-          internalType: 'address',
-          name: 'tokenOut',
-          type: 'address'
-        },
-        {
-          internalType: 'uint256',
-          name: 'amountOutMin',
-          type: 'uint256'
-        },
-        {
-          internalType: 'uint256',
-          name: 'estimatedFee',
-          type: 'uint256'
-        },
-        {
-          internalType: 'address',
-          name: 'to',
-          type: 'address'
-        },
-        {
-          internalType: 'bytes',
-          name: 'route',
-          type: 'bytes'
-        }
+        { internalType: 'address payable', name: 'transferValueTo', type: 'address' },
+        { internalType: 'uint256', name: 'amountValueTransfer', type: 'uint256' },
+        { internalType: 'address', name: 'tokenIn', type: 'address' },
+        { internalType: 'uint256', name: 'amountIn', type: 'uint256' },
+        { internalType: 'address', name: 'tokenOut', type: 'address' },
+        { internalType: 'uint256', name: 'amountOutMin', type: 'uint256' },
+        { internalType: 'uint256', name: 'estimatedFee', type: 'uint256' },
+        { internalType: 'address', name: 'to', type: 'address' },
+        { internalType: 'bytes', name: 'route', type: 'bytes' }
       ],
       name: 'transferValueAndprocessRoute',
-      outputs: [
-        {
-          internalType: 'uint256',
-          name: 'amountOut',
-          type: 'uint256'
-        }
-      ],
+      outputs: [{ internalType: 'uint256', name: 'amountOut', type: 'uint256' }],
       stateMutability: 'payable',
       type: 'function'
     },
     {
       inputs: [
-        {
-          internalType: 'int256',
-          name: 'amount0Delta',
-          type: 'int256'
-        },
-        {
-          internalType: 'int256',
-          name: 'amount1Delta',
-          type: 'int256'
-        },
-        {
-          internalType: 'bytes',
-          name: 'data',
-          type: 'bytes'
-        }
+        { internalType: 'int256', name: 'amount0Delta', type: 'int256' },
+        { internalType: 'int256', name: 'amount1Delta', type: 'int256' },
+        { internalType: 'bytes', name: 'data', type: 'bytes' }
       ],
       name: 'uniswapV3SwapCallback',
       outputs: [],
       stateMutability: 'nonpayable',
       type: 'function'
     },
-    {
-      stateMutability: 'payable',
-      type: 'receive'
-    }
+    { stateMutability: 'payable', type: 'receive' }
   ]
 }
 
