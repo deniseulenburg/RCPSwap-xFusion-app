@@ -1,4 +1,4 @@
-import { Currency, currencyEquals, WETH, DEFAULT_CURRENCIES } from '@venomswap/sdk'
+import { Currency, currencyEquals, WETH, DEFAULT_CURRENCIES } from '@rcpswap/sdk'
 import { useMemo } from 'react'
 import { tryParseAmount } from '../state/swap/hooks'
 import { useTransactionAdder } from '../state/transactions/hooks'

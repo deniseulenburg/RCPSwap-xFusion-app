@@ -1,4 +1,4 @@
-import { ChainId, Token } from '@venomswap/sdk'
+import { ChainId, Token } from '@rcpswap/sdk'
 import getPairTokensWithDefaults from '../utils/getPairTokensWithDefaults'
 
 export interface StakingRewardsInfo {
@@ -10,115 +10,115 @@ export interface StakingRewardsInfo {
 export const STAKING_REWARDS_INFO: {
   [chainId in ChainId]?: StakingRewardsInfo[]
 } = {
-  [ChainId.HARMONY_MAINNET]: [
+  [ChainId.ARBITRUM_NOVA]: [
     {
       pid: 0,
-      tokens: getPairTokensWithDefaults(ChainId.HARMONY_MAINNET, 'WONE/BUSD'),
+      tokens: getPairTokensWithDefaults(ChainId.ARBITRUM_NOVA, 'WONE/BUSD'),
       active: true
     },
     {
       pid: 1,
-      tokens: getPairTokensWithDefaults(ChainId.HARMONY_MAINNET, 'WONE/VIPER'),
+      tokens: getPairTokensWithDefaults(ChainId.ARBITRUM_NOVA, 'WONE/VIPER'),
       active: true
     },
     {
       pid: 2,
-      tokens: getPairTokensWithDefaults(ChainId.HARMONY_MAINNET, 'WONE/1ETH'),
+      tokens: getPairTokensWithDefaults(ChainId.ARBITRUM_NOVA, 'WONE/1ETH'),
       active: true
     },
     {
       pid: 3,
-      tokens: getPairTokensWithDefaults(ChainId.HARMONY_MAINNET, 'BUSD/VIPER'),
+      tokens: getPairTokensWithDefaults(ChainId.ARBITRUM_NOVA, 'BUSD/VIPER'),
       active: true
     },
     {
       pid: 4,
-      tokens: getPairTokensWithDefaults(ChainId.HARMONY_MAINNET, 'BUSD/bscBUSD'),
+      tokens: getPairTokensWithDefaults(ChainId.ARBITRUM_NOVA, 'BUSD/bscBUSD'),
       active: true
     },
     {
       pid: 5,
-      tokens: getPairTokensWithDefaults(ChainId.HARMONY_MAINNET, 'WONE/1USDC'),
+      tokens: getPairTokensWithDefaults(ChainId.ARBITRUM_NOVA, 'WONE/1USDC'),
       active: true
     },
     {
       pid: 6,
-      tokens: getPairTokensWithDefaults(ChainId.HARMONY_MAINNET, '1ROT/VIPER'),
+      tokens: getPairTokensWithDefaults(ChainId.ARBITRUM_NOVA, '1ROT/VIPER'),
       active: true
     },
     {
       pid: 7,
-      tokens: getPairTokensWithDefaults(ChainId.HARMONY_MAINNET, '1MAGGOT/VIPER'),
+      tokens: getPairTokensWithDefaults(ChainId.ARBITRUM_NOVA, '1MAGGOT/VIPER'),
       active: true
     },
     {
       pid: 8,
-      tokens: getPairTokensWithDefaults(ChainId.HARMONY_MAINNET, '1WISE/VIPER'),
+      tokens: getPairTokensWithDefaults(ChainId.ARBITRUM_NOVA, '1WISE/VIPER'),
       active: true
     },
     {
       pid: 9,
-      tokens: getPairTokensWithDefaults(ChainId.HARMONY_MAINNET, '1DSLA/VIPER'),
+      tokens: getPairTokensWithDefaults(ChainId.ARBITRUM_NOVA, '1DSLA/VIPER'),
       active: true
     },
     {
       pid: 10,
-      tokens: getPairTokensWithDefaults(ChainId.HARMONY_MAINNET, 'LINK/VIPER'),
+      tokens: getPairTokensWithDefaults(ChainId.ARBITRUM_NOVA, 'LINK/VIPER'),
       active: true
     },
     {
       pid: 11,
-      tokens: getPairTokensWithDefaults(ChainId.HARMONY_MAINNET, '1AAVE/VIPER'),
+      tokens: getPairTokensWithDefaults(ChainId.ARBITRUM_NOVA, '1AAVE/VIPER'),
       active: true
     },
     {
       pid: 12,
-      tokens: getPairTokensWithDefaults(ChainId.HARMONY_MAINNET, '1SNX/VIPER'),
+      tokens: getPairTokensWithDefaults(ChainId.ARBITRUM_NOVA, '1SNX/VIPER'),
       active: true
     },
     {
       pid: 13,
-      tokens: getPairTokensWithDefaults(ChainId.HARMONY_MAINNET, '1YFI/VIPER'),
+      tokens: getPairTokensWithDefaults(ChainId.ARBITRUM_NOVA, '1YFI/VIPER'),
       active: true
     },
     {
       pid: 14,
-      tokens: getPairTokensWithDefaults(ChainId.HARMONY_MAINNET, '11INCH/VIPER'),
+      tokens: getPairTokensWithDefaults(ChainId.ARBITRUM_NOVA, '11INCH/VIPER'),
       active: true
     },
     {
       pid: 15,
-      tokens: getPairTokensWithDefaults(ChainId.HARMONY_MAINNET, 'bscCAKE/VIPER'),
+      tokens: getPairTokensWithDefaults(ChainId.ARBITRUM_NOVA, 'bscCAKE/VIPER'),
       active: true
     },
     {
       pid: 16,
-      tokens: getPairTokensWithDefaults(ChainId.HARMONY_MAINNET, '1SUSHI/VIPER'),
+      tokens: getPairTokensWithDefaults(ChainId.ARBITRUM_NOVA, '1SUSHI/VIPER'),
       active: true
     },
     {
       pid: 17,
-      tokens: getPairTokensWithDefaults(ChainId.HARMONY_MAINNET, '1UNI/VIPER'),
+      tokens: getPairTokensWithDefaults(ChainId.ARBITRUM_NOVA, '1UNI/VIPER'),
       active: true
     },
     {
       pid: 18,
-      tokens: getPairTokensWithDefaults(ChainId.HARMONY_MAINNET, '1WISE/1ETH'),
+      tokens: getPairTokensWithDefaults(ChainId.ARBITRUM_NOVA, '1WISE/1ETH'),
       active: true
     },
     {
       pid: 19,
-      tokens: getPairTokensWithDefaults(ChainId.HARMONY_MAINNET, 'WONE/1WBTC'),
+      tokens: getPairTokensWithDefaults(ChainId.ARBITRUM_NOVA, 'WONE/1WBTC'),
       active: true
     },
     {
       pid: 20,
-      tokens: getPairTokensWithDefaults(ChainId.HARMONY_MAINNET, 'WONE/1MATIC'),
+      tokens: getPairTokensWithDefaults(ChainId.ARBITRUM_NOVA, 'WONE/1MATIC'),
       active: true
     },
     {
       pid: 21,
-      tokens: getPairTokensWithDefaults(ChainId.HARMONY_MAINNET, 'JENN/VIPER'),
+      tokens: getPairTokensWithDefaults(ChainId.ARBITRUM_NOVA, 'JENN/VIPER'),
       active: true
     }
   ],

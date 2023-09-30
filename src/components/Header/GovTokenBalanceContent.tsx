@@ -1,4 +1,4 @@
-import { TokenAmount, Blockchain } from '@venomswap/sdk'
+import { TokenAmount, Blockchain } from '@rcpswap/sdk'
 import React from 'react'
 //import React, { useMemo } from 'react'
 import { X } from 'react-feather'
@@ -217,7 +217,7 @@ export default function GovTokenBalanceContent({ setShowUniBalanceModal }: { set
             </RowBetween>
           </AutoColumn>
         </CardSection>
-        {blockchain === Blockchain.HARMONY && govTokenPrice && circulatingMarketCap && totalMarketCap && (
+        {blockchain === Blockchain.NOVA && govTokenPrice && circulatingMarketCap && totalMarketCap && (
           <>
             <Break />
             <CardSection gap="sm">

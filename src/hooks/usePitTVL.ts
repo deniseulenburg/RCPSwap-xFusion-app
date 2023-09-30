@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { TokenAmount, Fraction } from '@venomswap/sdk'
+import { TokenAmount, Fraction } from '@rcpswap/sdk'
 import { useTokenBalance } from '../state/wallet/hooks'
 import useBUSDPrice from './useBUSDPrice'
 import usePitToken from './usePitToken'

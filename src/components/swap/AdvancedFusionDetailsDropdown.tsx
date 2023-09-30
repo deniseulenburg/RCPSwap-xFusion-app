@@ -5,7 +5,7 @@ import React, { useContext } from 'react'
 import styled, { ThemeContext } from 'styled-components'
 import { Text } from 'rebass'
 import { XFusionSwapType } from 'state/swap/hooks'
-import { Token, TokenAmount } from '@venomswap/sdk'
+import { Token, TokenAmount } from '@rcpswap/sdk'
 import { ethers } from 'ethers'
 
 const AdvancedDetailsFooter = styled.div<{ show: boolean }>`

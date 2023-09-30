@@ -1,5 +1,5 @@
 import { Web3Provider } from '@ethersproject/providers'
-import { Blockchain } from '@venomswap/sdk'
+import { Blockchain } from '@rcpswap/sdk'
 import { BLOCKCHAIN } from '../connectors'
 
 export default function getLibrary(provider: any): Web3Provider {
@@ -8,7 +8,7 @@ export default function getLibrary(provider: any): Web3Provider {
     case Blockchain.BINANCE_SMART_CHAIN:
       library.pollingInterval = 1500
       break
-    case Blockchain.HARMONY:
+    case Blockchain.NOVA:
       library.pollingInterval = 500
       break
     default:

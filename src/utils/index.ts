@@ -5,7 +5,7 @@ import { JsonRpcSigner, Web3Provider } from '@ethersproject/providers'
 import { BigNumber } from '@ethersproject/bignumber'
 import { abi as IUniswapV2Router02ABI } from '@venomswap/periphery/build/IUniswapV2Router02.json'
 import { ROUTER_ADDRESSES } from '../constants'
-import { ChainId, JSBI, Percent, Token, CurrencyAmount, Currency, DEFAULT_CURRENCIES } from '@venomswap/sdk'
+import { ChainId, JSBI, Percent, Token, CurrencyAmount, Currency, DEFAULT_CURRENCIES } from '@rcpswap/sdk'
 import { TokenAddressMap } from '../state/lists/hooks'
 import { useActiveWeb3React } from '../hooks/index'
 

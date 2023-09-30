@@ -7,7 +7,7 @@ import { TYPE, CloseIcon, ExternalLink } from '../../theme'
 import { ButtonError } from '../Button'
 import CurrencyInputPanel from '../CurrencyInputPanel'
 import { maxAmountSpend } from '../../utils/maxAmountSpend'
-import { TokenAmount, Pair, Blockchain } from '@venomswap/sdk'
+import { TokenAmount, Pair, Blockchain } from '@rcpswap/sdk'
 import { useActiveWeb3React } from '../../hooks'
 import { StakingInfo, useDerivedUnstakeInfo } from '../../state/stake/hooks'
 //import { wrappedCurrencyAmount } from '../../utils/wrappedCurrency'
@@ -96,7 +96,7 @@ export default function ModifiedStakingModal({ isOpen, onDismiss, stakingInfo }:
   const { lastActionBlock, withdrawalFee } = useCalculateWithdrawalFee(stakingInfo.pid, account)
 
   let feeInfoUrl = ''
-  if (blockchain == Blockchain.HARMONY) {
+  if (blockchain == Blockchain.NOVA) {
     feeInfoUrl = 'https://docs.venomdao.org/viper/fees'
   }
 

@@ -1,4 +1,4 @@
-import { ChainId, /*TokenAmount,*/ Blockchain } from '@venomswap/sdk'
+import { ChainId, /*TokenAmount,*/ Blockchain } from '@rcpswap/sdk'
 import React, { useState } from 'react'
 import { Text } from 'rebass'
 import { NavLink } from 'react-router-dom'
@@ -323,7 +323,7 @@ export default function Header() {
       logoDark = CobraLogoDark
       logo = CobraLogo
       break
-    case Blockchain.HARMONY:
+    case Blockchain.NOVA:
       logoDark = ViperLogoDark
       logo = ViperLogo
       break

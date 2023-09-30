@@ -1,4 +1,4 @@
-import { Currency, currencyEquals, JSBI, Token, Price, WETH, ChainId } from '@venomswap/sdk'
+import { Currency, currencyEquals, JSBI, Token, Price, WETH, ChainId } from '@rcpswap/sdk'
 import { useMemo } from 'react'
 import { PairState, usePairs } from '../data/Reserves'
 import { useActiveWeb3React } from '.'

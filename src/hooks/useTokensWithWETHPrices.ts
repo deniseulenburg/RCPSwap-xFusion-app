@@ -1,4 +1,4 @@
-import { ChainId, WETH, Token, Blockchain } from '@venomswap/sdk'
+import { ChainId, WETH, Token, Blockchain } from '@rcpswap/sdk'
 import { useMemo } from 'react'
 import useGovernanceToken from './useGovernanceToken'
 import useTokenWethPrice from './useTokenWETHPrice'
@@ -19,15 +19,15 @@ export default function useTokensWithWethPrices(): Record<string, any> {
   const BUSD: Token | undefined = getToken(chainId, BUSDTicker)
   const BUSDWETHPrice = useTokenWethPrice(BUSD)
 
-  const USDCTicker = blockchain === Blockchain.HARMONY ? '1USDC' : 'USDC'
+  const USDCTicker = blockchain === Blockchain.NOVA ? '1USDC' : 'USDC'
   const USDC: Token | undefined = getToken(chainId, USDCTicker)
   const USDCWETHPrice = useTokenWethPrice(USDC)
 
   // Harmony specific tokens
-  const bscBUSD: Token | undefined = blockchain === Blockchain.HARMONY ? getToken(chainId, 'bscBUSD') : undefined
+  const bscBUSD: Token | undefined = blockchain === Blockchain.NOVA ? getToken(chainId, 'bscBUSD') : undefined
   const bscBUSDWETHPrice = useTokenWethPrice(bscBUSD)
 
-  const bridgedETH: Token | undefined = Blockchain.HARMONY ? getToken(chainId, '1ETH') : undefined
+  const bridgedETH: Token | undefined = Blockchain.NOVA ? getToken(chainId, '1ETH') : undefined
   const bridgedETHWETHPrice = useTokenWethPrice(bridgedETH)
 
   return useMemo(() => {

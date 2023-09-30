@@ -1,4 +1,4 @@
-import { currencyEquals, Token, TokenAmount, Trade } from '@venomswap/sdk'
+import { currencyEquals, Token, TokenAmount, Trade } from '@rcpswap/sdk'
 import React, { useCallback, useMemo } from 'react'
 import TransactionConfirmationModal, {
   ConfirmationModalContent,

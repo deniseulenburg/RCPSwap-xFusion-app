@@ -1,5 +1,5 @@
 import { Interface } from '@ethersproject/abi'
-import { ChainId } from '@venomswap/sdk'
+import { ChainId } from '@rcpswap/sdk'
 import V1_EXCHANGE_ABI from './v1_exchange.json'
 import V1_FACTORY_ABI from './v1_factory.json'
 
@@ -11,7 +11,7 @@ const V1_FACTORY_ADDRESSES: { [chainId in ChainId]: string } = {
   [ChainId.KOVAN]: '0xD3E51Ef092B2845f10401a0159B2B96e8B6c3D30',
   [ChainId.BSC_MAINNET]: '0x0000000000000000000000000000000000000001',
   [ChainId.BSC_TESTNET]: '0x0000000000000000000000000000000000000001',
-  [ChainId.HARMONY_MAINNET]: '0x0000000000000000000000000000000000000001',
+  [ChainId.ARBITRUM_NOVA]: '0x0000000000000000000000000000000000000001',
   [ChainId.HARMONY_TESTNET]: '0x0000000000000000000000000000000000000001'
 }
 

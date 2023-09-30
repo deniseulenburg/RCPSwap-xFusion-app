@@ -768,7 +768,7 @@ export default [
       symbol: 'ETH',
       decimals: 18
     },
-    rpc: ['https://nova.arbitrum.io/rpc'],
+    rpc: ['https://nova.arbitrum.io/rpc', 'https://arbitrum-nova.drpc.org'],
     faucets: [],
     explorers: [
       {

@@ -3,7 +3,7 @@ import { Text } from 'rebass'
 import { StyledBalanceMaxMini } from './styleds'
 import { Repeat } from 'react-feather'
 import { ThemeContext } from 'styled-components'
-import { Price } from '@venomswap/sdk'
+import { Price } from '@rcpswap/sdk'
 import { XFusionSwapType } from 'state/swap/hooks'
 import { ethers } from 'ethers'
 

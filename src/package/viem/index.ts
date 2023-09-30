@@ -280,10 +280,18 @@ export const arbitrumNova = {
   nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
   rpcUrls: {
     default: {
-      http: ['https://nova.arbitrum.io/rpc']
+      http: [
+        'https://lb.drpc.org/ogrpc?network=arbitrum-nova&dkey=At0OdVg0-EXdgd-Fv0azP6So2FX1Xw8R7qrVGuupJxEQ',
+        'https://nova.arbitrum.io/rpc',
+        'https://arbitrum-nova.drpc.org'
+      ]
     },
     public: {
-      http: ['https://nova.arbitrum.io/rpc']
+      http: [
+        'https://lb.drpc.org/ogrpc?network=arbitrum-nova&dkey=At0OdVg0-EXdgd-Fv0azP6So2FX1Xw8R7qrVGuupJxEQ',
+        'https://nova.arbitrum.io/rpc',
+        'https://arbitrum-nova.drpc.org'
+      ]
     }
   },
   blockExplorers: {

@@ -1,4 +1,4 @@
-import { Blockchain, ChainId } from '@venomswap/sdk'
+import { Blockchain, ChainId } from '@rcpswap/sdk'
 
 export default function getBlockchain(chainId: ChainId | undefined): Blockchain {
   switch (chainId) {
@@ -11,9 +11,8 @@ export default function getBlockchain(chainId: ChainId | undefined): Blockchain 
     case ChainId.BSC_MAINNET:
     case ChainId.BSC_TESTNET:
       return Blockchain.BINANCE_SMART_CHAIN
-    case ChainId.HARMONY_MAINNET:
-    case ChainId.HARMONY_TESTNET:
-      return Blockchain.HARMONY
+    case ChainId.ARBITRUM_NOVA:
+      return Blockchain.NOVA
     default:
       return Blockchain.ETHEREUM
   }

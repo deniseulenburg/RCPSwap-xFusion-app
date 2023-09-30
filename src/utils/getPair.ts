@@ -1,4 +1,4 @@
-import { Token, TokenAmount, Pair } from '@venomswap/sdk'
+import { Token, TokenAmount, Pair } from '@rcpswap/sdk'
 import { BigNumber } from 'ethers'
 
 export default function getPair(

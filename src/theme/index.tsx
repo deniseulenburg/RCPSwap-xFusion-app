@@ -11,7 +11,7 @@ import { Text, TextProps } from 'rebass'
 import { Colors } from './styled'
 
 import useBlockchain from '../hooks/useBlockchain'
-import { Blockchain } from '@venomswap/sdk'
+import { Blockchain } from '@rcpswap/sdk'
 
 export * from './components'
 
@@ -281,7 +281,7 @@ export function colors(blockchain: Blockchain, darkMode: boolean): Colors {
   switch (blockchain) {
     case Blockchain.BINANCE_SMART_CHAIN:
       return bscColors(darkMode)
-    case Blockchain.HARMONY:
+    case Blockchain.NOVA:
       return harmonyColors(darkMode)
     default:
       return viperColors(darkMode)

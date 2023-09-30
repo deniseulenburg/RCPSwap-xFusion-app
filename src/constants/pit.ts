@@ -1,4 +1,4 @@
-import { ChainId, Token } from '@venomswap/sdk'
+import { ChainId, Token } from '@rcpswap/sdk'
 import getPairTokensWithDefaults from '../utils/getPairTokensWithDefaults'
 
 export const PIT_POOLS: {
@@ -7,26 +7,26 @@ export const PIT_POOLS: {
     tokens: [Token, Token]
   }[]
 } = {
-  [ChainId.HARMONY_MAINNET]: [
+  [ChainId.ARBITRUM_NOVA]: [
     {
       pid: 0,
-      tokens: getPairTokensWithDefaults(ChainId.HARMONY_MAINNET, 'WONE/BUSD')
+      tokens: getPairTokensWithDefaults(ChainId.ARBITRUM_NOVA, 'WONE/BUSD')
     },
     {
       pid: 1,
-      tokens: getPairTokensWithDefaults(ChainId.HARMONY_MAINNET, 'WONE/VIPER')
+      tokens: getPairTokensWithDefaults(ChainId.ARBITRUM_NOVA, 'WONE/VIPER')
     },
     {
       pid: 2,
-      tokens: getPairTokensWithDefaults(ChainId.HARMONY_MAINNET, 'WONE/1ETH')
+      tokens: getPairTokensWithDefaults(ChainId.ARBITRUM_NOVA, 'WONE/1ETH')
     },
     {
       pid: 3,
-      tokens: getPairTokensWithDefaults(ChainId.HARMONY_MAINNET, 'BUSD/VIPER')
+      tokens: getPairTokensWithDefaults(ChainId.ARBITRUM_NOVA, 'BUSD/VIPER')
     },
     {
       pid: 4,
-      tokens: getPairTokensWithDefaults(ChainId.HARMONY_MAINNET, 'BUSD/bscBUSD')
+      tokens: getPairTokensWithDefaults(ChainId.ARBITRUM_NOVA, 'BUSD/bscBUSD')
     }
   ],
   [ChainId.HARMONY_TESTNET]: [

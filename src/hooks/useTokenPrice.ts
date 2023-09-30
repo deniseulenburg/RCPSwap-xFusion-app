@@ -1,4 +1,4 @@
-import { Currency, Token } from '@venomswap/sdk'
+import { Currency, Token } from '@rcpswap/sdk'
 import axios from 'axios'
 import { useEffect, useState } from 'react'
 

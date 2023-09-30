@@ -1,4 +1,4 @@
-import { Currency, ETHER, HARMONY, BINANCE_COIN, Token } from '@venomswap/sdk'
+import { Currency, ETHER, BINANCE_COIN, Token } from '@rcpswap/sdk'
 import React, { KeyboardEvent, RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import ReactGA from 'react-ga'
 import { useTranslation } from 'react-i18next'
@@ -137,8 +137,8 @@ export function CurrencySearch({
         const s = debouncedQuery.toLowerCase().trim()
         if (s === 'eth') {
           handleCurrencySelect(ETHER)
-        } else if (s === 'one') {
-          handleCurrencySelect(HARMONY)
+          // } else if (s === 'one') {
+          //   handleCurrencySelect(ETHER)
         } else if (s === 'bnb') {
           handleCurrencySelect(BINANCE_COIN)
         } else if (filteredSortedTokens.length > 0) {

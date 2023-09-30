@@ -7,8 +7,8 @@ import { abi as MASTER_BREEDER_ABI } from '@venomswap/contracts/build/MasterBree
 import { abi as PIT_ABI } from '@venomswap/contracts/build/Pit.json'
 import { abi as PIT_BREEDER_ABI } from '@venomswap/contracts/build/PitBreeder.json'
 import { abi as MERKLE_DISTRIBUTOR_ABI } from '@uniswap/merkle-distributor/build/MerkleDistributor.json'
-import { ChainId, WETH } from '@venomswap/sdk'
-import { abi as IUniswapV2PairABI } from '@venomswap/core/build/IUniswapV2Pair.json'
+import { ChainId, WETH } from '@rcpswap/sdk'
+import { abi as IUniswapV2PairABI } from '@rcpswap/core/build/IRCPswapV2Pair.json'
 import { useMemo } from 'react'
 import { GOVERNANCE_ADDRESS, MERKLE_DISTRIBUTOR_ADDRESS, MASTER_BREEDER, PIT, PIT_BREEDER } from '../constants'
 import {

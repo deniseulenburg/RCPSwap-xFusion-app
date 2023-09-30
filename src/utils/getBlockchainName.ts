@@ -1,4 +1,4 @@
-import { ChainId } from '@venomswap/sdk'
+import { ChainId } from '@rcpswap/sdk'
 
 export default function getBlockchainName(chainId: ChainId | undefined): string {
   switch (chainId) {
@@ -11,7 +11,7 @@ export default function getBlockchainName(chainId: ChainId | undefined): string 
     case ChainId.BSC_MAINNET:
     case ChainId.BSC_TESTNET:
       return 'Binance Smart Chain'
-    case ChainId.HARMONY_MAINNET:
+    case ChainId.ARBITRUM_NOVA:
     case ChainId.HARMONY_TESTNET:
       return 'Arbitrum Nova'
     default:

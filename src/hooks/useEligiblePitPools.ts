@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { CallState } from '../state/multicall/hooks'
-import { JSBI } from '@venomswap/sdk'
+import { JSBI } from '@rcpswap/sdk'
 
 export default function useEligiblePitPools(
   stakingPools: any,
