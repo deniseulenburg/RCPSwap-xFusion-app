@@ -16,7 +16,7 @@ const BannerWrapper = styled.a`
 `
 
 const BannerContact = styled.a`
-  background-color: rgba(0, 0, 0, 0.3);
+  background-color: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(4px);
   padding: 8px;
   position: absolute;
