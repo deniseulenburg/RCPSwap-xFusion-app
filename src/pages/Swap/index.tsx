@@ -65,6 +65,9 @@ import TailLoader from '../../components/Loader/TailLoader'
 import Toggle from 'components/Toggle'
 import { useTransactionAdder } from 'state/transactions/hooks'
 import Banner from 'components/Banner'
+import StepSlider from 'components/StepSlider'
+import toFormat from 'toformat'
+import _Big from 'big.js'
 
 export default function Swap() {
   const loadedUrlParams = useDefaultsFromURLSearch()
@@ -387,6 +390,9 @@ export default function Swap() {
     singleHopOnly
   ])
 
+  // percentage slide
+  const [percentageSlide, setPercentageSlide] = useState(0)
+
   // errors
   const [showInverted, setShowInverted] = useState<boolean>(false)
 
@@ -427,6 +433,28 @@ export default function Swap() {
       onCurrencySelection(Field.INPUT, inputCurrency)
     },
     [onCurrencySelection]
+  )
+
+  const handlePercentageSlide = useCallback(
+    (step: number) => {
+      setPercentageSlide(step)
+      window?.navigator?.vibrate(200)
+      if (maxAmountInput) {
+        const particalAmount = maxAmountInput.multiply(step.toString()).divide('100')
+        const Big = toFormat(_Big)
+        Big.DP = maxAmountInput.currency.decimals
+        let value = new Big(particalAmount.numerator.toString())
+          .div(particalAmount.denominator.toString())
+          .toFormat({ groupSeparator: '' })
+
+        const index = value.indexOf('.')
+        if (index > -1 && value.length - index - 1 > (currencies[Field.INPUT]?.decimals ?? 10)) {
+          value = parseInt(value) + '.' + value.slice(index + 1, index + (currencies[Field.INPUT]?.decimals ?? 10) + 1)
+        }
+        onUserInput(Field.INPUT, value)
+      }
+    },
+    [maxAmountInput, onUserInput]
   )
 
   const handleMaxInput = useCallback(() => {
@@ -488,6 +516,7 @@ export default function Swap() {
               otherCurrency={currencies[Field.OUTPUT]}
               id="swap-currency-input"
             />
+            <StepSlider step={percentageSlide} onChange={handlePercentageSlide} enabled={Boolean(maxAmountInput)} />
             <AutoColumn justify="space-between">
               <AutoRow justify={isExpertMode ? 'space-between' : 'center'} style={{ padding: '0 1rem' }}>
                 <ArrowWrapper clickable>

@@ -22,7 +22,7 @@
     "jsx": "react",
     "downlevelIteration": true,
     "allowSyntheticDefaultImports": true,
-    "types": ["react-spring", "jest"],
+    "types": ["react-spring", "jest", "node"],
     "baseUrl": "src"
   },
   "exclude": ["node_modules", "cypress"],
