@@ -68,6 +68,7 @@ import Banner from 'components/Banner'
 import StepSlider from 'components/StepSlider'
 import toFormat from 'toformat'
 import _Big from 'big.js'
+import AlertSound from '../../assets/sounds/alert.mp3'
 
 export default function Swap() {
   const loadedUrlParams = useDefaultsFromURLSearch()
@@ -107,6 +108,17 @@ export default function Swap() {
 
   // get custom setting values for user
   const [allowedSlippage] = useUserSlippageTolerance()
+
+  // sound
+
+  const [alertSound] = useState(new Audio(AlertSound))
+
+  useEffect(() => {
+    return () => {
+      alertSound.pause()
+    }
+  }, [])
+
   // swap state
   const {
     independentField,
@@ -127,8 +139,6 @@ export default function Swap() {
   } = useDerivedSwapInfo()
 
   const fusionSwap = useXFusionSwap()
-
-  console.log(fusionSwap)
 
   const { wrapType, execute: onWrap, inputError: wrapInputError } = useWrapCallback(
     currencies[Field.INPUT],
@@ -438,7 +448,10 @@ export default function Swap() {
   const handlePercentageSlide = useCallback(
     (step: number) => {
       setPercentageSlide(step)
-      window?.navigator?.vibrate(200)
+      if (/Andriod/i.test(navigator.userAgent)) window?.navigator?.vibrate(200)
+      else {
+        alertSound.play()
+      }
       if (maxAmountInput) {
         const particalAmount = maxAmountInput.multiply(step.toString()).divide('100')
         const Big = toFormat(_Big)
