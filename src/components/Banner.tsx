@@ -15,7 +15,7 @@ const BannerWrapper = styled.a`
   overflow: hidden;
 `
 
-const BannerContact = styled.a`
+const BannerContact = styled.span`
   background-color: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(4px);
   padding: 8px;
@@ -69,7 +69,7 @@ const Banner = () => {
       rel="noreferrer"
       style={{ backgroundImage: `url('images/${bannerData.name}')` }}
     >
-      <BannerContact href="mailto:Team@moonsdust.com">
+      <BannerContact>
         <img src={Ads} alt="ads" />
         <BannerLink>
           For Advertising Here, Contact <strong>Team@moonsdust.com</strong>
