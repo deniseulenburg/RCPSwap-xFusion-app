@@ -516,7 +516,7 @@ export default function Swap() {
               otherCurrency={currencies[Field.OUTPUT]}
               id="swap-currency-input"
             />
-            <StepSlider step={percentageSlide} onChange={handlePercentageSlide} enabled={true} />
+            <StepSlider step={percentageSlide} onChange={handlePercentageSlide} enabled={Boolean(maxAmountInput)} />
             <AutoColumn justify="space-between">
               <AutoRow justify={isExpertMode ? 'space-between' : 'center'} style={{ padding: '0 1rem' }}>
                 <ArrowWrapper clickable>

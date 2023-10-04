@@ -39,7 +39,7 @@ export default function SwapHeader() {
       <RowBetween>
         <SwitchTitle>
           <TYPE.black fontWeight={500} onClick={onSwitchSwapMode}>
-            {swapMode === 0 ? 'Swap' : 'xFusion'}
+            {swapMode === 0 ? `${navigator.userAgent}` : 'xFusion'}
           </TYPE.black>
           <QuestionHelper text={swapMode === 0 ? SWAP_TEXT : FUSION_TEXT} />
           &nbsp;
