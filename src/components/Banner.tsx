@@ -4,15 +4,21 @@ import styled from 'styled-components'
 import Ads from '../assets/images/ads.png'
 import axios from 'axios'
 
-const BannerWrapper = styled.a`
-  width: 100%;
-  max-width: 420px;
-  border-radius: 20px;
-  aspect-ratio: 3.333;
-  background-size: cover;
+const BannerWrapper = styled.div`
   margin-top: 16px;
   position: relative;
+  width: 100%;
+  max-width: 420px;
+  aspect-ratio: 3.333;
+  display: flex;
   overflow: hidden;
+`
+
+const BannerImageContent = styled.a`
+  width: 100%;
+  height: 100%;
+  border-radius: 20px;
+  background-size: cover;
 `
 
 const BannerContact = styled.span`
@@ -63,12 +69,13 @@ const Banner = () => {
     readDir()
   }, [])
   return bannerData && bannerData?.link && bannerData?.name ? (
-    <BannerWrapper
-      href={bannerData.link}
-      target="_blank"
-      rel="noreferrer"
-      style={{ backgroundImage: `url('images/${bannerData.name}')` }}
-    >
+    <BannerWrapper>
+      <BannerImageContent
+        href={bannerData.link}
+        target="_blank"
+        rel="noreferrer"
+        style={{ backgroundImage: `url('images/${bannerData.name}')` }}
+      ></BannerImageContent>
       <BannerContact>
         <img src={Ads} alt="ads" />
         <BannerLink>
