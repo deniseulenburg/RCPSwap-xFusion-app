@@ -494,17 +494,6 @@ export default function Swap() {
     [maxAmountInput, onUserInput]
   )
 
-  const handleMaxInput = useCallback(() => {
-    if (maxAmountInput) {
-      let value = maxAmountInput.toExact()
-      const index = value.indexOf('.')
-      if (index > -1 && value.length - index - 1 > (currencies[Field.INPUT]?.decimals ?? 10)) {
-        value = parseInt(value) + '.' + value.slice(index + 1, index + (currencies[Field.INPUT]?.decimals ?? 10) + 1)
-      }
-      onUserInput(Field.INPUT, value)
-    }
-  }, [maxAmountInput, onUserInput])
-
   const handleOutputSelect = useCallback(outputCurrency => onCurrencySelection(Field.OUTPUT, outputCurrency), [
     onCurrencySelection
   ])
@@ -545,10 +534,8 @@ export default function Swap() {
             <CurrencyInputPanel
               label={independentField === Field.OUTPUT && !showWrap && trade ? 'From (estimated)' : 'From'}
               value={formattedAmounts[Field.INPUT]}
-              showMaxButton={!atMaxAmountInput}
               currency={currencies[Field.INPUT]}
               onUserInput={handleTypeInput}
-              onMax={handleMaxInput}
               onCurrencySelect={handleInputSelect}
               otherCurrency={currencies[Field.OUTPUT]}
               id="swap-currency-input"

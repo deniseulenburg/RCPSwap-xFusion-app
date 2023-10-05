@@ -111,7 +111,7 @@ const StepSlider: React.FC<StepSliderType> = ({ step, onChange, enabled }) => {
         <StepButton onClick={() => onChange(25, false)}>25%</StepButton>
         <StepButton onClick={() => onChange(50, false)}>50%</StepButton>
         <StepButton onClick={() => onChange(75, false)}>75%</StepButton>
-        <StepButtonSpace />
+        <StepButton onClick={() => onChange(100, false)}>100%</StepButton>
       </StepButtonWrapper>
       <StepSliderWrapper>
         <StepSliderBarWrapper>
