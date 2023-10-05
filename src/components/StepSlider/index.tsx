@@ -89,6 +89,8 @@ const StepButtonWrapper = styled.div`
   display: flex;
   justify-content: space-between;
   padding-right: 40px;
+  margin-left: -10px;
+  margin-right: -10px;
 `
 
 const StepButton = styled.button`
@@ -96,6 +98,8 @@ const StepButton = styled.button`
   background: transparent;
   border: none;
   color: ${props => props.theme.primary1};
+  width: 50px;
+  text-align: center;
 `
 
 type StepSliderType = {

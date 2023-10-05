@@ -468,7 +468,9 @@ export default function Swap() {
         }
         if (delayedStep % 25 === 0) {
           if (/Andriod/i.test(navigator.userAgent)) window?.navigator?.vibrate(200)
-          else alertSound.play()
+          else {
+            if (alertSound.paused) alertSound.play()
+          }
         }
         if (maxAmountInput) {
           const particalAmount = maxAmountInput.multiply(step.toString()).divide('100')
