@@ -464,14 +464,14 @@ export default function Swap() {
         setPercentageSlide(delayedStep)
         if (delaying) {
           setSlideDisable(true)
-          setTimeout(() => setSlideDisable(false), 200)
+          setTimeout(() => setSlideDisable(false), 400)
         }
-        if (delayedStep % 25 === 0) {
-          if (/Andriod/i.test(navigator.userAgent)) window?.navigator?.vibrate(200)
-          else {
-            if (alertSound.paused) alertSound.play()
-          }
-        }
+        // if (delayedStep % 25 === 0) {
+        //   if (/Andriod/i.test(navigator.userAgent)) window?.navigator?.vibrate(200)
+        //   else {
+        //     if (alertSound.paused) alertSound.play()
+        //   }
+        // }
         if (maxAmountInput) {
           const particalAmount = maxAmountInput.multiply(step.toString()).divide('100')
           const Big = toFormat(_Big)
