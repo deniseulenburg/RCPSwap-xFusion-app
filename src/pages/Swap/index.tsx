@@ -466,7 +466,7 @@ export default function Swap() {
         setPercentageSlide(delayedStep)
         if (delaying) {
           setSlideDisable(true)
-          setTimeout(() => setSlideDisable(false), 400)
+          setTimeout(() => setSlideDisable(false), 100)
         }
         // if (delayedStep % 25 === 0) {
         //   if (/Andriod/i.test(navigator.userAgent)) window?.navigator?.vibrate(200)
