@@ -1,10 +1,13 @@
 import React, { useState } from 'react'
 import styled from 'styled-components'
 
+const StepSliderGroup = styled.div`
+  margin-top: 1rem;
+`
+
 const StepSliderWrapper = styled.div`
   display: flex;
   align-items: center;
-  margin-top: 1rem;
 `
 
 const StepSliderText = styled.span`
@@ -90,38 +93,51 @@ const StepButtonWrapper = styled.div`
   justify-content: space-between;
   padding-right: 40px;
   margin-left: -10px;
-  margin-right: -10px;
+  margin-right: -16px;
 `
 
 const StepButton = styled.button`
   cursor: pointer;
   background: transparent;
   border: none;
-  color: ${props => props.theme.primary1};
+  color: ${props => props.theme.primary3};
   width: 50px;
   text-align: center;
+  font-weight: bold;
+  outline: none;
+  transition: all 300ms ease-in-out;
+  &:hover {
+    filter: brightness(1.1);
+  }
+  &:active {
+    filter: brightness(0.95);
+  }
+`
+
+const StepButtonSpace = styled.div`
+  width: 50px;
 `
 
 type StepSliderType = {
   step: number
-  onChange: (e: number) => void
+  onChange: (e: number, f: boolean) => void
   enabled: boolean
 }
 
 const StepSlider: React.FC<StepSliderType> = ({ step, onChange, enabled }) => {
   const onSlide = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange(parseInt(e.target.value))
+    onChange(parseInt(e.target.value), true)
   }
 
   return (
-    <>
-      {/* <StepButtonWrapper>
-        <StepButton>0%</StepButton>
-        <StepButton>25%</StepButton>
-        <StepButton>50%</StepButton>
-        <StepButton>75%</StepButton>
-        <StepButton>100%</StepButton>
-      </StepButtonWrapper> */}
+    <StepSliderGroup>
+      <StepButtonWrapper>
+        <StepButtonSpace />
+        <StepButton onClick={() => onChange(25, false)}>25%</StepButton>
+        <StepButton onClick={() => onChange(50, false)}>50%</StepButton>
+        <StepButton onClick={() => onChange(75, false)}>75%</StepButton>
+        <StepButtonSpace />
+      </StepButtonWrapper>
       <StepSliderWrapper>
         <StepSliderBarWrapper>
           <StepSliderContent>
@@ -197,7 +213,7 @@ const StepSlider: React.FC<StepSliderType> = ({ step, onChange, enabled }) => {
         </StepSliderBarWrapper>
         <StepSliderText>{step}%</StepSliderText>
       </StepSliderWrapper>
-    </>
+    </StepSliderGroup>
   )
 }
 

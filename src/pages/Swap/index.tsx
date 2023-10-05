@@ -447,19 +447,21 @@ export default function Swap() {
   )
 
   const handlePercentageSlide = useCallback(
-    (step: number) => {
-      if (!slideDisable) {
+    (step: number, delay: boolean) => {
+      if (!slideDisable || !delay) {
         let delayedStep = step
         let delaying = false
-        if ((percentageSlide < 25 && step >= 25) || (percentageSlide > 25 && step <= 25)) {
-          delayedStep = 25
-          delaying = true
-        } else if ((percentageSlide < 50 && step >= 50) || (percentageSlide > 50 && step <= 50)) {
-          delayedStep = 50
-          delaying = true
-        } else if ((percentageSlide < 75 && step >= 75) || (percentageSlide > 75 && step <= 75)) {
-          delayedStep = 75
-          delaying = true
+        if (delay) {
+          if ((percentageSlide < 25 && step >= 25) || (percentageSlide > 25 && step <= 25)) {
+            delayedStep = 25
+            delaying = true
+          } else if ((percentageSlide < 50 && step >= 50) || (percentageSlide > 50 && step <= 50)) {
+            delayedStep = 50
+            delaying = true
+          } else if ((percentageSlide < 75 && step >= 75) || (percentageSlide > 75 && step <= 75)) {
+            delayedStep = 75
+            delaying = true
+          }
         }
         setPercentageSlide(delayedStep)
         if (delaying) {
