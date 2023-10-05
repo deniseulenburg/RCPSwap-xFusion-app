@@ -1,5 +1,8 @@
 import React from 'react'
+import RangeSlider from 'react-bootstrap-range-slider'
 import styled from 'styled-components'
+
+import 'react-bootstrap-range-slider/dist/react-bootstrap-range-slider.css'
 
 const StepSliderGroup = styled.div`
   margin-top: 1rem;
@@ -29,73 +32,17 @@ const StepSliderContent = styled.div`
   z-index: 1;
 `
 
-const StepSliderTooltip = styled.div`
-  position: absolute;
-  opacity: 0;
-  transition: all 300ms ease-in-out;
-  padding: 0.5rem;
-  background-color: ${props => props.theme.bg3}
-  font-size: 12px;
-  border-radius: 5px;
-  top: -2.2rem;
-  transform: translateX(-50%);
-  &::before {
-    content: '';
-    position: absolute;
-    border-width: 0.3rem 0.3rem 0;
-    border-style: solid;
-    border-color: transparent;
-    border-top-color: ${props => props.theme.bg3};
-    bottom: -4px;
-    left: 50%;
-    transform: translateX(-50%);
-  }
-`
-
-const StepSliderInput = styled.input`
-  -webkit-appearance: none;
-  width: 100%;
-  border-radius: 9999px;
-  &:hover {
-    & + #step-tooltip {
-      opacity: 100 !important;
-    }
-  }
-  &:focus {
-    outline: none;
-  }
-  &::before,
-  &::after {
-    position: absolute;
-    top: 1rem;
-    color: #4338ca;
-    font-size: 14px;
-    line-height: 1;
-    padding: 3px 5px;
-    background-color: rgba(165, 180, 252, 1);
-    border-radius: 4px;
-  }
+const StyledRangeSlider = styled<any>(RangeSlider)`
   &::-webkit-slider-runnable-track {
-    width: 100%;
     height: 4px;
-    cursor: pointer;
-    animate: 0.2s;
     background: linear-gradient(
       90deg,
-      ${props => props.theme.primary1} ${props => props.progress},
-      ${props => props.theme.bg3} ${props => props.progress}
-    );
+      ${props => props.theme.primary1} ${props => `${props.value}%`},
+      ${props => props.theme.bg3} ${props => `${props.value}%`}
+    ) !important;
   }
   &::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    border-radius: 50%;
-    background: ${props => (props?.disabled ? props.theme.bg2 : props?.theme?.primary1)};
-    cursor: pointer;
-    height: 20px;
-    width: 20px;
-    margin-top: -3px;
-    cursor: pointer;
-    transform: translateY(calc(-50% + 5px));
+    background: ${props => (props?.disabled ? props.theme.bg2 : props?.theme?.primary1)} !important;
   }
 `
 
@@ -104,7 +51,7 @@ const StepSliderLineWrapper = styled.div`
   align-items: center;
   justify-content: space-between;
   pointer-events: none;
-  bottom: 6px;
+  bottom: 19px;
   position: relative;
   padding-left: 2px;
 `
@@ -154,7 +101,7 @@ type StepSliderType = {
 
 const StepSlider: React.FC<StepSliderType> = ({ step, onChange, enabled }) => {
   const onSlide = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange(parseInt(e.target.value), true)
+    onChange(e.target.valueAsNumber, true)
   }
 
   return (
@@ -169,24 +116,17 @@ const StepSlider: React.FC<StepSliderType> = ({ step, onChange, enabled }) => {
       <StepSliderWrapper>
         <StepSliderBarWrapper>
           <StepSliderContent>
-            <StepSliderInput
-              type="range"
-              step={1}
+            <StyledRangeSlider
+              value={step}
               min={0}
               max={100}
+              step={1}
+              tooltipPlacement="top"
+              tooltipLabel={(val: any) => `${val}%`}
               onChange={onSlide}
-              value={step}
-              progress={`${step}%`}
+              className=""
               disabled={!enabled}
             />
-            <StepSliderTooltip
-              id="step-tooltip"
-              style={{
-                left: `calc((100% - 22px) * ${step} / 100 + 12px)`
-              }}
-            >
-              {step}%
-            </StepSliderTooltip>
           </StepSliderContent>
           <StepSliderLineWrapper>
             <StepSliderTick
