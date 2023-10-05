@@ -85,6 +85,19 @@ const StepSliderTick = styled.svg`
   visibility: ${props => (props?.invise ? 'hidden' : 'visible')};
 `
 
+const StepButtonWrapper = styled.div`
+  display: flex;
+  justify-content: space-between;
+  padding-right: 40px;
+`
+
+const StepButton = styled.button`
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  color: ${props => props.theme.primary1};
+`
+
 type StepSliderType = {
   step: number
   onChange: (e: number) => void
@@ -97,81 +110,90 @@ const StepSlider: React.FC<StepSliderType> = ({ step, onChange, enabled }) => {
   }
 
   return (
-    <StepSliderWrapper>
-      <StepSliderBarWrapper>
-        <StepSliderContent>
-          <StepSliderInput
-            type="range"
-            step={1}
-            min={0}
-            max={100}
-            onChange={onSlide}
-            value={step}
-            progress={`${step}%`}
-            disabled={!enabled}
-          />
-        </StepSliderContent>
-        <StepSliderLineWrapper>
-          <StepSliderTick
-            width={4}
-            height={16}
-            viewBox="0 0 4 16"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            ticked={step >= 0}
-            disabled={!enabled}
-            first
-          >
-            <line x1={2} x2={2} y2={10} stroke="currentColor" strokeWidth={4} />
-          </StepSliderTick>
-          <StepSliderTick
-            width={4}
-            height={16}
-            viewBox="0 0 4 16"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            ticked={step > 20}
-            disabled={!enabled}
-          >
-            <line x1={2} x2={2} y2={10} stroke="currentColor" strokeWidth={4} />
-          </StepSliderTick>
-          <StepSliderTick
-            width={4}
-            height={16}
-            viewBox="0 0 4 16"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            ticked={step > 46}
-            disabled={!enabled}
-          >
-            <line x1={2} x2={2} y2={10} stroke="currentColor" strokeWidth={4} />
-          </StepSliderTick>
-          <StepSliderTick
-            width={4}
-            height={16}
-            viewBox="0 0 4 16"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            ticked={step > 72}
-            disabled={!enabled}
-          >
-            <line x1={2} x2={2} y2={10} stroke="currentColor" strokeWidth={4} />
-          </StepSliderTick>
-          <StepSliderTick
-            width={4}
-            height={17}
-            viewBox="0 0 4 16"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            invise={step > 98}
-            disabled={!enabled}
-          >
-            <line x1={2} x2={2} y2={10} stroke="currentColor" strokeWidth={4} />
-          </StepSliderTick>
-        </StepSliderLineWrapper>
-      </StepSliderBarWrapper>
-      <StepSliderText>{step}%</StepSliderText>
-    </StepSliderWrapper>
+    <>
+      {/* <StepButtonWrapper>
+        <StepButton>0%</StepButton>
+        <StepButton>25%</StepButton>
+        <StepButton>50%</StepButton>
+        <StepButton>75%</StepButton>
+        <StepButton>100%</StepButton>
+      </StepButtonWrapper> */}
+      <StepSliderWrapper>
+        <StepSliderBarWrapper>
+          <StepSliderContent>
+            <StepSliderInput
+              type="range"
+              step={1}
+              min={0}
+              max={100}
+              onChange={onSlide}
+              value={step}
+              progress={`${step}%`}
+              disabled={!enabled}
+            />
+          </StepSliderContent>
+          <StepSliderLineWrapper>
+            <StepSliderTick
+              width={4}
+              height={16}
+              viewBox="0 0 4 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              ticked={step >= 0}
+              disabled={!enabled}
+              first
+            >
+              <line x1={2} x2={2} y2={10} stroke="currentColor" strokeWidth={4} />
+            </StepSliderTick>
+            <StepSliderTick
+              width={4}
+              height={16}
+              viewBox="0 0 4 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              ticked={step > 20}
+              disabled={!enabled}
+            >
+              <line x1={2} x2={2} y2={10} stroke="currentColor" strokeWidth={4} />
+            </StepSliderTick>
+            <StepSliderTick
+              width={4}
+              height={16}
+              viewBox="0 0 4 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              ticked={step > 46}
+              disabled={!enabled}
+            >
+              <line x1={2} x2={2} y2={10} stroke="currentColor" strokeWidth={4} />
+            </StepSliderTick>
+            <StepSliderTick
+              width={4}
+              height={16}
+              viewBox="0 0 4 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              ticked={step > 72}
+              disabled={!enabled}
+            >
+              <line x1={2} x2={2} y2={10} stroke="currentColor" strokeWidth={4} />
+            </StepSliderTick>
+            <StepSliderTick
+              width={4}
+              height={17}
+              viewBox="0 0 4 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              invise={step > 98}
+              disabled={!enabled}
+            >
+              <line x1={2} x2={2} y2={10} stroke="currentColor" strokeWidth={4} />
+            </StepSliderTick>
+          </StepSliderLineWrapper>
+        </StepSliderBarWrapper>
+        <StepSliderText>{step}%</StepSliderText>
+      </StepSliderWrapper>
+    </>
   )
 }
 
