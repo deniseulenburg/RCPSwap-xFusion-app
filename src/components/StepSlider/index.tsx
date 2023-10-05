@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 import styled from 'styled-components'
 
 const StepSliderGroup = styled.div`
@@ -29,10 +29,38 @@ const StepSliderContent = styled.div`
   z-index: 1;
 `
 
+const StepSliderTooltip = styled.div`
+  position: absolute;
+  opacity: 0;
+  transition: all 300ms ease-in-out;
+  padding: 0.5rem;
+  background-color: ${props => props.theme.bg3}
+  font-size: 12px;
+  border-radius: 5px;
+  top: -2.2rem;
+  transform: translateX(-50%);
+  &::before {
+    content: '';
+    position: absolute;
+    border-width: 0.3rem 0.3rem 0;
+    border-style: solid;
+    border-color: transparent;
+    border-top-color: ${props => props.theme.bg3};
+    bottom: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+`
+
 const StepSliderInput = styled.input`
   -webkit-appearance: none;
   width: 100%;
   border-radius: 9999px;
+  &:hover {
+    & + #step-tooltip {
+      opacity: 100 !important;
+    }
+  }
   &:focus {
     outline: none;
   }
@@ -151,6 +179,14 @@ const StepSlider: React.FC<StepSliderType> = ({ step, onChange, enabled }) => {
               progress={`${step}%`}
               disabled={!enabled}
             />
+            <StepSliderTooltip
+              id="step-tooltip"
+              style={{
+                left: `calc((100% - 22px) * ${step} / 100 + 12px)`
+              }}
+            >
+              {step}%
+            </StepSliderTooltip>
           </StepSliderContent>
           <StepSliderLineWrapper>
             <StepSliderTick
