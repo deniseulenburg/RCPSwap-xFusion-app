@@ -64,6 +64,7 @@ const StepSliderTick = styled.svg`
 `
 
 const StepButtonWrapper = styled.div`
+  margin-top: -12px;
   display: flex;
   justify-content: space-between;
   padding-right: 40px;
@@ -75,8 +76,11 @@ const StepButton = styled.button`
   cursor: pointer;
   background: transparent;
   border: none;
-  color: ${props => props.theme.primary3};
+  color: ${props => (props?.active ? props.theme.primary3 : props.theme.text1)};
+  font-size: ${props => (props?.active ? '14px' : '13px')}
   width: 50px;
+  height: 22px;
+  line-height: 22px;
   text-align: center;
   font-weight: bold;
   outline: none;
@@ -106,13 +110,6 @@ const StepSlider: React.FC<StepSliderType> = ({ step, onChange, enabled }) => {
 
   return (
     <StepSliderGroup>
-      <StepButtonWrapper>
-        <StepButtonSpace />
-        <StepButton onClick={() => onChange(25, false)}>25%</StepButton>
-        <StepButton onClick={() => onChange(50, false)}>50%</StepButton>
-        <StepButton onClick={() => onChange(75, false)}>75%</StepButton>
-        <StepButton onClick={() => onChange(100, false)}>100%</StepButton>
-      </StepButtonWrapper>
       <StepSliderWrapper>
         <StepSliderBarWrapper>
           <StepSliderContent>
@@ -189,6 +186,21 @@ const StepSlider: React.FC<StepSliderType> = ({ step, onChange, enabled }) => {
         </StepSliderBarWrapper>
         <StepSliderText>{step}%</StepSliderText>
       </StepSliderWrapper>
+      <StepButtonWrapper>
+        <StepButtonSpace />
+        <StepButton onClick={() => onChange(25, false)} active={step >= 25}>
+          25%
+        </StepButton>
+        <StepButton onClick={() => onChange(50, false)} active={step >= 50}>
+          50%
+        </StepButton>
+        <StepButton onClick={() => onChange(75, false)} active={step >= 75}>
+          75%
+        </StepButton>
+        <StepButton onClick={() => onChange(100, false)} active={step >= 100}>
+          100%
+        </StepButton>
+      </StepButtonWrapper>
     </StepSliderGroup>
   )
 }
