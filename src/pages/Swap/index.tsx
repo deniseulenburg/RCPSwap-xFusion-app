@@ -68,7 +68,7 @@ import Banner from 'components/Banner'
 import StepSlider from 'components/StepSlider'
 import toFormat from 'toformat'
 import _Big from 'big.js'
-import AlertSound from '../../assets/sounds/alert.mp3'
+// import AlertSound from '../../assets/sounds/alert.mp3'
 
 export default function Swap() {
   const loadedUrlParams = useDefaultsFromURLSearch()
@@ -111,13 +111,13 @@ export default function Swap() {
 
   // sound
 
-  const [alertSound] = useState(new Audio(AlertSound))
+  // const [alertSound] = useState(new Audio(AlertSound))
 
-  useEffect(() => {
-    return () => {
-      alertSound.pause()
-    }
-  }, [])
+  // useEffect(() => {
+  //   return () => {
+  //     alertSound.pause()
+  //   }
+  // }, [])
 
   // swap state
   const {
