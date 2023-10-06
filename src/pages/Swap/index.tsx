@@ -184,7 +184,6 @@ export default function Swap() {
       if (index > -1 && value.length - index - 1 > (currencies[Field.INPUT]?.decimals ?? 10)) {
         value = parseInt(value) + '.' + value.slice(index + 1, index + (currencies[Field.INPUT]?.decimals ?? 10) + 1)
       }
-      console.log(value)
 
       onUserInput(Field.INPUT, value)
     },
@@ -402,13 +401,25 @@ export default function Swap() {
 
   // percentage slide
   const [percentageSlide, setPercentageSlide] = useState(0)
-  const [slideDisable, setSlideDisable] = useState(false)
 
   // errors
   const [showInverted, setShowInverted] = useState<boolean>(false)
 
   // warnings on slippage
   const priceImpactSeverity = swapMode === 0 ? warningSeverity(priceImpactWithoutFee) : 0
+
+  useEffect(() => {
+    if (maxAmountInput) {
+      if (maxAmountInput.equalTo('0')) {
+        setPercentageSlide(0)
+      } else {
+        const percenage =
+          parseFloat(parsedAmounts[Field.INPUT]?.toExact() ?? '0') / parseFloat(maxAmountInput.toExact())
+        console.log(percenage)
+        setPercentageSlide(Math.min(Math.floor(percenage * 100), 100))
+      }
+    }
+  }, [maxAmountInput, parsedAmounts[Field.INPUT]?.toExact()])
 
   // show approve flow when: no error on inputs, not approved or pending, or approved in current session
   // never show if price impact is above threshold in non expert mode
