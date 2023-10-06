@@ -450,8 +450,6 @@ export default function Swap() {
     (step: number, delay: boolean) => {
       setPercentageSlide(step)
 
-      if (window && window.navigator && window.navigator.vibrate) window?.navigator?.vibrate(200)
-
       if (maxAmountInput) {
         const particalAmount = maxAmountInput.multiply(step.toString()).divide('100')
         const Big = toFormat(_Big)
