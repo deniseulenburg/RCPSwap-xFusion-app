@@ -447,7 +447,7 @@ export default function Swap() {
   )
 
   const handlePercentageSlide = useCallback(
-    (step: number, delay: boolean) => {
+    (step: number) => {
       setPercentageSlide(step)
 
       if (maxAmountInput) {

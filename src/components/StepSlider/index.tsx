@@ -44,6 +44,15 @@ const StyledRangeSlider = styled<any>(RangeSlider)`
   &::-webkit-slider-thumb {
     background: ${props => (props?.disabled ? props.theme.bg5 : props?.theme?.primary3)} !important;
   }
+
+  & + .range-slider__tooltip {
+    & > .range-slider__tooltip__label {
+      background-color: ${props => props.theme.bg5} !important;
+    }
+    & > .range-slider__tooltip__caret::before {
+      border-top-color: ${props => props.theme.bg5} !important;
+    }
+  }
 `
 
 const StepSliderLineWrapper = styled.div`
@@ -63,49 +72,15 @@ const StepSliderTick = styled.svg`
   visibility: ${props => (props?.invise ? 'hidden' : 'visible')};
 `
 
-const StepButtonWrapper = styled.div`
-  margin-top: -12px;
-  display: flex;
-  justify-content: space-between;
-  padding-right: 40px;
-  margin-left: -10px;
-  margin-right: -16px;
-`
-
-const StepButton = styled.button`
-  cursor: pointer;
-  background: transparent;
-  border: none;
-  color: ${props => (props?.active ? props.theme.primary3 : props.theme.text1)};
-  font-size: ${props => (props?.active ? '14px' : '13px')}
-  width: 50px;
-  height: 22px;
-  line-height: 22px;
-  text-align: center;
-  font-weight: bold;
-  outline: none;
-  transition: all 300ms ease-in-out;
-  &:hover {
-    filter: brightness(1.1);
-  }
-  &:active {
-    filter: brightness(0.95);
-  }
-`
-
-const StepButtonSpace = styled.div`
-  width: 50px;
-`
-
 type StepSliderType = {
   step: number
-  onChange: (e: number, f: boolean) => void
+  onChange: (e: number) => void
   enabled: boolean
 }
 
 const StepSlider: React.FC<StepSliderType> = ({ step, onChange, enabled }) => {
   const onSlide = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange(e.target.valueAsNumber, true)
+    onChange(e.target.valueAsNumber)
   }
 
   return (
