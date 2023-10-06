@@ -38,20 +38,22 @@ const StyledRangeSlider = styled<any>(RangeSlider)`
     height: 4px;
     background: linear-gradient(
       90deg,
-      ${props => props.theme.primary3} ${props => `${props.value}%`},
-      ${props => props.theme.bg5} ${props => `${props.value}%`}
+      ${props => (props?.dark ? props.theme.primary1 : props.theme.primary3)} ${props => `${props.value}%`},
+      ${props => (props?.dark ? props.theme.bg6 : props.theme.bg5)} ${props => `${props.value}%`}
     ) !important;
   }
   &::-webkit-slider-thumb {
-    background: ${props => (props?.disabled ? props.theme.bg5 : props?.theme?.primary3)} !important;
+    background: ${props =>
+      props?.disabled ? props.theme.bg5 : props?.dark ? props.theme.primary1 : props?.theme?.primary3} !important;
   }
 
   & + .range-slider__tooltip {
     & > .range-slider__tooltip__label {
-      background-color: ${props => (props?.dark ? `${props.theme.bg5} !important` : '')};
+      background-color: ${props => props.theme.bg6} !important;
+      color: ${props => props.theme.text6} !important;
     }
     & > .range-slider__tooltip__caret::before {
-      border-top-color: ${props => (props?.dark ? `${props.theme.bg5} !important` : '')};
+      border-top-color: ${props => props.theme.bg6} !important;
     }
   }
 `
@@ -69,7 +71,18 @@ const StepSliderLineWrapper = styled.div`
 const StepSliderTick = styled.svg`
   margin-top: -0.375rem;
   z-index: ${props => (props?.first ? 0 : 1)};
-  color: ${props => (props.disabled ? props.theme.bg5 : props?.ticked ? props.theme.primary3 : props.theme.bg5)};
+  color: ${props =>
+    props.disabled
+      ? props?.dark
+        ? props.theme.bg6
+        : props.theme.bg5
+      : props?.ticked
+      ? props?.dark
+        ? props.theme.primary1
+        : props.theme.primary3
+      : props?.dark
+      ? props.theme.bg6
+      : props.theme.bg5};
   visibility: ${props => (props?.invise ? 'hidden' : 'visible')};
 `
 
@@ -113,6 +126,7 @@ const StepSlider: React.FC<StepSliderType> = ({ step, onChange, enabled }) => {
               ticked={step >= 0}
               disabled={!enabled}
               first
+              dark={dark}
             >
               <line x1={2} x2={2} y2={10} stroke="currentColor" strokeWidth={4} />
             </StepSliderTick>
@@ -124,6 +138,7 @@ const StepSlider: React.FC<StepSliderType> = ({ step, onChange, enabled }) => {
               xmlns="http://www.w3.org/2000/svg"
               ticked={step > 20}
               disabled={!enabled}
+              dark={dark}
             >
               <line x1={2} x2={2} y2={10} stroke="currentColor" strokeWidth={4} />
             </StepSliderTick>
@@ -135,6 +150,7 @@ const StepSlider: React.FC<StepSliderType> = ({ step, onChange, enabled }) => {
               xmlns="http://www.w3.org/2000/svg"
               ticked={step > 46}
               disabled={!enabled}
+              dark={dark}
             >
               <line x1={2} x2={2} y2={10} stroke="currentColor" strokeWidth={4} />
             </StepSliderTick>
@@ -146,6 +162,7 @@ const StepSlider: React.FC<StepSliderType> = ({ step, onChange, enabled }) => {
               xmlns="http://www.w3.org/2000/svg"
               ticked={step > 72}
               disabled={!enabled}
+              dark={dark}
             >
               <line x1={2} x2={2} y2={10} stroke="currentColor" strokeWidth={4} />
             </StepSliderTick>
@@ -157,6 +174,7 @@ const StepSlider: React.FC<StepSliderType> = ({ step, onChange, enabled }) => {
               xmlns="http://www.w3.org/2000/svg"
               invise={step > 98}
               disabled={!enabled}
+              dark={dark}
             >
               <line x1={2} x2={2} y2={10} stroke="currentColor" strokeWidth={4} />
             </StepSliderTick>
