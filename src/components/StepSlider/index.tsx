@@ -3,6 +3,7 @@ import RangeSlider from 'react-bootstrap-range-slider'
 import styled from 'styled-components'
 
 import 'react-bootstrap-range-slider/dist/react-bootstrap-range-slider.css'
+import { useIsDarkMode } from 'state/user/hooks'
 
 const StepSliderGroup = styled.div`
   margin-bottom: -10px;
@@ -47,10 +48,10 @@ const StyledRangeSlider = styled<any>(RangeSlider)`
 
   & + .range-slider__tooltip {
     & > .range-slider__tooltip__label {
-      background-color: ${props => props.theme.bg5} !important;
+      background-color: ${props => (props?.dark ? `${props.theme.bg5} !important` : '')};
     }
     & > .range-slider__tooltip__caret::before {
-      border-top-color: ${props => props.theme.bg5} !important;
+      border-top-color: ${props => (props?.dark ? `${props.theme.bg5} !important` : '')};
     }
   }
 `
@@ -79,6 +80,7 @@ type StepSliderType = {
 }
 
 const StepSlider: React.FC<StepSliderType> = ({ step, onChange, enabled }) => {
+  const dark = useIsDarkMode()
   const onSlide = (e: React.ChangeEvent<HTMLInputElement>) => {
     onChange(e.target.valueAsNumber)
   }
@@ -98,6 +100,7 @@ const StepSlider: React.FC<StepSliderType> = ({ step, onChange, enabled }) => {
               onChange={onSlide}
               className=""
               disabled={!enabled}
+              dark={dark}
             />
           </StepSliderContent>
           <StepSliderLineWrapper>

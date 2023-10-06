@@ -1,5 +1,5 @@
 import React, { useRef } from 'react'
-import { FaReddit, FaTelegramPlane, FaBook, FaGithub, FaTwitter, FaRegChartBar } from 'react-icons/fa'
+import { FaReddit, FaTelegramPlane, FaBook, FaGithub, FaTwitter, FaRegChartBar, FaGlobe } from 'react-icons/fa'
 import styled from 'styled-components'
 import { ReactComponent as MenuIcon } from '../../assets/images/menu.svg'
 import { useOnClickOutside } from '../../hooks/useOnClickOutside'
@@ -50,7 +50,7 @@ const StyledMenu = styled.div`
 `
 
 const MenuFlyout = styled.span`
-  min-width: 8.125rem;
+  min-width: 9.125rem;
   background-color: ${({ theme }) => theme.bg3};
   box-shadow: 0px 0px 1px rgba(0, 0, 0, 0.01), 0px 4px 8px rgba(0, 0, 0, 0.04), 0px 16px 24px rgba(0, 0, 0, 0.04),
     0px 24px 32px rgba(0, 0, 0, 0.01);
@@ -100,6 +100,10 @@ export default function Menu() {
 
       {open && (
         <MenuFlyout>
+          <MenuItem id="link" href="https://moonsdust.com">
+            <FaGlobe size={16} />
+            MoonsDust
+          </MenuItem>
           <MenuItem id="link" href="https://t.me/RedditMoon">
             <FaTelegramPlane size={16} />
             Telegram
