@@ -450,10 +450,7 @@ export default function Swap() {
     (step: number, delay: boolean) => {
       setPercentageSlide(step)
 
-      if (/Andriod/i.test(navigator.userAgent)) window?.navigator?.vibrate(200)
-      else {
-        if (alertSound.paused) alertSound.play()
-      }
+      window?.navigator?.vibrate(200)
 
       if (maxAmountInput) {
         const particalAmount = maxAmountInput.multiply(step.toString()).divide('100')
