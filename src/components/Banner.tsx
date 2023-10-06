@@ -26,9 +26,10 @@ const BannerContact = styled.span`
   backdrop-filter: blur(4px);
   padding: 8px;
   position: absolute;
+  cursor: pointer;
   top: 0;
   right: 0;
-  width: 40px;
+  width: ${props => (props?.open ? '360px' : '40px')};
   white-space: nowrap;
   display: flex;
   align-items: center;
@@ -36,9 +37,7 @@ const BannerContact = styled.span`
   text-decoration: none;
   transition: all 300ms ease-in-out;
   user-select: none;
-  &:hover {
-    width: 360px;
-  }
+
   & > img {
     width: 24px;
   }
@@ -57,6 +56,8 @@ const BannerLink = styled.span`
 
 const Banner = () => {
   const [bannerData, setBannerData] = useState<any>()
+  const [open, setOpen] = useState(false)
+
   const readDir = async () => {
     try {
       const data = await axios.get('images/banner/banner.json')
@@ -76,7 +77,7 @@ const Banner = () => {
         rel="noreferrer"
         style={{ backgroundImage: `url('images/${bannerData.name}')` }}
       ></BannerImageContent>
-      <BannerContact>
+      <BannerContact open={open} onClick={() => setOpen(!open)}>
         <img src={Ads} alt="ads" />
         <BannerLink>
           For Advertising Here, Contact <strong>Team@moonsdust.com</strong>

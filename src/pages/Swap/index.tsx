@@ -448,47 +448,27 @@ export default function Swap() {
 
   const handlePercentageSlide = useCallback(
     (step: number, delay: boolean) => {
-      if (!slideDisable || !delay) {
-        let delayedStep = step
-        let delaying = false
-        if (delay) {
-          if ((percentageSlide < 25 && step >= 25) || (percentageSlide > 25 && step <= 25)) {
-            delayedStep = 25
-            delaying = true
-          } else if ((percentageSlide < 50 && step >= 50) || (percentageSlide > 50 && step <= 50)) {
-            delayedStep = 50
-            delaying = true
-          } else if ((percentageSlide < 75 && step >= 75) || (percentageSlide > 75 && step <= 75)) {
-            delayedStep = 75
-            delaying = true
-          }
-        }
-        setPercentageSlide(delayedStep)
-        if (delaying) {
-          setSlideDisable(true)
-          setTimeout(() => setSlideDisable(false), 200)
-        }
-        // if (delayedStep % 25 === 0) {
-        //   if (/Andriod/i.test(navigator.userAgent)) window?.navigator?.vibrate(200)
-        //   else {
-        //     if (alertSound.paused) alertSound.play()
-        //   }
-        // }
-        if (maxAmountInput) {
-          const particalAmount = maxAmountInput.multiply(step.toString()).divide('100')
-          const Big = toFormat(_Big)
-          Big.DP = maxAmountInput.currency.decimals
-          let value = new Big(particalAmount.numerator.toString())
-            .div(particalAmount.denominator.toString())
-            .toFormat({ groupSeparator: '' })
+      setPercentageSlide(step)
 
-          const index = value.indexOf('.')
-          if (index > -1 && value.length - index - 1 > (currencies[Field.INPUT]?.decimals ?? 10)) {
-            value =
-              parseInt(value) + '.' + value.slice(index + 1, index + (currencies[Field.INPUT]?.decimals ?? 10) + 1)
-          }
-          onUserInput(Field.INPUT, value)
+      // if (delayedStep % 25 === 0) {
+      //   if (/Andriod/i.test(navigator.userAgent)) window?.navigator?.vibrate(200)
+      //   else {
+      //     if (alertSound.paused) alertSound.play()
+      //   }
+      // }
+      if (maxAmountInput) {
+        const particalAmount = maxAmountInput.multiply(step.toString()).divide('100')
+        const Big = toFormat(_Big)
+        Big.DP = maxAmountInput.currency.decimals
+        let value = new Big(particalAmount.numerator.toString())
+          .div(particalAmount.denominator.toString())
+          .toFormat({ groupSeparator: '' })
+
+        const index = value.indexOf('.')
+        if (index > -1 && value.length - index - 1 > (currencies[Field.INPUT]?.decimals ?? 10)) {
+          value = parseInt(value) + '.' + value.slice(index + 1, index + (currencies[Field.INPUT]?.decimals ?? 10) + 1)
         }
+        onUserInput(Field.INPUT, value)
       }
     },
     [maxAmountInput, onUserInput]

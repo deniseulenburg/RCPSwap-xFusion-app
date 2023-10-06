@@ -5,7 +5,7 @@ import styled from 'styled-components'
 import 'react-bootstrap-range-slider/dist/react-bootstrap-range-slider.css'
 
 const StepSliderGroup = styled.div`
-  margin-top: 1rem;
+  margin-bottom: -10px;
 `
 
 const StepSliderWrapper = styled.div`
@@ -16,7 +16,7 @@ const StepSliderWrapper = styled.div`
 const StepSliderText = styled.span`
   width: 40px;
   text-align: right;
-  margin-top: -6px;
+  margin-top: -9px;
 `
 
 const StepSliderBarWrapper = styled.div`
@@ -37,12 +37,12 @@ const StyledRangeSlider = styled<any>(RangeSlider)`
     height: 4px;
     background: linear-gradient(
       90deg,
-      ${props => props.theme.primary1} ${props => `${props.value}%`},
-      ${props => props.theme.bg3} ${props => `${props.value}%`}
+      ${props => props.theme.primary3} ${props => `${props.value}%`},
+      ${props => props.theme.bg5} ${props => `${props.value}%`}
     ) !important;
   }
   &::-webkit-slider-thumb {
-    background: ${props => (props?.disabled ? props.theme.bg2 : props?.theme?.primary1)} !important;
+    background: ${props => (props?.disabled ? props.theme.bg5 : props?.theme?.primary3)} !important;
   }
 `
 
@@ -59,7 +59,7 @@ const StepSliderLineWrapper = styled.div`
 const StepSliderTick = styled.svg`
   margin-top: -0.375rem;
   z-index: ${props => (props?.first ? 0 : 1)};
-  color: ${props => (props.disabled ? props.theme.bg2 : props?.ticked ? props.theme.primary1 : props.theme.bg3)};
+  color: ${props => (props.disabled ? props.theme.bg5 : props?.ticked ? props.theme.primary3 : props.theme.bg5)};
   visibility: ${props => (props?.invise ? 'hidden' : 'visible')};
 `
 
@@ -186,21 +186,6 @@ const StepSlider: React.FC<StepSliderType> = ({ step, onChange, enabled }) => {
         </StepSliderBarWrapper>
         <StepSliderText>{step}%</StepSliderText>
       </StepSliderWrapper>
-      <StepButtonWrapper>
-        <StepButtonSpace />
-        <StepButton onClick={() => onChange(25, false)} active={step >= 25}>
-          25%
-        </StepButton>
-        <StepButton onClick={() => onChange(50, false)} active={step >= 50}>
-          50%
-        </StepButton>
-        <StepButton onClick={() => onChange(75, false)} active={step >= 75}>
-          75%
-        </StepButton>
-        <StepButton onClick={() => onChange(100, false)} active={step >= 100}>
-          100%
-        </StepButton>
-      </StepButtonWrapper>
     </StepSliderGroup>
   )
 }
