@@ -40,8 +40,7 @@ export default function ConfirmSwapModal({
   attemptingTxn,
   txHash,
   swapMode,
-  fusionSwap,
-  outPrice
+  fusionSwap
 }: {
   isOpen: boolean
   trade: Trade | undefined
@@ -56,7 +55,6 @@ export default function ConfirmSwapModal({
   onDismiss: () => void
   swapMode: number
   fusionSwap: XFusionSwapType
-  outPrice: number
 }) {
   const blockchain = useBlockchain()
 
@@ -89,7 +87,6 @@ export default function ConfirmSwapModal({
         disabledConfirm={showAcceptChanges}
         swapErrorMessage={swapErrorMessage}
         allowedSlippage={allowedSlippage}
-        outPrice={outPrice}
       />
     ) : null
   }, [allowedSlippage, onConfirm, showAcceptChanges, swapErrorMessage, trade])

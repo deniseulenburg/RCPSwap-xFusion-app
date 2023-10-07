@@ -1,5 +1,5 @@
-import { Currency, CurrencyAmount, Pair } from '@rcpswap/sdk'
-import React, { useState, useCallback } from 'react'
+import { ChainId, Currency, CurrencyAmount, Pair } from '@rcpswap/sdk'
+import React, { useState, useCallback, useMemo } from 'react'
 import styled from 'styled-components'
 import { darken } from 'polished'
 import { useCurrencyBalance } from '../../state/wallet/hooks'
@@ -14,6 +14,9 @@ import { ReactComponent as DropDown } from '../../assets/images/dropdown.svg'
 import { useActiveWeb3React } from '../../hooks'
 import { useTranslation } from 'react-i18next'
 import useTheme from '../../hooks/useTheme'
+import usePrice from 'hooks/usePrice'
+import { wrappedCurrency } from 'utils/wrappedCurrency'
+import { tryParseAmount } from 'state/swap/hooks'
 
 const InputRow = styled.div<{ selected: boolean }>`
   ${({ theme }) => theme.flexRowNoWrap}
@@ -53,6 +56,13 @@ const LabelRow = styled.div`
     cursor: pointer;
     color: ${({ theme }) => darken(0.2, theme.text2)};
   }
+`
+
+const PriceRow = styled.div`
+  ${({ theme }) => theme.flexRowNoWrap}
+  color: ${({ theme }) => theme.text3};
+  font-size: 0.75rem;
+  padding: 0 0.75rem 0.75rem 1rem;
 `
 
 const Aligner = styled.span`
@@ -164,6 +174,13 @@ export default function CurrencyInputPanel({
   }
   const theme = useTheme()
 
+  const { data: price, isInitialLoading: isPriceLoading } = usePrice(
+    wrappedCurrency(currency ?? undefined, ChainId.ARBITRUM_NOVA)?.address
+  )
+
+  const parsedValue = useMemo(() => tryParseAmount(value, currency ?? undefined), [currency, value])
+  const totalPrice = parsedValue && price ? `${parsedValue.multiply(price).toFixed(2)}` : '0.00'
+
   const handleDismissSearch = useCallback(() => {
     setModalOpen(false)
   }, [setModalOpen])
@@ -241,6 +258,7 @@ export default function CurrencyInputPanel({
             </Aligner>
           </CurrencySelect>
         </InputRow>
+        <PriceRow>{!isPriceLoading && price?.equalTo('0') ? 'Price not available' : `~$ ${totalPrice}`}</PriceRow>
       </Container>
       {!disableCurrencySelect && onCurrencySelect && (
         <CurrencySearchModal

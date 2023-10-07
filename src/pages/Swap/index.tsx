@@ -59,7 +59,6 @@ import FusionPrice from 'components/swap/FusionPrice'
 import { BigNumber, ethers } from 'ethers'
 import { FUSION_CONTRACT } from 'contracts'
 import AdvancedFusionDetailsDropdown from 'components/swap/AdvancedFusionDetailsDropdown'
-import { useTokenPrice } from 'hooks/useTokenPrice'
 import { calculateSlippageAmount, isAddress, shortenAddress } from 'utils'
 import TailLoader from '../../components/Loader/TailLoader'
 import Toggle from 'components/Toggle'
@@ -233,8 +232,6 @@ export default function Swap() {
 
   // check if user has gone through approval process, used to show two step buttons, reset on token change
   const [approvalSubmitted, setApprovalSubmitted] = useState<boolean>(false)
-
-  const tokenOutPrice = useTokenPrice(fusionSwap.currencies?.OUTPUT, swapMode === 1)
 
   const addTransaction = useTransactionAdder()
 
@@ -415,7 +412,6 @@ export default function Swap() {
       } else {
         const percenage =
           parseFloat(parsedAmounts[Field.INPUT]?.toExact() ?? '0') / parseFloat(maxAmountInput.toExact())
-        console.log(percenage)
         setPercentageSlide(Math.min(Math.floor(percenage * 100), 100))
       }
     }
@@ -512,7 +508,6 @@ export default function Swap() {
             onConfirm={handleSwap}
             swapErrorMessage={swapErrorMessage}
             onDismiss={handleConfirmDismiss}
-            outPrice={tokenOutPrice}
           />
 
           <AutoColumn gap={'md'}>
@@ -800,7 +795,7 @@ export default function Swap() {
           <UnsupportedCurrencyFooter show={swapIsUnsupported} currencies={[currencies.INPUT, currencies.OUTPUT]} />
         )
       ) : swapMode === 1 ? (
-        <AdvancedFusionDetailsDropdown swap={fusionSwap} price={tokenOutPrice} />
+        <AdvancedFusionDetailsDropdown swap={fusionSwap} currency={fusionSwap.currencies?.OUTPUT} />
       ) : null}
       <Banner />
     </>

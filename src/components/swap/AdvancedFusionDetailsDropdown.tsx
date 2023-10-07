@@ -5,8 +5,10 @@ import React, { useContext } from 'react'
 import styled, { ThemeContext } from 'styled-components'
 import { Text } from 'rebass'
 import { XFusionSwapType } from 'state/swap/hooks'
-import { Token, TokenAmount } from '@rcpswap/sdk'
+import { ChainId, Currency, Token, TokenAmount } from '@rcpswap/sdk'
 import { ethers } from 'ethers'
+import usePrice from 'hooks/usePrice'
+import { wrappedCurrency } from 'utils/wrappedCurrency'
 
 const AdvancedDetailsFooter = styled.div<{ show: boolean }>`
   padding-top: 16px;
@@ -32,8 +34,17 @@ const DexLogo = styled.img`
   margin: 1px 6px 0;
 `
 
-export default function AdvancedFusionDetailsDropdown({ swap, price }: { swap: XFusionSwapType; price: number }) {
+export default function AdvancedFusionDetailsDropdown({
+  swap,
+  currency
+}: {
+  swap: XFusionSwapType
+  currency: Currency | undefined
+}) {
   const theme = useContext(ThemeContext)
+  const { data: price, isInitialLoading: isLoading } = usePrice(
+    wrappedCurrency(currency, ChainId.ARBITRUM_NOVA)?.address
+  )
 
   return swap.result?.route?.fee?.isFusion ? (
     <AdvancedDetailsFooter show={Boolean(swap && swap?.result && swap?.result?.route)}>
@@ -67,10 +78,10 @@ export default function AdvancedFusionDetailsDropdown({ swap, price }: { swap: X
                           ).toExact()
                         ),
                       0
-                    ) * (price === 0 ? 1 : price)
+                    ) * (isLoading || !price || price.equalTo('0') ? 1 : parseFloat(price.toFixed(6)))
                   ).toFixed(3) +
                     ' ' +
-                    (price === 0 ? swap?.currencies?.OUTPUT?.symbol : '$')}
+                    (isLoading || !price || price.equalTo('0') ? swap?.currencies?.OUTPUT?.symbol : '$')}
                 </Text>
                 <Text fontSize={14} color={theme.text2} marginLeft={'5px'}>
                   in saving

@@ -1,4 +1,4 @@
-import { Currency, Token, TokenAmount, Trade, TradeType } from '@rcpswap/sdk'
+import { ChainId, Currency, Token, TokenAmount, Trade, TradeType } from '@rcpswap/sdk'
 import React, { useContext, useEffect, useMemo, useState } from 'react'
 import { Repeat, Type } from 'react-feather'
 import { Text } from 'rebass'
@@ -21,6 +21,8 @@ import useBlockchain from '../../hooks/useBlockchain'
 import getBlockchainAdjustedCurrency from '../../utils/getBlockchainAdjustedCurrency'
 import { XFusionSwapType } from 'state/swap/hooks'
 import { ethers } from 'ethers'
+import usePrice from 'hooks/usePrice'
+import { wrappedCurrency } from 'utils/wrappedCurrency'
 
 export default function SwapModalFooter({
   trade,
@@ -29,8 +31,7 @@ export default function SwapModalFooter({
   swapErrorMessage,
   disabledConfirm,
   swapMode,
-  fusionSwap,
-  outPrice
+  fusionSwap
 }: {
   trade: Trade | undefined
   swapMode: number
@@ -39,7 +40,6 @@ export default function SwapModalFooter({
   onConfirm: () => void
   swapErrorMessage: string | undefined
   disabledConfirm: boolean
-  outPrice: number
 }) {
   const blockchain = useBlockchain()
 
@@ -51,6 +51,10 @@ export default function SwapModalFooter({
   ])
   const { priceImpactWithoutFee, realizedLPFee } = useMemo(() => computeTradePriceBreakdown(trade), [trade])
   const severity = warningSeverity(priceImpactWithoutFee)
+
+  const { data: price, isInitialLoading: isPriceLoading } = usePrice(
+    wrappedCurrency(fusionSwap.currencies?.OUTPUT, ChainId.ARBITRUM_NOVA)?.address
+  )
 
   const tradeInputCurrency = getBlockchainAdjustedCurrency(
     blockchain,
@@ -215,10 +219,10 @@ export default function SwapModalFooter({
                         ).toExact()
                       ),
                     0
-                  ) * (outPrice === 0 ? 1 : outPrice)
+                  ) * (isPriceLoading || !price || price.equalTo('0') ? 1 : parseFloat(price.toFixed(6)))
                 ).toFixed(6) +
                   ' ' +
-                  (outPrice === 0 ? tradeOutputCurrency?.symbol : '$')}
+                  (isPriceLoading || !price || price.equalTo('0') ? tradeOutputCurrency?.symbol : '$')}
               </TYPE.black>
             </RowBetween>
           )}
