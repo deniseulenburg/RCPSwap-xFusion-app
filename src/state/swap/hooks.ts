@@ -68,8 +68,8 @@ export function useSwapActionHandlers(): {
             currency instanceof Token
               ? currency.address
               : currency && DEFAULT_CURRENCIES.includes(currency)
-              ? symbol
-              : ''
+                ? symbol
+                : ''
         })
       )
     },
@@ -248,8 +248,8 @@ export function useDerivedSwapInfo(): {
         ? slippageAdjustedAmountsV1[Field.INPUT]
         : null
       : slippageAdjustedAmounts
-      ? slippageAdjustedAmounts[Field.INPUT]
-      : null
+        ? slippageAdjustedAmounts[Field.INPUT]
+        : null
   ]
 
   if (balanceIn && amountIn && balanceIn.lessThan(amountIn)) {
@@ -542,11 +542,10 @@ export function useXFusionSwap(): XFusionSwapType {
         bestSingleProviderRoute?.amountOutBN ?? BigNumber.from(0)
       )
         ? (bestRoute?.amountOutBN ?? BigNumber.from(0))
-            .sub(bestSingleProviderRoute?.amountOutBN ?? BigNumber.from(0))
-            .mul(FEE_BP)
-            .div(10000)
-            .toString()
-        : '0'
+          .sub(bestSingleProviderRoute?.amountOutBN ?? BigNumber.from(0))
+          .mul(FEE_BP)
+          .div(10000)
+        : BigNumber.from(0)
 
       return new Promise(res =>
         setTimeout(
@@ -574,31 +573,33 @@ export function useXFusionSwap(): XFusionSwapType {
                     bestSingleProviderRoute === sushiBestRoute
                       ? 'Sushi'
                       : bestSingleProviderRoute === arbBestRoute
-                      ? 'Arb'
-                      : 'RCP',
+                        ? 'Arb'
+                        : 'RCP',
                   amountOut: bestSingleProviderRoute?.amountOut ?? 0,
                   amountOutBN: bestSingleProviderRoute?.amountOutBN?.toString() ?? '0'
                 },
                 fee: {
-                  amount: feeAmountOut === 0 ? (bestRoute.amountOut * 100) / 10000 : feeAmountOut,
-                  amountOutBN: BigNumber.from(feeAmountOutBN).isZero()
+                  amount: feeAmountOut === 0 ? (bestRoute.amountOut * 100) / 10000 : feeAmountOut + (bestRoute.amountOut * 30) / 10000,
+                  amountOutBN: feeAmountOutBN.isZero()
                     ? BigNumber.from(bestRoute.amountOutBN)
-                        .mul(100)
-                        .div(10000)
-                    : feeAmountOutBN,
+                      .mul(100)
+                      .div(10000)
+                    : feeAmountOutBN.add(BigNumber.from(bestRoute.amountOutBN)
+                      .mul(30)
+                      .div(10000)),
                   isFusion: BigNumber.from(feeAmountOutBN).gt(0)
                 }
               },
               args:
                 recipient || account
                   ? Router.routeProcessor2Params(
-                      poolsCodeMap,
-                      bestRoute,
-                      inputToken,
-                      outputToken,
-                      (recipient || account) ?? '',
-                      routeProcessor3Address[ChainId.ARBITRUM_NOVA]
-                    )
+                    poolsCodeMap,
+                    bestRoute,
+                    inputToken,
+                    outputToken,
+                    (recipient || account) ?? '',
+                    routeProcessor3Address[ChainId.ARBITRUM_NOVA]
+                  )
                   : undefined
             }),
           0

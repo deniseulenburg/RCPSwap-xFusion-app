@@ -146,6 +146,7 @@ interface CurrencyInputPanelProps {
   inPrice: { totalPrice: Fraction; price: Fraction | undefined; loading: boolean }
   outPrice: { totalPrice: Fraction; price: Fraction | undefined; loading: boolean }
   showPriceImpact?: boolean
+  loading?: boolean
 }
 
 export default function CurrencyInputPanel({
@@ -168,7 +169,8 @@ export default function CurrencyInputPanel({
   disabled = false,
   inPrice,
   outPrice,
-  showPriceImpact = false
+  showPriceImpact = false,
+  loading = false
 }: CurrencyInputPanelProps) {
   const { t } = useTranslation()
 
@@ -264,13 +266,17 @@ export default function CurrencyInputPanel({
         <PriceRow>
           {!inPrice.loading && inPrice.price?.equalTo('0')
             ? 'Price not available'
-            : `~$ ${parseFloat(inPrice.totalPrice.toFixed(2)).toLocaleString('en-US', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-              })}`}
+            : `~$ ${
+                loading
+                  ? '0.00'
+                  : parseFloat(inPrice.totalPrice.toFixed(2)).toLocaleString('en-US', {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2
+                    })
+              }`}
           &nbsp;
           {showPriceImpact && outPrice.totalPrice?.greaterThan('0') && inPrice.totalPrice.greaterThan('0') ? (
-            <PriceImpact impact={impact}>({impact.toFixed(2)}%)</PriceImpact>
+            <PriceImpact impact={loading ? 0 : impact}>({loading ? '0.00' : impact.toFixed(2)}%)</PriceImpact>
           ) : null}
         </PriceRow>
       </Container>

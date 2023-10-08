@@ -588,6 +588,7 @@ export default function Swap() {
               inPrice={outputTokenPrice}
               outPrice={inputTokenPrice}
               showPriceImpact
+              loading={swapMode === 1 && fusionSwap.loading}
             />
 
             {recipient !== null && !showWrap ? (
