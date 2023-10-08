@@ -5,7 +5,7 @@ import Ads from '../assets/images/ads.png'
 import axios from 'axios'
 
 const BannerWrapper = styled.div`
-  margin-top: 16px;
+  margin-top: 30px;
   position: relative;
   width: 100%;
   max-width: 420px;

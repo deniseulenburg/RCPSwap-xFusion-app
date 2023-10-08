@@ -1,4 +1,4 @@
-import { ChainId, Currency, CurrencyAmount, Pair } from '@rcpswap/sdk'
+import { ChainId, Currency, CurrencyAmount, Fraction, Pair } from '@rcpswap/sdk'
 import React, { useState, useCallback, useMemo } from 'react'
 import styled from 'styled-components'
 import { darken } from 'polished'
@@ -14,9 +14,6 @@ import { ReactComponent as DropDown } from '../../assets/images/dropdown.svg'
 import { useActiveWeb3React } from '../../hooks'
 import { useTranslation } from 'react-i18next'
 import useTheme from '../../hooks/useTheme'
-import usePrice from 'hooks/usePrice'
-import { wrappedCurrency } from 'utils/wrappedCurrency'
-import { tryParseAmount } from 'state/swap/hooks'
 
 const InputRow = styled.div<{ selected: boolean }>`
   ${({ theme }) => theme.flexRowNoWrap}
@@ -98,7 +95,10 @@ const Container = styled.div<{ hideInput: boolean; disabled?: boolean }>`
 const StyledTokenName = styled.span<{ active?: boolean }>`
   ${({ active }) => (active ? '  margin: 0 0.25rem 0 0.75rem;' : '  margin: 0 0.25rem 0 0.25rem;')}
   font-size:  ${({ active }) => (active ? '20px' : '16px')};
+`
 
+const PriceImpact = styled.span<{ impact: number }>`
+  color: ${({ impact, theme }) => (impact <= -5 ? '#e61537' : impact <= -2 ? '#f7c40c' : theme.green1)};
 `
 
 const StyledBalanceMax = styled.button`
@@ -143,6 +143,9 @@ interface CurrencyInputPanelProps {
   customBalanceText?: string
   overrideSelectedCurrencyBalance?: CurrencyAmount | null
   disabled?: boolean
+  inPrice: { totalPrice: Fraction; price: Fraction | undefined; loading: boolean }
+  outPrice: { totalPrice: Fraction; price: Fraction | undefined; loading: boolean }
+  showPriceImpact?: boolean
 }
 
 export default function CurrencyInputPanel({
@@ -162,7 +165,10 @@ export default function CurrencyInputPanel({
   showCommonBases,
   customBalanceText,
   overrideSelectedCurrencyBalance = null,
-  disabled = false
+  disabled = false,
+  inPrice,
+  outPrice,
+  showPriceImpact = false
 }: CurrencyInputPanelProps) {
   const { t } = useTranslation()
 
@@ -174,16 +180,13 @@ export default function CurrencyInputPanel({
   }
   const theme = useTheme()
 
-  const { data: price, isInitialLoading: isPriceLoading } = usePrice(
-    wrappedCurrency(currency ?? undefined, ChainId.ARBITRUM_NOVA)?.address
-  )
-
-  const parsedValue = useMemo(() => tryParseAmount(value, currency ?? undefined), [currency, value])
-  const totalPrice = parsedValue && price ? `${parsedValue.multiply(price).toFixed(2)}` : '0.00'
-
   const handleDismissSearch = useCallback(() => {
     setModalOpen(false)
   }, [setModalOpen])
+
+  const impact = outPrice.totalPrice.greaterThan(0)
+    ? parseFloat(inPrice.totalPrice.divide(outPrice.totalPrice).toFixed(6)) * 100 - 100
+    : 0
 
   return (
     <InputPanel id={id}>
@@ -258,7 +261,18 @@ export default function CurrencyInputPanel({
             </Aligner>
           </CurrencySelect>
         </InputRow>
-        <PriceRow>{!isPriceLoading && price?.equalTo('0') ? 'Price not available' : `~$ ${totalPrice}`}</PriceRow>
+        <PriceRow>
+          {!inPrice.loading && inPrice.price?.equalTo('0')
+            ? 'Price not available'
+            : `~$ ${parseFloat(inPrice.totalPrice.toFixed(2)).toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+              })}`}
+          &nbsp;
+          {showPriceImpact && outPrice.totalPrice?.greaterThan('0') && inPrice.totalPrice.greaterThan('0') ? (
+            <PriceImpact impact={impact}>({impact.toFixed(2)}%)</PriceImpact>
+          ) : null}
+        </PriceRow>
       </Container>
       {!disableCurrencySelect && onCurrencySelect && (
         <CurrencySearchModal
