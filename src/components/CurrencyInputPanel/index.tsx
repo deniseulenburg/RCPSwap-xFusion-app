@@ -143,8 +143,8 @@ interface CurrencyInputPanelProps {
   customBalanceText?: string
   overrideSelectedCurrencyBalance?: CurrencyAmount | null
   disabled?: boolean
-  inPrice: { totalPrice: Fraction; price: Fraction | undefined; loading: boolean }
-  outPrice: { totalPrice: Fraction; price: Fraction | undefined; loading: boolean }
+  inPrice?: { totalPrice: Fraction; price: Fraction | undefined; loading: boolean }
+  outPrice?: { totalPrice: Fraction; price: Fraction | undefined; loading: boolean }
   showPriceImpact?: boolean
   loading?: boolean
 }
@@ -186,9 +186,12 @@ export default function CurrencyInputPanel({
     setModalOpen(false)
   }, [setModalOpen])
 
-  const impact = outPrice.totalPrice.greaterThan(0)
-    ? parseFloat(inPrice.totalPrice.divide(outPrice.totalPrice).toFixed(6)) * 100 - 100
-    : 0
+  const impact =
+    inPrice && outPrice
+      ? outPrice.totalPrice.greaterThan(0)
+        ? parseFloat(inPrice.totalPrice.divide(outPrice.totalPrice).toFixed(6)) * 100 - 100
+        : 0
+      : null
 
   return (
     <InputPanel id={id}>
@@ -263,22 +266,24 @@ export default function CurrencyInputPanel({
             </Aligner>
           </CurrencySelect>
         </InputRow>
-        <PriceRow>
-          {!inPrice.loading && inPrice.price?.equalTo('0')
-            ? 'Price not available'
-            : `~$ ${
-                loading
-                  ? '0.00'
-                  : parseFloat(inPrice.totalPrice.toFixed(2)).toLocaleString('en-US', {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2
-                    })
-              }`}
-          &nbsp;
-          {showPriceImpact && outPrice.totalPrice?.greaterThan('0') && inPrice.totalPrice.greaterThan('0') ? (
-            <PriceImpact impact={loading ? 0 : impact}>({loading ? '0.00' : impact.toFixed(2)}%)</PriceImpact>
-          ) : null}
-        </PriceRow>
+        {inPrice && outPrice && (
+          <PriceRow>
+            {!inPrice.loading && inPrice.price?.equalTo('0')
+              ? 'Price not available'
+              : `~$ ${
+                  loading
+                    ? '0.00'
+                    : parseFloat(inPrice.totalPrice.toFixed(2)).toLocaleString('en-US', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                      })
+                }`}
+            &nbsp;
+            {showPriceImpact && outPrice.totalPrice?.greaterThan('0') && inPrice.totalPrice.greaterThan('0') ? (
+              <PriceImpact impact={loading ? 0 : impact}>({loading ? '0.00' : impact.toFixed(2)}%)</PriceImpact>
+            ) : null}
+          </PriceRow>
+        )}
       </Container>
       {!disableCurrencySelect && onCurrencySelect && (
         <CurrencySearchModal
