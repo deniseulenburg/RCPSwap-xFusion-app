@@ -412,7 +412,8 @@ export default function Swap() {
       } else {
         const percenage =
           parseFloat(parsedAmounts[Field.INPUT]?.toExact() ?? '0') / parseFloat(maxAmountInput.toExact())
-        setPercentageSlide(Math.min(Math.floor(percenage * 100), 100))
+        const percent = Math.min(Math.floor(percenage * 100), 100)
+        if (percent !== percentageSlide) setPercentageSlide(percent)
       }
     }
   }, [maxAmountInput?.toExact(), parsedAmounts[Field.INPUT]?.toExact()])
