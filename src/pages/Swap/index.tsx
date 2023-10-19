@@ -412,8 +412,7 @@ export default function Swap() {
       } else {
         const percenage =
           parseFloat(parsedAmounts[Field.INPUT]?.toExact() ?? '0') / parseFloat(maxAmountInput.toExact())
-        const percent = Math.min(Math.floor(percenage * 100), 100)
-        if (percent !== percentageSlide) setPercentageSlide(percent)
+        setPercentageSlide(Math.min(Math.floor(percenage * 100), 100))
       }
     }
   }, [maxAmountInput?.toExact(), parsedAmounts[Field.INPUT]?.toExact()])
@@ -437,8 +436,6 @@ export default function Swap() {
   const outputTokenValue =
     swapMode === 0 || showWrap
       ? formattedAmounts[Field.OUTPUT]
-      : fusionSwap.loadingBalance
-      ? '0'
       : currencies.OUTPUT
       ? new TokenAmount(
           currencies.OUTPUT as Token,
@@ -480,27 +477,31 @@ export default function Swap() {
 
   const handlePercentageSlide = useCallback(
     (step: number) => {
+      console.log(step)
       setPercentageSlide(step)
 
-      // if (slideTimerRef.current) {
-      //   clearTimeout(slideTimerRef.current)
-      //   slideTimerRef.current = null
-      // }
-
-      if (maxAmountInput) {
-        const particalAmount = maxAmountInput.multiply(step.toString()).divide('100')
-        const Big = toFormat(_Big)
-        Big.DP = maxAmountInput.currency.decimals
-        let value = new Big(particalAmount.numerator.toString())
-          .div(particalAmount.denominator.toString())
-          .toFormat({ groupSeparator: '' })
-
-        const index = value.indexOf('.')
-        if (index > -1 && value.length - index - 1 > (currencies[Field.INPUT]?.decimals ?? 10)) {
-          value = parseInt(value) + '.' + value.slice(index + 1, index + (currencies[Field.INPUT]?.decimals ?? 10) + 1)
-        }
-        onUserInput(Field.INPUT, value)
+      if (slideTimerRef.current) {
+        clearTimeout(slideTimerRef.current)
+        slideTimerRef.current = null
       }
+
+      slideTimerRef.current = (setTimeout(() => {
+        if (maxAmountInput) {
+          const particalAmount = maxAmountInput.multiply(step.toString()).divide('100')
+          const Big = toFormat(_Big)
+          Big.DP = maxAmountInput.currency.decimals
+          let value = new Big(particalAmount.numerator.toString())
+            .div(particalAmount.denominator.toString())
+            .toFormat({ groupSeparator: '' })
+
+          const index = value.indexOf('.')
+          if (index > -1 && value.length - index - 1 > (currencies[Field.INPUT]?.decimals ?? 10)) {
+            value =
+              parseInt(value) + '.' + value.slice(index + 1, index + (currencies[Field.INPUT]?.decimals ?? 10) + 1)
+          }
+          onUserInput(Field.INPUT, value)
+        }
+      }, 1000) as unknown) as number
     },
     [maxAmountInput?.toExact(), onUserInput]
   )
