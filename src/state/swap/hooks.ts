@@ -407,7 +407,7 @@ function useUpdate() {
     timerId = (setTimeout(() => {
       setUpdate(prev => prev + 1)
       setLoading(false)
-    }, 5000) as unknown) as number
+    }, 2000) as unknown) as number
   }
 
   useEffect(() => {
@@ -461,6 +461,7 @@ export function useXFusionSwap(): XFusionSwapType {
       { currencyA: inputCurrencyId, currencyB: outputCurrencyId, poolsCodeMap, isUltra, recipient, swapMode, update }
     ],
     queryFn: async () => {
+      console.log('updating')
       if (
         !poolsCodeMap ||
         !inputToken ||
@@ -647,8 +648,8 @@ export function useXFusionSwap(): XFusionSwapType {
     error: isError,
     loading:
       isFetching ||
-      Boolean(isLoading && inputCurrencyId && outputCurrencyId && typedValue.length > 0 && +typedValue > 0) ||
-      Boolean(isInputLoading && inputCurrencyId && outputCurrencyId && typedValue.length > 0 && +typedValue > 0),
+      Boolean(isLoading && inputCurrencyId && outputCurrencyId && typedValue.length > 0 && +typedValue > 0),
+    // Boolean(isInputLoading && inputCurrencyId && outputCurrencyId && typedValue.length > 0 && +typedValue > 0),
     currencies,
     parsedAmount,
     result: (data ?? {}) as any
