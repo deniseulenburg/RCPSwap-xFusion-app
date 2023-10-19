@@ -461,7 +461,6 @@ export function useXFusionSwap(): XFusionSwapType {
       { currencyA: inputCurrencyId, currencyB: outputCurrencyId, poolsCodeMap, isUltra, recipient, swapMode, update }
     ],
     queryFn: async () => {
-      console.log('updating')
       if (
         !poolsCodeMap ||
         !inputToken ||
@@ -647,9 +646,8 @@ export function useXFusionSwap(): XFusionSwapType {
   return {
     error: isError,
     loading:
-      Boolean(isFetching && inputCurrencyId && outputCurrencyId && typedValue.length > 0 && +typedValue > 0),
-    // Boolean(isLoading && inputCurrencyId && outputCurrencyId && typedValue.length > 0 && +typedValue > 0),
-    // Boolean(isInputLoading && inputCurrencyId && outputCurrencyId && typedValue.length > 0 && +typedValue > 0),
+      isFetching ||
+      Boolean(isLoading && inputCurrencyId && outputCurrencyId && typedValue.length > 0 && +typedValue > 0) || Boolean(isInputLoading && inputCurrencyId && outputCurrencyId && typedValue.length > 0 && +typedValue > 0),
     currencies,
     parsedAmount,
     result: (data ?? {}) as any

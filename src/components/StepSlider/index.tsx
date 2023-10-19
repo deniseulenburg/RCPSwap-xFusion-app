@@ -38,13 +38,17 @@ const StyledRangeSlider = styled<any>(RangeSlider)`
     height: 4px;
     background: linear-gradient(
       90deg,
-      ${props => (props?.dark ? props.theme.primary1 : props.theme.primary3)} ${props => `${props.value}%`},
-      ${props => (props?.dark ? props.theme.bg6 : props.theme.bg5)} ${props => `${props.value}%`}
+      ${props => (props?.dark === 'true' ? props.theme.primary1 : props.theme.primary3)} ${props => `${props.value}%`},
+      ${props => (props?.dark === 'true' ? props.theme.bg6 : props.theme.bg5)} ${props => `${props.value}%`}
     ) !important;
   }
   &::-webkit-slider-thumb {
     background: ${props =>
-      props?.disabled ? props.theme.bg5 : props?.dark ? props.theme.primary1 : props?.theme?.primary3} !important;
+      props?.disabled
+        ? props.theme.bg5
+        : props?.dark === 'true'
+        ? props.theme.primary1
+        : props?.theme?.primary3} !important;
   }
 
   & + .range-slider__tooltip {
@@ -70,7 +74,7 @@ const StepSliderLineWrapper = styled.div`
 
 const StepSliderTick = styled.svg`
   margin-top: -0.375rem;
-  z-index: ${props => (props?.first ? 0 : 1)};
+  z-index: 0;
   color: ${props =>
     props.disabled
       ? props?.dark
@@ -94,8 +98,8 @@ type StepSliderType = {
 
 const StepSlider: React.FC<StepSliderType> = ({ step, onChange, enabled }) => {
   const dark = useIsDarkMode()
-  const onSlide = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange(e.target.valueAsNumber)
+  const onSlide = (e: React.ChangeEvent<HTMLInputElement>, value: number) => {
+    onChange(value)
   }
 
   return (
@@ -113,7 +117,7 @@ const StepSlider: React.FC<StepSliderType> = ({ step, onChange, enabled }) => {
               onChange={onSlide}
               className=""
               disabled={!enabled}
-              dark={dark}
+              dark={dark ? 'true' : 'false'}
             />
           </StepSliderContent>
           <StepSliderLineWrapper>

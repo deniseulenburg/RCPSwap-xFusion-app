@@ -1,5 +1,5 @@
 import { ChainId, CurrencyAmount, Fraction, JSBI, Percent, Token, TokenAmount, Trade } from '@rcpswap/sdk'
-import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useContext, useEffect, useMemo, useState, useRef } from 'react'
 import { ArrowDown, Repeat } from 'react-feather'
 import ReactGA from 'react-ga'
 import { Text } from 'rebass'
@@ -178,24 +178,6 @@ export default function Swap() {
   const isValid = !swapInputError
   const dependentField: Field = independentField === Field.INPUT ? Field.OUTPUT : Field.INPUT
 
-  const handleTypeInput = useCallback(
-    (value: string) => {
-      const index = value.indexOf('.')
-      if (index > -1 && value.length - index - 1 > (currencies[Field.INPUT]?.decimals ?? 10)) {
-        value = parseInt(value) + '.' + value.slice(index + 1, index + (currencies[Field.INPUT]?.decimals ?? 10) + 1)
-      }
-
-      onUserInput(Field.INPUT, value)
-    },
-    [onUserInput]
-  )
-  const handleTypeOutput = useCallback(
-    (value: string) => {
-      onUserInput(Field.OUTPUT, value)
-    },
-    [onUserInput]
-  )
-
   // modal and loading
   const [{ showConfirm, tradeToConfirm, swapErrorMessage, attemptingTxn, txHash }, setSwapState] = useState<{
     showConfirm: boolean
@@ -247,7 +229,6 @@ export default function Swap() {
   }, [approval, approvalSubmitted, swapMode])
 
   const maxAmountInput: CurrencyAmount | undefined = maxAmountSpend(currencyBalances[Field.INPUT])
-  const atMaxAmountInput = Boolean(maxAmountInput && parsedAmounts[Field.INPUT]?.equalTo(maxAmountInput))
 
   // the callback to execute the swap
   const { callback: swapCallback, error: swapCallbackError } = useSwapCallback(trade, allowedSlippage, recipient)
@@ -397,6 +378,24 @@ export default function Swap() {
     singleHopOnly
   ])
 
+  const handleTypeInput = useCallback(
+    (value: string) => {
+      const index = value.indexOf('.')
+      if (index > -1 && value.length - index - 1 > (currencies[Field.INPUT]?.decimals ?? 10)) {
+        value = parseInt(value) + '.' + value.slice(index + 1, index + (currencies[Field.INPUT]?.decimals ?? 10) + 1)
+      }
+
+      onUserInput(Field.INPUT, value)
+    },
+    [onUserInput]
+  )
+  const handleTypeOutput = useCallback(
+    (value: string) => {
+      onUserInput(Field.OUTPUT, value)
+    },
+    [onUserInput]
+  )
+
   // percentage slide
   const [percentageSlide, setPercentageSlide] = useState(0)
 
@@ -416,7 +415,7 @@ export default function Swap() {
         setPercentageSlide(Math.min(Math.floor(percenage * 100), 100))
       }
     }
-  }, [maxAmountInput, parsedAmounts[Field.INPUT]?.toExact()])
+  }, [maxAmountInput?.toExact(), parsedAmounts[Field.INPUT]?.toExact()])
 
   // show approve flow when: no error on inputs, not approved or pending, or approved in current session
   // never show if price impact is above threshold in non expert mode
@@ -474,26 +473,36 @@ export default function Swap() {
     [onCurrencySelection]
   )
 
+  const slideTimerRef = useRef<number | null>(null)
+
   const handlePercentageSlide = useCallback(
     (step: number) => {
       setPercentageSlide(step)
 
-      if (maxAmountInput) {
-        const particalAmount = maxAmountInput.multiply(step.toString()).divide('100')
-        const Big = toFormat(_Big)
-        Big.DP = maxAmountInput.currency.decimals
-        let value = new Big(particalAmount.numerator.toString())
-          .div(particalAmount.denominator.toString())
-          .toFormat({ groupSeparator: '' })
-
-        const index = value.indexOf('.')
-        if (index > -1 && value.length - index - 1 > (currencies[Field.INPUT]?.decimals ?? 10)) {
-          value = parseInt(value) + '.' + value.slice(index + 1, index + (currencies[Field.INPUT]?.decimals ?? 10) + 1)
-        }
-        onUserInput(Field.INPUT, value)
+      if (slideTimerRef.current) {
+        clearTimeout(slideTimerRef.current)
+        slideTimerRef.current = null
       }
+
+      slideTimerRef.current = (setTimeout(() => {
+        if (maxAmountInput) {
+          const particalAmount = maxAmountInput.multiply(step.toString()).divide('100')
+          const Big = toFormat(_Big)
+          Big.DP = maxAmountInput.currency.decimals
+          let value = new Big(particalAmount.numerator.toString())
+            .div(particalAmount.denominator.toString())
+            .toFormat({ groupSeparator: '' })
+
+          const index = value.indexOf('.')
+          if (index > -1 && value.length - index - 1 > (currencies[Field.INPUT]?.decimals ?? 10)) {
+            value =
+              parseInt(value) + '.' + value.slice(index + 1, index + (currencies[Field.INPUT]?.decimals ?? 10) + 1)
+          }
+          onUserInput(Field.INPUT, value)
+        }
+      }, 500) as unknown) as number
     },
-    [maxAmountInput, onUserInput]
+    [maxAmountInput?.toExact(), onUserInput]
   )
 
   const handleOutputSelect = useCallback(outputCurrency => onCurrencySelection(Field.OUTPUT, outputCurrency), [
