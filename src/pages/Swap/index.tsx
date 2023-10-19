@@ -501,7 +501,7 @@ export default function Swap() {
           }
           onUserInput(Field.INPUT, value)
         }
-      }, 1000) as unknown) as number
+      }, 10000) as unknown) as number
     },
     [maxAmountInput?.toExact(), onUserInput]
   )
