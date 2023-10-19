@@ -407,7 +407,7 @@ function useUpdate() {
     timerId = (setTimeout(() => {
       setUpdate(prev => prev + 1)
       setLoading(false)
-    }, 2000) as unknown) as number
+    }, 1000) as unknown) as number
   }
 
   useEffect(() => {
@@ -647,8 +647,8 @@ export function useXFusionSwap(): XFusionSwapType {
   return {
     error: isError,
     loading:
-      isFetching ||
-      Boolean(isLoading && inputCurrencyId && outputCurrencyId && typedValue.length > 0 && +typedValue > 0),
+      Boolean(isFetching && inputCurrencyId && outputCurrencyId && typedValue.length > 0 && +typedValue > 0),
+    // Boolean(isLoading && inputCurrencyId && outputCurrencyId && typedValue.length > 0 && +typedValue > 0),
     // Boolean(isInputLoading && inputCurrencyId && outputCurrencyId && typedValue.length > 0 && +typedValue > 0),
     currencies,
     parsedAmount,
