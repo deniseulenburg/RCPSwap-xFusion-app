@@ -98,17 +98,17 @@ export default function Modal({
     leave: { opacity: 0 }
   })
 
-  const [{ y }, set] = useSpring(() => ({ y: 0, config: { mass: 1, tension: 210, friction: 20 } }))
-  const bind = useGesture({
-    onDrag: state => {
-      set({
-        y: state.down ? state.movement[1] : 0
-      })
-      if (state.movement[1] > 400 || (state.velocity > 4 && state.direction[1] > 0)) {
-        // onDismiss()
-      }
-    }
-  })
+  // const [{ y }, set] = useSpring(() => ({ y: 0, config: { mass: 1, tension: 210, friction: 20 } }))
+  // const bind = useGesture({
+  //   onDrag: state => {
+  //     set({
+  //       y: state.down ? state.movement[1] : 0
+  //     })
+  //     if (state.movement[1] > 400 || (state.velocity > 4 && state.direction[1] > 0)) {
+  //       // onDismiss()
+  //     }
+  //   }
+  // })
 
   return (
     <>
@@ -117,12 +117,12 @@ export default function Modal({
           item && (
             <StyledDialogOverlay key={key} style={props} onDismiss={onDismiss} initialFocusRef={initialFocusRef}>
               <StyledDialogContent
-                {...(isMobile
-                  ? {
-                      ...bind(),
-                      style: { transform: y.interpolate(y => `translateY(${y > 0 ? y : 0}px)`) }
-                    }
-                  : {})}
+                // {...(isMobile
+                //   ? {
+                //       ...bind(),
+                //       style: { transform: y.interpolate(y => `translateY(${y > 0 ? y : 0}px)`) }
+                //     }
+                //   : {})}
                 aria-label="dialog content"
                 minHeight={minHeight}
                 maxHeight={maxHeight}
