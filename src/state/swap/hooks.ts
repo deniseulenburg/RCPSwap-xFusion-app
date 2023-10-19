@@ -362,6 +362,7 @@ export function useDefaultsFromURLSearch():
 export type XFusionSwapType = {
   error: boolean
   loading: boolean
+  loadingBalance: boolean
   currencies?: { [field in Field]?: Currency }
   parsedAmount?: CurrencyAmount
   result?: {
@@ -648,6 +649,7 @@ export function useXFusionSwap(): XFusionSwapType {
     loading:
       isFetching ||
       Boolean(isLoading && inputCurrencyId && outputCurrencyId && typedValue.length > 0 && +typedValue > 0) || Boolean(isInputLoading && inputCurrencyId && outputCurrencyId && typedValue.length > 0 && +typedValue > 0),
+    loadingBalance: Boolean(isInputLoading && inputCurrencyId && outputCurrencyId && typedValue.length > 0 && +typedValue > 0),
     currencies,
     parsedAmount,
     result: (data ?? {}) as any

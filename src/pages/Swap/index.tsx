@@ -436,6 +436,8 @@ export default function Swap() {
   const outputTokenValue =
     swapMode === 0 || showWrap
       ? formattedAmounts[Field.OUTPUT]
+      : fusionSwap.loadingBalance
+      ? '0'
       : currencies.OUTPUT
       ? new TokenAmount(
           currencies.OUTPUT as Token,
