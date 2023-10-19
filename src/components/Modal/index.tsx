@@ -105,7 +105,7 @@ export default function Modal({
         y: state.down ? state.movement[1] : 0
       })
       if (state.movement[1] > 300 || (state.velocity > 3 && state.direction[1] > 0)) {
-        onDismiss()
+        // onDismiss()
       }
     }
   })
