@@ -286,8 +286,8 @@ export default function CurrencyInputPanel({
             inPrice.totalPrice.greaterThan('0') &&
             impact <= -1.3 &&
             !loading ? (
-              <PriceImpact impact={loading ? 0 : impact}>
-                ({loading ? '0.00' : (impact - (saving > 0 ? 1 : 0.3)).toFixed(2)}%)
+              <PriceImpact impact={loading ? 0 : impact + (saving > 0 ? 1 : 0.3)}>
+                ({loading ? '0.00' : (impact + (saving > 0 ? 1 : 0.3)).toFixed(2)}%)
               </PriceImpact>
             ) : null}
           </PriceRow>
