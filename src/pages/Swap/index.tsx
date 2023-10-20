@@ -391,9 +391,9 @@ export default function Swap() {
   )
   const handleTypeOutput = useCallback(
     (value: string) => {
-      onUserInput(Field.OUTPUT, value)
+      if (swapMode === 0) onUserInput(Field.OUTPUT, value)
     },
-    [onUserInput]
+    [onUserInput, swapMode]
   )
 
   // percentage slide
@@ -513,6 +513,34 @@ export default function Swap() {
 
   const isFusionFetching = swapMode === 1 && fusionSwap.loading && !account
 
+  const fusionSaving =
+    swapMode === 1 &&
+    fusionSwap &&
+    fusionSwap?.result &&
+    fusionSwap.result?.route &&
+    fusionSwap.result.route?.amountOut &&
+    fusionSwap.currencies?.OUTPUT &&
+    fusionSwap.result.route.fee?.amountOutBN
+      ? parseFloat(
+          new TokenAmount(
+            fusionSwap.currencies?.OUTPUT as Token,
+            ethers.BigNumber.from(fusionSwap.result.route.amountOutBN ?? '0').toString()
+          ).toExact()
+        ) -
+        parseFloat(
+          new TokenAmount(
+            fusionSwap.currencies?.OUTPUT as Token,
+            ethers.BigNumber.from(fusionSwap.result.route.fee.amountOutBN ?? '0').toString()
+          ).toExact()
+        ) -
+        parseFloat(
+          new TokenAmount(
+            fusionSwap.currencies.OUTPUT as Token,
+            ethers.BigNumber.from(fusionSwap.result.route.singleProviderRoute?.amountOutBN ?? '0').toString()
+          ).toExact()
+        )
+      : 0
+
   return (
     <>
       <TokenWarningModal
@@ -593,11 +621,12 @@ export default function Swap() {
               onCurrencySelect={handleOutputSelect}
               otherCurrency={currencies[Field.INPUT]}
               id="swap-currency-output"
-              disabled={swapMode === 1}
+              // disabled={swapMode === 1}
               inPrice={outputTokenPrice}
               outPrice={inputTokenPrice}
               showPriceImpact
               loading={swapMode === 1 && fusionSwap.loading}
+              saving={fusionSaving}
             />
 
             {recipient !== null && !showWrap ? (

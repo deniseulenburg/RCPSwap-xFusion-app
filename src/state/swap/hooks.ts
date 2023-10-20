@@ -362,7 +362,6 @@ export function useDefaultsFromURLSearch():
 export type XFusionSwapType = {
   error: boolean
   loading: boolean
-  loadingBalance: boolean
   currencies?: { [field in Field]?: Currency }
   parsedAmount?: CurrencyAmount
   result?: {
@@ -462,7 +461,6 @@ export function useXFusionSwap(): XFusionSwapType {
       { currencyA: inputCurrencyId, currencyB: outputCurrencyId, poolsCodeMap, isUltra, recipient, swapMode, update }
     ],
     queryFn: async () => {
-      console.log('asdf')
       if (
         !poolsCodeMap ||
         !inputToken ||
@@ -647,8 +645,7 @@ export function useXFusionSwap(): XFusionSwapType {
 
   return {
     error: isError,
-    loading: Boolean(isFetching && inputCurrencyId && outputCurrencyId && typedValue.length > 0 && +typedValue > 0),
-    loadingBalance: Boolean(isInputLoading && inputCurrencyId && outputCurrencyId && typedValue.length > 0 && +typedValue > 0),
+    loading: isFetching || Boolean(isLoading && inputCurrencyId && outputCurrencyId && typedValue.length > 0 && +typedValue > 0) || Boolean(isInputLoading && inputCurrencyId && outputCurrencyId && typedValue.length > 0 && +typedValue > 0),
     currencies,
     parsedAmount,
     result: (data ?? {}) as any

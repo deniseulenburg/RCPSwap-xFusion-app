@@ -54,6 +54,11 @@ const StyledRangeSlider = styled<any>(RangeSlider)`
     transform: translateY(-5px);
   }
 
+  &.range-slider--primary:not(.disabled):focus::-webkit-slider-thumb,
+  &.range-slider--primary:not(.disabled):active::-webkit-slider-thumb {
+    box-shadow: 0 0 0 0.3rem rgba(0, 123, 255, 0.25) !important;
+  }
+
   & + .range-slider__tooltip {
     & > .range-slider__tooltip__label {
       background-color: ${props => props.theme.bg6} !important;
