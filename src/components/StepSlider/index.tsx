@@ -49,6 +49,9 @@ const StyledRangeSlider = styled<any>(RangeSlider)`
         : props?.dark === 'true'
         ? props.theme.primary1
         : props?.theme?.primary3} !important;
+    width: 30px !important;
+    height: 30px !important;
+    transform: translateY(-5px);
   }
 
   & + .range-slider__tooltip {
