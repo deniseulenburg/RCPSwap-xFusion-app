@@ -474,10 +474,13 @@ export default function Swap() {
   )
 
   const slideTimerRef = useRef<number | null>(null)
+  const [tempInputValue, setTempInputValue] = useState(0)
+  const [percentageSliding, setPercentageSliding] = useState(false)
 
-  const handlePercentageSlide = useCallback(
+  const handlePercentageSlideChange = useCallback(
     (step: number) => {
       setPercentageSlide(step)
+      setPercentageSliding(true)
 
       if (slideTimerRef.current) {
         clearTimeout(slideTimerRef.current)
@@ -498,9 +501,37 @@ export default function Swap() {
             value =
               parseInt(value) + '.' + value.slice(index + 1, index + (currencies[Field.INPUT]?.decimals ?? 10) + 1)
           }
-          onUserInput(Field.INPUT, value)
+          setTempInputValue(value)
         }
       }, 20) as unknown) as number
+    },
+    [maxAmountInput?.toExact(), setTempInputValue]
+  )
+
+  const handlePercentageSlideAfterChange = useCallback(
+    (step: number) => {
+      setPercentageSlide(step)
+      setPercentageSliding(false)
+
+      if (slideTimerRef.current) {
+        clearTimeout(slideTimerRef.current)
+        slideTimerRef.current = null
+      }
+
+      if (maxAmountInput) {
+        const particalAmount = maxAmountInput.multiply(step.toString()).divide('100')
+        const Big = toFormat(_Big)
+        Big.DP = maxAmountInput.currency.decimals
+        let value = new Big(particalAmount.numerator.toString())
+          .div(particalAmount.denominator.toString())
+          .toFormat({ groupSeparator: '' })
+
+        const index = value.indexOf('.')
+        if (index > -1 && value.length - index - 1 > (currencies[Field.INPUT]?.decimals ?? 10)) {
+          value = parseInt(value) + '.' + value.slice(index + 1, index + (currencies[Field.INPUT]?.decimals ?? 10) + 1)
+        }
+        onUserInput(Field.INPUT, value)
+      }
     },
     [maxAmountInput?.toExact(), onUserInput]
   )
@@ -571,7 +602,7 @@ export default function Swap() {
           <AutoColumn gap={'md'}>
             <CurrencyInputPanel
               label={independentField === Field.OUTPUT && !showWrap && trade ? 'From (estimated)' : 'From'}
-              value={formattedAmounts[Field.INPUT]}
+              value={percentageSliding ? tempInputValue : formattedAmounts[Field.INPUT]}
               currency={currencies[Field.INPUT]}
               onUserInput={handleTypeInput}
               onCurrencySelect={handleInputSelect}
@@ -580,7 +611,12 @@ export default function Swap() {
               outPrice={outputTokenPrice}
               id="swap-currency-input"
             />
-            <StepSlider step={percentageSlide} onChange={handlePercentageSlide} enabled={Boolean(maxAmountInput)} />
+            <StepSlider
+              step={percentageSlide}
+              onChange={handlePercentageSlideChange}
+              onAfterChange={handlePercentageSlideAfterChange}
+              enabled={Boolean(maxAmountInput)}
+            />
             <AutoColumn justify="space-between">
               <AutoRow justify={isExpertMode ? 'space-between' : 'center'} style={{ padding: '0 1rem' }}>
                 <ArrowWrapper clickable>

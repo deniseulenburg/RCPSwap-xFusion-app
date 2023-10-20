@@ -101,13 +101,17 @@ const StepSliderTick = styled.svg`
 type StepSliderType = {
   step: number
   onChange: (e: number) => void
+  onAfterChange: (e: number) => void
   enabled: boolean
 }
 
-const StepSlider: React.FC<StepSliderType> = ({ step, onChange, enabled }) => {
+const StepSlider: React.FC<StepSliderType> = ({ step, onChange, onAfterChange, enabled }) => {
   const dark = useIsDarkMode()
-  const onSlide = (e: React.ChangeEvent<HTMLInputElement>, value: number) => {
+  const onSlideChange = (e: React.ChangeEvent<HTMLInputElement>, value: number) => {
     onChange(value)
+  }
+  const onSlideAfterChange = (e: React.ChangeEvent<HTMLInputElement>, value: number) => {
+    onAfterChange(value)
   }
 
   return (
@@ -122,7 +126,8 @@ const StepSlider: React.FC<StepSliderType> = ({ step, onChange, enabled }) => {
               step={1}
               tooltipPlacement="top"
               tooltipLabel={(val: any) => `${val}%`}
-              onChange={onSlide}
+              onChange={onSlideChange}
+              onAfterChange={onSlideAfterChange}
               className=""
               disabled={!enabled}
               dark={dark ? 'true' : 'false'}
