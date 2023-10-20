@@ -477,7 +477,6 @@ export default function Swap() {
 
   const handlePercentageSlide = useCallback(
     (step: number) => {
-      console.log(step)
       setPercentageSlide(step)
 
       if (slideTimerRef.current) {
@@ -501,7 +500,7 @@ export default function Swap() {
           }
           onUserInput(Field.INPUT, value)
         }
-      }, 10000) as unknown) as number
+      }, 20) as unknown) as number
     },
     [maxAmountInput?.toExact(), onUserInput]
   )

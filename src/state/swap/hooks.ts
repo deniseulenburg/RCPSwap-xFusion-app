@@ -408,7 +408,7 @@ function useUpdate() {
     timerId = (setTimeout(() => {
       setUpdate(prev => prev + 1)
       setLoading(false)
-    }, 1000) as unknown) as number
+    }, 500) as unknown) as number
   }
 
   useEffect(() => {
