@@ -284,7 +284,7 @@ export default function CurrencyInputPanel({
             {showPriceImpact &&
             outPrice.totalPrice?.greaterThan('0') &&
             inPrice.totalPrice.greaterThan('0') &&
-            impact >= 1.3 &&
+            impact <= -1.3 &&
             !loading ? (
               <PriceImpact impact={loading ? 0 : impact}>
                 ({loading ? '0.00' : (impact - (saving > 0 ? 1 : 0.3)).toFixed(2)}%)
