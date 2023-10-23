@@ -53,6 +53,7 @@ export default function SwapModalFooter({
   const severity = warningSeverity(priceImpactWithoutFee)
 
   const { data: price, isInitialLoading: isPriceLoading } = usePrice(
+    ChainId.ARBITRUM_NOVA,
     wrappedCurrency(fusionSwap.currencies?.OUTPUT, ChainId.ARBITRUM_NOVA)?.address
   )
 

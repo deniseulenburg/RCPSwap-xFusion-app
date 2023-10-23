@@ -1,4 +1,4 @@
-import { ChainId, Currency, ETHER, BINANCE_COIN, WETH } from '@rcpswap/sdk'
+import { ChainId, Currency, ETHER, BINANCE_COIN, WETH, MATIC_TOKEN } from '@rcpswap/sdk'
 import { NETWORK_CHAIN_ID } from '../connectors'
 
 export default function baseCurrencies(chainId: ChainId | undefined): Currency[] {
@@ -9,6 +9,10 @@ export default function baseCurrencies(chainId: ChainId | undefined): Currency[]
       case 56:
       case 97:
         currencies.push(BINANCE_COIN)
+        currencies.push(WETH[chainId])
+        break
+      case 137:
+        currencies.push(MATIC_TOKEN)
         currencies.push(WETH[chainId])
         break
       case 42170:

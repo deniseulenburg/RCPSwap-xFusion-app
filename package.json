@@ -135,8 +135,8 @@
   "license": "GPL-3.0-or-later",
   "dependencies": {
     "@rcpswap/core": "^1.1.0",
-    "@rcpswap/sdk": "^1.1.1",
-    "@rcpswap/sdk-extra": "^1.1.1",
+    "@rcpswap/sdk": "^1.2.0",
+    "@rcpswap/sdk-extra": "^1.2.0",
     "@tanstack/react-query": "^4.32.0",
     "@venomswap/default-token-list": "^2.1.0",
     "react-bootstrap-range-slider": "^3.0.8",

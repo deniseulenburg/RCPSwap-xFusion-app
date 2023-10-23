@@ -17,6 +17,7 @@ export const ROUTER_ADDRESSES: { [chainId in ChainId]: string } = {
   [ChainId.KOVAN]: ZERO_ONE_ADDRESS,
   [ChainId.BSC_MAINNET]: ZERO_ONE_ADDRESS,
   [ChainId.BSC_TESTNET]: '0xDBbEbd367133609DA8c7AcDF96A4498E4F0f1F9c',
+  [ChainId.POLYGON]: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D',
   [ChainId.ARBITRUM_NOVA]: '0x28e0f3ebab59a998C4f1019358388B5E2ca92cfA',
   [ChainId.HARMONY_TESTNET]: '0x8e9A3cE409B13ef459fE4448aE97a79d6Ecd8b4b'
 }
@@ -38,6 +39,13 @@ export const GOVERNANCE_TOKEN: { [chainId in ChainId]: Token } = {
     18,
     'COBRA',
     'Cobra'
+  ),
+  [ChainId.POLYGON]: new Token(
+    ChainId.POLYGON,
+    '0x69A655c56087D927eb05247FB56495a0f19B9f70',
+    18,
+    'MOOND',
+    'MoonsDust'
   ),
   [ChainId.ARBITRUM_NOVA]: new Token(
     ChainId.ARBITRUM_NOVA,
@@ -63,6 +71,7 @@ export const MASTER_BREEDER: { [chainId in ChainId]: string } = {
   [ChainId.KOVAN]: ZERO_ONE_ADDRESS,
   [ChainId.BSC_MAINNET]: ZERO_ONE_ADDRESS,
   [ChainId.BSC_TESTNET]: '0x8E7Cfa9685935fd87562E5749eFCAF64Eef61DD6',
+  [ChainId.POLYGON]: ZERO_ADDRESS,
   [ChainId.ARBITRUM_NOVA]: '0x7AbC67c8D4b248A38B0dc5756300630108Cb48b4',
   [ChainId.HARMONY_TESTNET]: '0x651e2E555164834bc42303c1a1B4f795a9Fb7619'
 }
@@ -75,6 +84,7 @@ export const PIT_BREEDER: { [chainId in ChainId]: string } = {
   [ChainId.KOVAN]: ZERO_ONE_ADDRESS,
   [ChainId.BSC_MAINNET]: ZERO_ONE_ADDRESS,
   [ChainId.BSC_TESTNET]: '0x38a75B033c2C3444Cb91D580645F76d042F98EdA',
+  [ChainId.POLYGON]: ZERO_ADDRESS,
   [ChainId.ARBITRUM_NOVA]: '0x08913d353091e24B361f0E519e2f7aD07a78995d',
   [ChainId.HARMONY_TESTNET]: '0x3945509547b74370468238F715e2dcf698a088B4'
 }
@@ -92,6 +102,13 @@ export const PIT: { [chainId in ChainId]: Token } = {
     18,
     'xCOBRA',
     'CobraDen'
+  ),
+  [ChainId.POLYGON]: new Token(
+    ChainId.POLYGON,
+    '0xE064a68994e9380250CfEE3E8C0e2AC5C0924548',
+    18,
+    'xVIPER',
+    'ViperPit'
   ),
   [ChainId.ARBITRUM_NOVA]: new Token(
     ChainId.ARBITRUM_NOVA,
@@ -117,6 +134,7 @@ export const PIT_SETTINGS: { [chainId in ChainId]: Record<string, string> } = {
   [ChainId.KOVAN]: { name: '', path: '' },
   [ChainId.BSC_MAINNET]: { name: 'CobraDen', path: '/cobraDen' },
   [ChainId.BSC_TESTNET]: { name: 'CobraDen', path: '/cobraDen' },
+  [ChainId.POLYGON]: { name: 'ViperPit', path: '/viperPit' },
   [ChainId.ARBITRUM_NOVA]: { name: 'ViperPit', path: '/viperPit' },
   [ChainId.HARMONY_TESTNET]: { name: 'ViperPit', path: '/viperPit' }
 }
@@ -129,6 +147,7 @@ export const WEB_INTERFACES: { [chainId in ChainId]: string[] } = {
   [ChainId.KOVAN]: [''],
   [ChainId.BSC_MAINNET]: ['cobra.exchange', 'cobraswap.io', 'cobradex.org'],
   [ChainId.BSC_TESTNET]: ['cobra.exchange', 'cobraswap.io', 'cobradex.org'],
+  [ChainId.POLYGON]: ['quickswap.exchange/'],
   [ChainId.ARBITRUM_NOVA]: ['rcpswap.com'],
   [ChainId.HARMONY_TESTNET]: ['viper.exchange', 'viperswap.one', 'viperswap.com', 'viperswap.io', 'viperswap.org']
 }
@@ -206,6 +225,7 @@ const WETH_ONLY: ChainTokenList = {
   [ChainId.KOVAN]: [WETH[ChainId.KOVAN]],
   [ChainId.BSC_MAINNET]: [WETH[ChainId.BSC_MAINNET]],
   [ChainId.BSC_TESTNET]: [WETH[ChainId.BSC_TESTNET]],
+  [ChainId.POLYGON]: [WETH[ChainId.POLYGON]],
   [ChainId.ARBITRUM_NOVA]: [WETH[ChainId.ARBITRUM_NOVA]],
   [ChainId.HARMONY_TESTNET]: [WETH[ChainId.HARMONY_TESTNET]]
 }
@@ -240,7 +260,7 @@ export const CUSTOM_BASES: { [chainId in ChainId]?: { [tokenAddress: string]: To
 export const SUGGESTED_BASES: ChainTokenList = {
   ...WETH_ONLY,
   [ChainId.MAINNET]: [...WETH_ONLY[ChainId.MAINNET], DAI, USDC, USDT, WBTC[ChainId.MAINNET]],
-  [ChainId.ARBITRUM_NOVA]: [...WETH_ONLY[ChainId.ARBITRUM_NOVA], DAI, USDT, USDC, MOON, BRICK]
+  [ChainId.ARBITRUM_NOVA]: [...WETH_ONLY[ChainId.ARBITRUM_NOVA], DAI, USDC, MOON, BRICK]
 }
 
 // used to construct the list of all pairs we consider by default in the frontend

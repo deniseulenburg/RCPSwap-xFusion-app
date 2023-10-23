@@ -7,6 +7,8 @@ export default function getBlockchainBlockTime(blockchain: Blockchain): number {
       return 3
     case Blockchain.NOVA:
       return 2
+    case Blockchain.POLYGON:
+      return 2
     default:
       return 13
   }

@@ -11,6 +11,9 @@ export default function getLibrary(provider: any): Web3Provider {
     case Blockchain.NOVA:
       library.pollingInterval = 500
       break
+    case Blockchain.POLYGON:
+      library.pollingInterval = 1500
+      break
     default:
       library.pollingInterval = 15000
       break

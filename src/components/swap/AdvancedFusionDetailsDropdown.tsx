@@ -43,6 +43,7 @@ export default function AdvancedFusionDetailsDropdown({
 }) {
   const theme = useContext(ThemeContext)
   const { data: price, isInitialLoading: isLoading } = usePrice(
+    ChainId.ARBITRUM_NOVA,
     wrappedCurrency(currency, ChainId.ARBITRUM_NOVA)?.address
   )
 

@@ -26,6 +26,7 @@ const ETHERSCAN_PREFIXES: { [chainId in ChainId]: string } = {
   42: 'kovan.',
   56: 'bscscan.com',
   97: 'testnet.bscscan.com',
+  137: 'polygonscan.com',
   42170: 'nova.arbiscan.io',
   1666700000: 'explorer.testnet.harmony.one/#'
 }
@@ -36,7 +37,7 @@ export function getEtherscanLink(
   type: 'transaction' | 'token' | 'address' | 'block'
 ): string {
   let prefix = `https://${ETHERSCAN_PREFIXES[chainId] || ETHERSCAN_PREFIXES[1]}`
-  prefix = [56, 97, 42170, 1666700000].includes(chainId) ? prefix : `${prefix}etherscan.io`
+  prefix = [56, 97, 137, 42170, 1666700000].includes(chainId) ? prefix : `${prefix}etherscan.io`
 
   switch (type) {
     case 'transaction': {

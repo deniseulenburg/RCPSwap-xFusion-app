@@ -6,6 +6,8 @@ export default function getExplorerName(blockchain: Blockchain): string {
       return 'BSCScan'
     case Blockchain.NOVA:
       return 'Arbitrum Nova Explorer'
+    case Blockchain.POLYGON:
+      return 'Polygonscan'
     default:
       return 'Etherscan'
   }

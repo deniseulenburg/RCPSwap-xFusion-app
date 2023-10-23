@@ -1,4 +1,4 @@
-import { Blockchain, Currency, ETHER, BINANCE_COIN } from '@rcpswap/sdk'
+import { Blockchain, Currency, ETHER, BINANCE_COIN, MATIC_TOKEN } from '@rcpswap/sdk'
 
 export default function getBlockchainAdjustedCurrency(
   blockchain: Blockchain,
@@ -11,6 +11,8 @@ export default function getBlockchainAdjustedCurrency(
       return BINANCE_COIN
     case Blockchain.NOVA:
       return ETHER
+    case Blockchain.POLYGON:
+      return MATIC_TOKEN
     default:
       return ETHER
   }

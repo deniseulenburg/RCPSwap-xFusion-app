@@ -10,7 +10,7 @@ async function getColorFromToken(token: Token): Promise<string | null> {
     return Promise.resolve('#FAAB14')
   }
 
-  const path = [56, 97, 42170, 1666700000].includes(token.chainId)
+  const path = [56, 97, 137, 42170, 1666700000].includes(token.chainId)
     ? `https://d1xrz6ki9z98vb.cloudfront.net/venomswap/tokens/${token.symbol}.png`
     : `https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/${token.address}/logo.png`
 

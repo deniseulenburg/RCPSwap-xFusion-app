@@ -2,7 +2,7 @@
 /**
  * @TODO add list from blockchain association
  */
-export const UNSUPPORTED_LIST_URLS: string[] = []
+export const UNSUPPORTED_LIST_URLS: string[] = ["https://raw.githubusercontent.com/VenomProtocol/venomswap-default-token-list/main/build/venomswap-default.tokenlist.json"]
 
 /*const COMPOUND_LIST = 'https://raw.githubusercontent.com/compound-finance/token-list/master/compound.tokenlist.json'
 const UMA_LIST = 'https://umaproject.org/uma.tokenlist.json'

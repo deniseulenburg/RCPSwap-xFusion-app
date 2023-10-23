@@ -45,8 +45,11 @@ switch (BLOCKCHAIN) {
   case Blockchain.NOVA:
     supportedChainIds = [42170]
     break
+  case Blockchain.POLYGON:
+    supportedChainIds = [137]
+    break
   default:
-    supportedChainIds = [1, 3, 4, 5, 42, 42170]
+    supportedChainIds = [1, 3, 4, 5, 42, 137, 42170]
     break
 }
 
