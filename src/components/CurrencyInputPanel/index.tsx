@@ -14,6 +14,7 @@ import { ReactComponent as DropDown } from '../../assets/images/dropdown.svg'
 import { useActiveWeb3React } from '../../hooks'
 import { useTranslation } from 'react-i18next'
 import useTheme from '../../hooks/useTheme'
+import NetworkSelector from 'components/NetworkSelector'
 
 const InputRow = styled.div<{ selected: boolean }>`
   ${({ theme }) => theme.flexRowNoWrap}
@@ -53,6 +54,12 @@ const LabelRow = styled.div`
     cursor: pointer;
     color: ${({ theme }) => darken(0.2, theme.text2)};
   }
+`
+
+const NetworkRow = styled.div`
+  ${({ theme }) => theme.flexRowNoWrap}
+  justify-content: end;
+  padding: 0.75rem 1rem 0 1rem;
 `
 
 const PriceRow = styled.div`
@@ -133,8 +140,11 @@ interface CurrencyInputPanelProps {
   label?: string
   onCurrencySelect?: (currency: Currency) => void
   currency?: Currency | null
+  onChainSelect?: (chain: ChainId) => void
+  chainId?: ChainId | null
   disableCurrencySelect?: boolean
   hideBalance?: boolean
+  hideChain?: boolean
   pair?: Pair | null
   hideInput?: boolean
   otherCurrency?: Currency | null
@@ -158,8 +168,11 @@ export default function CurrencyInputPanel({
   label = 'Input',
   onCurrencySelect,
   currency,
+  onChainSelect,
+  chainId,
   disableCurrencySelect = false,
   hideBalance = false,
+  hideChain = false,
   pair = null, // used for double token logo
   hideInput = false,
   otherCurrency,
@@ -219,6 +232,11 @@ export default function CurrencyInputPanel({
               )}
             </RowBetween>
           </LabelRow>
+        )}
+        {!hideChain && chainId && onChainSelect && (
+          <NetworkRow>
+            <NetworkSelector network={chainId} onChange={onChainSelect} />
+          </NetworkRow>
         )}
         <InputRow style={hideInput ? { padding: '0', borderRadius: '8px' } : {}} selected={disableCurrencySelect}>
           {!hideInput && (

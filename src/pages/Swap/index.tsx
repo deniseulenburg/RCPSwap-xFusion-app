@@ -606,8 +606,11 @@ export default function Swap() {
           <AutoColumn gap={'md'}>
             <CurrencyInputPanel
               label={independentField === Field.OUTPUT && !showWrap && trade ? 'From (estimated)' : 'From'}
-              value={percentageSliding ? tempInputValue : formattedAmounts[Field.INPUT]}
+              value={percentageSliding ? tempInputValue.toString() : formattedAmounts[Field.INPUT]}
               currency={currencies[Field.INPUT]}
+              chainId={ChainId.ARBITRUM_NOVA}
+              onChainSelect={() => {}}
+              hideChain={swapMode === 0}
               onUserInput={handleTypeInput}
               onCurrencySelect={handleInputSelect}
               otherCurrency={currencies[Field.OUTPUT]}
@@ -659,6 +662,9 @@ export default function Swap() {
               showMaxButton={false}
               currency={currencies[Field.OUTPUT]}
               onCurrencySelect={handleOutputSelect}
+              hideChain={swapMode === 0}
+              chainId={ChainId.ARBITRUM_NOVA}
+              onChainSelect={() => {}}
               otherCurrency={currencies[Field.INPUT]}
               id="swap-currency-output"
               // disabled={swapMode === 1}

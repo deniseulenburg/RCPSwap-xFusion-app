@@ -6,9 +6,10 @@ import { TYPE } from '../../theme'
 import { ExchangeSVG } from 'components/svgs'
 import { useSwapActionHandlers, useSwapState } from 'state/swap/hooks'
 import QuestionHelper from 'components/QuestionHelper'
+import { darken } from 'polished'
 
 const StyledSwapHeader = styled.div`
-  padding: 12px 1rem 0px 1.5rem;
+  padding: 12px 1rem 0px 1rem;
   margin-bottom: -4px;
   width: 100%;
   max-width: 420px;
@@ -26,6 +27,33 @@ const SwitchTitle = styled.div`
   cursor: pointer;
 `
 
+const activeClassName = 'ACTIVE'
+
+// const StyledNavLink = styled(NavLink).attrs({ activeClassName })`
+//   ${({ theme }) => theme.flexRowNoWrap}
+//   align-items: left;
+//   border-radius: 3rem;
+//   outline: none;
+//   cursor: pointer;
+//   text-decoration: none;
+//   color: ${({ theme }) => theme.text2};
+//   font-size: 1rem;
+//   width: fit-content;
+//   margin: 0 8px;
+//   font-weight: 500;
+
+//   &.${activeClassName} {
+//     border-radius: 12px;
+//     font-weight: 500;
+//     color: ${({ theme }) => theme.text1};
+//   }
+
+//   :hover,
+//   :focus {
+//     color: ${({ theme }) => darken(0.1, theme.text1)};
+//   }
+// `
+
 const FUSION_TEXT =
   'xFusion is DEX Aggregator Algorithm that thrives to calculate the most efficient route possible for the trade you entered - giving you the best trade possible.'
 const SWAP_TEXT =
@@ -34,11 +62,12 @@ const SWAP_TEXT =
 export default function SwapHeader() {
   const { swapMode } = useSwapState()
   const { onSwitchSwapMode } = useSwapActionHandlers()
+
   return (
     <StyledSwapHeader>
       <RowBetween>
         <SwitchTitle>
-          <TYPE.black fontWeight={500} onClick={onSwitchSwapMode}>
+          <TYPE.black fontWeight={500} onClick={onSwitchSwapMode} ml={'8px'}>
             {swapMode === 0 ? 'Swap' : 'xFusion'}
           </TYPE.black>
           <QuestionHelper text={swapMode === 0 ? SWAP_TEXT : FUSION_TEXT} />

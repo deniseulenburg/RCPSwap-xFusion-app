@@ -4,6 +4,9 @@ import { AbstractConnector } from '@web3-react/abstract-connector'
 
 import { fortmatic, injected, portis, walletconnect, walletlink } from '../connectors'
 
+import ArbitrumNova from '../assets/images/networks/42170.png'
+import Polygon from '../assets/images/networks/137.png'
+
 import getTokenWithDefault from '../utils/getTokenWithDefault'
 
 export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
@@ -411,3 +414,16 @@ export const BASES_TO_CHECK_FUSION_TRADES: ChainTokenList = {
   [ChainId.MAINNET]: [...WETH_ONLY[ChainId.MAINNET], DAI, USDC, USDT, COMP, MKR, WBTC[ChainId.MAINNET]],
   [ChainId.ARBITRUM_NOVA]: [...WETH_ONLY[ChainId.ARBITRUM_NOVA], DAI, USDT, USDC]
 }
+
+export const SUPPORTED_CROSS_CHAIN_NETWORKS = [
+  {
+    id: ChainId.ARBITRUM_NOVA,
+    name: 'Arbitrum Nova',
+    icon: ArbitrumNova
+  },
+  {
+    id: ChainId.POLYGON,
+    name: 'Polygon',
+    icon: Polygon
+  }
+]
