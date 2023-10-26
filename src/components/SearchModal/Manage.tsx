@@ -5,7 +5,7 @@ import { ArrowLeft } from 'react-feather'
 import { Text } from 'rebass'
 import { CloseIcon } from 'theme'
 import styled from 'styled-components'
-import { Token } from '@rcpswap/sdk'
+import { ChainId, Token } from '@rcpswap/sdk'
 import { ManageLists } from './ManageLists'
 import ManageTokens from './ManageTokens'
 import { TokenList } from '@uniswap/token-lists'
@@ -46,13 +46,15 @@ export default function Manage({
   setModalView,
   setImportList,
   setImportToken,
-  setListUrl
+  setListUrl,
+  chainId
 }: {
   onDismiss: () => void
   setModalView: (view: CurrencyModalView) => void
   setImportToken: (token: Token) => void
   setImportList: (list: TokenList) => void
   setListUrl: (url: string) => void
+  chainId?: ChainId
 }) {
   // toggle between tokens and lists
   const [showLists, setShowLists] = useState(true)
@@ -82,7 +84,7 @@ export default function Manage({
       {showLists ? (
         <ManageLists setModalView={setModalView} setImportList={setImportList} setListUrl={setListUrl} />
       ) : (
-        <ManageTokens setModalView={setModalView} setImportToken={setImportToken} />
+        <ManageTokens setModalView={setModalView} setImportToken={setImportToken} chainId={chainId} />
       )}
     </Wrapper>
   )

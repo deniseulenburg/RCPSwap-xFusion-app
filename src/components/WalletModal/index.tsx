@@ -25,6 +25,9 @@ import setupNetwork from '../../utils/setupNetwork'
 import Modal from '../Modal'
 import Option from './Option'
 import PendingView from './PendingView'
+import { useRouteMatch } from 'react-router-dom'
+import { useSwapState } from 'state/swap/hooks'
+import { useActiveWeb3React } from 'hooks'
 
 const CloseIcon = styled.div`
   position: absolute;
@@ -308,7 +311,7 @@ export default function WalletModal({
           <HeaderRow>{error instanceof UnsupportedChainIdError ? 'Wrong Network' : 'Error connecting'}</HeaderRow>
           <ContentWrapper>
             {error instanceof UnsupportedChainIdError ? (
-              <ButtonPrimary onClick={setupNetwork} padding="8px" borderRadius="8px">
+              <ButtonPrimary onClick={() => setupNetwork()} padding="8px" borderRadius="8px">
                 Click here to connect to {blockchainSettings?.name}
               </ButtonPrimary>
             ) : (

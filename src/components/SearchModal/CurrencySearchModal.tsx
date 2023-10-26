@@ -1,4 +1,4 @@
-import { Currency, Token } from '@rcpswap/sdk'
+import { ChainId, Currency, Token } from '@rcpswap/sdk'
 import React, { useCallback, useEffect, useState } from 'react'
 import useLast from '../../hooks/useLast'
 import Modal from '../Modal'
@@ -16,6 +16,7 @@ interface CurrencySearchModalProps {
   onCurrencySelect: (currency: Currency) => void
   otherSelectedCurrency?: Currency | null
   showCommonBases?: boolean
+  chainId?: ChainId
 }
 
 export enum CurrencyModalView {
@@ -31,6 +32,7 @@ export default function CurrencySearchModal({
   onCurrencySelect,
   selectedCurrency,
   otherSelectedCurrency,
+  chainId,
   showCommonBases = false
 }: CurrencySearchModalProps) {
   const [modalView, setModalView] = useState<CurrencyModalView>(CurrencyModalView.manage)
@@ -67,6 +69,7 @@ export default function CurrencySearchModal({
     <Modal isOpen={isOpen} onDismiss={onDismiss} maxHeight={80} minHeight={minHeight}>
       {modalView === CurrencyModalView.search ? (
         <CurrencySearch
+          chainId={chainId}
           isOpen={isOpen}
           onDismiss={onDismiss}
           onCurrencySelect={handleCurrencySelect}
@@ -79,6 +82,7 @@ export default function CurrencySearchModal({
         />
       ) : modalView === CurrencyModalView.importToken && importToken ? (
         <ImportToken
+          chainId={chainId}
           tokens={[importToken]}
           onDismiss={onDismiss}
           onBack={() =>
@@ -90,6 +94,7 @@ export default function CurrencySearchModal({
         <ImportList list={importList} listURL={listURL} onDismiss={onDismiss} setModalView={setModalView} />
       ) : modalView === CurrencyModalView.manage ? (
         <Manage
+          chainId={chainId}
           onDismiss={onDismiss}
           setModalView={setModalView}
           setImportToken={setImportToken}

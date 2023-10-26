@@ -1,6 +1,6 @@
 import React, { useContext } from 'react'
 import { Link, RouteComponentProps, withRouter } from 'react-router-dom'
-import { Token, TokenAmount, WETH } from '@rcpswap/sdk'
+import { ChainId, Token, TokenAmount, WETH } from '@rcpswap/sdk'
 
 import { Text } from 'rebass'
 import { AutoColumn } from '../Column'
@@ -19,7 +19,8 @@ interface PositionCardProps extends RouteComponentProps<{}> {
 function V1PositionCard({ token, V1LiquidityBalance }: PositionCardProps) {
   const theme = useContext(ThemeContext)
 
-  const { chainId } = useActiveWeb3React()
+  // const { chainId } = useActiveWeb3React()
+  const chainId = ChainId.ARBITRUM_NOVA
 
   return (
     <HoverCard>

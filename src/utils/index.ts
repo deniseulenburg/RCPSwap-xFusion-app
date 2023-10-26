@@ -1,10 +1,10 @@
 import { Contract } from '@ethersproject/contracts'
 import { getAddress } from '@ethersproject/address'
 import { AddressZero } from '@ethersproject/constants'
-import { JsonRpcSigner, Web3Provider } from '@ethersproject/providers'
+import { JsonRpcSigner, Web3Provider, JsonRpcProvider } from '@ethersproject/providers'
 import { BigNumber } from '@ethersproject/bignumber'
 import { abi as IUniswapV2Router02ABI } from '@venomswap/periphery/build/IUniswapV2Router02.json'
-import { ROUTER_ADDRESSES } from '../constants'
+import { ROUTER_ADDRESSES, SUPPORTED_CHAIN_RPCS } from '../constants'
 import { ChainId, JSBI, Percent, Token, CurrencyAmount, Currency, DEFAULT_CURRENCIES } from '@rcpswap/sdk'
 import { TokenAddressMap } from '../state/lists/hooks'
 import { useActiveWeb3React } from '../hooks/index'
@@ -93,29 +93,33 @@ export function getSigner(library: Web3Provider | undefined, account: string): J
 // account is optional
 export function getProviderOrSigner(
   library: Web3Provider | undefined,
-  account?: string
-): Web3Provider | JsonRpcSigner | undefined {
-  return account ? getSigner(library, account) : library
+  account?: string,
+  chainId?: ChainId
+): Web3Provider | JsonRpcProvider | JsonRpcSigner | undefined {
+  return account ? getSigner(library, account) : chainId && SUPPORTED_CHAIN_RPCS?.[chainId] ? new JsonRpcProvider(SUPPORTED_CHAIN_RPCS[chainId]) : library
+}
+
+export function getProvider(chainId?: ChainId): JsonRpcProvider | undefined {
+  return chainId && SUPPORTED_CHAIN_RPCS?.[chainId] ? new JsonRpcProvider(SUPPORTED_CHAIN_RPCS[chainId]) : undefined
 }
 
 // account is optional
-export function getContract(address: string, ABI: any, library: Web3Provider | undefined, account?: string): Contract {
+export function getContract(address: string, ABI: any, library: Web3Provider | undefined, account?: string, chainId?: ChainId): Contract {
   if (!isAddress(address) || address === AddressZero) {
     throw Error(`Invalid 'address' parameter '${address}'.`)
   }
 
-  return new Contract(address, ABI, getProviderOrSigner(library, account) as any)
+  return new Contract(address, ABI, getProviderOrSigner(library, account, chainId) as any)
 }
 
 // account is optional
 export function getRouterContract(chainId: number, library: Web3Provider, account?: string): Contract {
   const convertedChainId = chainId as ChainId
   const routerAddress = (chainId && ROUTER_ADDRESSES[convertedChainId]) as string
-  return getContract(routerAddress, IUniswapV2Router02ABI, library, account)
+  return getContract(routerAddress, IUniswapV2Router02ABI, library, account, chainId)
 }
 
-export function useRouterContractAddress(): string | undefined {
-  const { chainId } = useActiveWeb3React()
+export function useRouterContractAddress(chainId?: ChainId): string | undefined {
   const routerAddress = (chainId && ROUTER_ADDRESSES[chainId]) as string
   return routerAddress
 }

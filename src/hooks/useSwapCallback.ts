@@ -118,7 +118,7 @@ export function useSwapCallback(
 
   const swapCalls = useSwapCallArguments(trade, allowedSlippage, recipientAddressOrName)
 
-  const addTransaction = useTransactionAdder()
+  const addTransaction = useTransactionAdder(chainId)
 
   const { address: recipientAddress } = useENS(recipientAddressOrName)
   const recipient = recipientAddressOrName === null ? account : recipientAddress

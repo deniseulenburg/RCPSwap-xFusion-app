@@ -1,6 +1,6 @@
 import React, { useContext, useMemo } from 'react'
 import styled, { ThemeContext } from 'styled-components'
-import { Pair, JSBI } from '@rcpswap/sdk'
+import { Pair, JSBI, ChainId } from '@rcpswap/sdk'
 import { Link } from 'react-router-dom'
 import { SwapPoolTabs } from '../../components/NavigationTabs'
 
@@ -84,7 +84,8 @@ const EmptyProposals = styled.div`
 
 export default function Pool() {
   const theme = useContext(ThemeContext)
-  const { account, chainId } = useActiveWeb3React()
+  const { account } = useActiveWeb3React()
+  const chainId = ChainId.ARBITRUM_NOVA
   const blockchain = useBlockchain()
 
   const baseCurrency = baseCurrencies(chainId)[0]
@@ -102,7 +103,8 @@ export default function Pool() {
   ])
   const [v2PairsBalances, fetchingV2PairBalances] = useTokenBalancesWithLoadingIndicator(
     account ?? undefined,
-    liquidityTokens
+    liquidityTokens,
+    chainId
   )
 
   // fetch the reserves for all V2 pools in which the user has a balance
@@ -114,13 +116,16 @@ export default function Pool() {
     [tokenPairsWithLiquidityTokens, v2PairsBalances]
   )
 
-  const v2Pairs = usePairs(liquidityTokensWithBalances.map(({ tokens }) => tokens))
+  const v2Pairs = usePairs(
+    liquidityTokensWithBalances.map(({ tokens }) => tokens),
+    chainId
+  )
   const v2IsLoading =
     fetchingV2PairBalances || v2Pairs?.length < liquidityTokensWithBalances.length || v2Pairs?.some(V2Pair => !V2Pair)
 
   const allV2PairsWithLiquidity = v2Pairs.map(([, pair]) => pair).filter((v2Pair): v2Pair is Pair => Boolean(v2Pair))
 
-  const hasV1Liquidity = useUserHasLiquidityInAllTokens()
+  const hasV1Liquidity = useUserHasLiquidityInAllTokens(ChainId.ARBITRUM_NOVA)
 
   // show liquidity even if its deposited in rewards contract
   const stakingInfo = useStakingInfo(true)

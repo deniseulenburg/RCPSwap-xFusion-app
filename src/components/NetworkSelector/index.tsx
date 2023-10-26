@@ -112,8 +112,20 @@ export default function NetworkSelector({ network, onChange }: NetworkSelectorPr
     }
   }, [])
 
+  const onClose = () => {
+    setSearch('')
+    setOpen(false)
+  }
+
   const closeMenu = (e: MouseEvent) => {
-    if (!ref.current?.contains(e.target as Node)) setOpen(false)
+    if (!ref.current?.contains(e.target as Node)) onClose()
+  }
+
+  const onSelect = (chain: ChainId) => {
+    return () => {
+      onClose()
+      onChange(chain)
+    }
   }
 
   return (
@@ -140,7 +152,7 @@ export default function NetworkSelector({ network, onChange }: NetworkSelectorPr
               item.name.toLowerCase().indexOf(search.toLowerCase()) > -1 ||
               item.id.toString().indexOf(search.toLowerCase()) > -1
           ).map(item => (
-            <StyledNetworkDropdownItem key={item.id}>
+            <StyledNetworkDropdownItem key={item.id} onClick={onSelect(item.id)}>
               <StyledNetworkIcon src={item.icon} alt={item.name} size="18px" />
               {item.name}
             </StyledNetworkDropdownItem>

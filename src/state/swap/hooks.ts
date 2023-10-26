@@ -2,7 +2,7 @@ import useENS from '../../hooks/useENS'
 import { Version } from '../../hooks/useToggledVersion'
 import { parseUnits } from '@ethersproject/units'
 import { useQuery } from '@tanstack/react-query'
-import { Currency, CurrencyAmount, JSBI, Token, TokenAmount, Trade, DEFAULT_CURRENCIES, Fraction } from '@rcpswap/sdk'
+import { Currency, CurrencyAmount, JSBI, Token, TokenAmount, Trade, DEFAULT_CURRENCIES, Fraction, ChainId } from '@rcpswap/sdk'
 import { ParsedQs } from 'qs'
 import { useCallback, useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
@@ -18,6 +18,7 @@ import { useCurrencyBalances } from '../wallet/hooks'
 import {
   Field,
   replaceSwapState,
+  selectChain,
   selectCurrency,
   setRecipient,
   switchCurrencies,
@@ -36,7 +37,6 @@ import axios from 'axios'
 import { useToken } from 'package/tokens'
 import { usePoolsCodeMap } from 'package/pools/usePoolsCodeMap'
 import { RPParams, Router } from 'package/router'
-import { ChainId } from 'package/chain'
 import { useGasPrice } from 'hooks/useGasPrice'
 import { BigNumber } from 'ethers'
 import { LiquidityProviders } from 'package/router/liquidity-providers'
@@ -44,13 +44,15 @@ import { RToken, RouteLeg, RouteStatus, getBetterRoute } from 'package/tines'
 import { routeProcessor3Address } from 'package/route-processor'
 import { Native } from 'package/currency'
 import { PoolCode } from 'package/router/pools/PoolCode'
+import baseCurrencies from 'utils/baseCurrencies'
 
 export function useSwapState(): AppState['swap'] {
   return useSelector<AppState, AppState['swap']>(state => state.swap)
 }
 
 export function useSwapActionHandlers(): {
-  onCurrencySelection: (field: Field, currency: Currency) => void
+  onCurrencySelection: (field: Field, currency: Currency, chainId: ChainId) => void
+  onChainSelection: (field: Field, chain: ChainId) => void
   onSwitchTokens: (mode: number | undefined, value: string | undefined) => void
   onUserInput: (field: Field, typedValue: string) => void
   onChangeRecipient: (recipient: string | null) => void
@@ -59,8 +61,10 @@ export function useSwapActionHandlers(): {
 } {
   const dispatch = useDispatch<AppDispatch>()
   const onCurrencySelection = useCallback(
-    (field: Field, currency: Currency) => {
-      const symbol: string = BASE_CURRENCY && BASE_CURRENCY.symbol ? BASE_CURRENCY.symbol : 'ETH'
+    (field: Field, currency: Currency, chainId: ChainId) => {
+      const baseCurrency = baseCurrencies(chainId)[0]
+      const symbol: string = baseCurrency && baseCurrency.symbol ? baseCurrency.symbol : 'ETH'
+      console.log(symbol)
       dispatch(
         selectCurrency({
           field,
@@ -75,6 +79,10 @@ export function useSwapActionHandlers(): {
     },
     [dispatch]
   )
+
+  const onChainSelection = useCallback((field: Field, chain: ChainId) => {
+    dispatch(selectChain({ field, chain }))
+  }, [dispatch])
 
   const onSwitchTokens = useCallback(
     (mode: number | undefined, value: string | undefined) => {
@@ -107,6 +115,7 @@ export function useSwapActionHandlers(): {
 
   return {
     onSwitchTokens,
+    onChainSelection,
     onCurrencySelection,
     onUserInput,
     onChangeRecipient,
@@ -171,32 +180,37 @@ export function useDerivedSwapInfo(): {
   const {
     independentField,
     typedValue,
-    [Field.INPUT]: { currencyId: inputCurrencyId },
-    [Field.OUTPUT]: { currencyId: outputCurrencyId },
+    [Field.INPUT]: { currencyId: inputCurrencyId, chainId: inputChainId },
+    [Field.OUTPUT]: { currencyId: outputCurrencyId, chainId: outputChainId },
     recipient
   } = useSwapState()
 
-  const inputCurrency = useCurrency(inputCurrencyId)
-  const outputCurrency = useCurrency(outputCurrencyId)
+  const inputCurrency = useCurrency(inputCurrencyId, inputChainId)
+  const outputCurrency = useCurrency(outputCurrencyId, outputChainId)
+
   const recipientLookup = useENS(recipient ?? undefined)
   const to: string | null = (recipient === null ? account : recipientLookup.address) ?? null
 
-  const relevantTokenBalances = useCurrencyBalances(account ?? undefined, [
-    inputCurrency ?? undefined,
+  const relevantTokenBalance0 = useCurrencyBalances(account ?? undefined, [
+    inputCurrency ?? undefined
+  ], inputChainId)
+
+  const relevantTokenBalance1 = useCurrencyBalances(account ?? undefined, [
     outputCurrency ?? undefined
-  ])
+  ], outputChainId)
+
 
   const isExactIn: boolean = independentField === Field.INPUT
   const parsedAmount = tryParseAmount(typedValue, (isExactIn ? inputCurrency : outputCurrency) ?? undefined)
 
-  const bestTradeExactIn = useTradeExactIn(isExactIn ? parsedAmount : undefined, outputCurrency ?? undefined)
-  const bestTradeExactOut = useTradeExactOut(inputCurrency ?? undefined, !isExactIn ? parsedAmount : undefined)
+  const bestTradeExactIn = useTradeExactIn(isExactIn ? parsedAmount : undefined, outputCurrency ?? undefined, ChainId.ARBITRUM_NOVA)
+  const bestTradeExactOut = useTradeExactOut(inputCurrency ?? undefined, !isExactIn ? parsedAmount : undefined, ChainId.ARBITRUM_NOVA)
 
   const v2Trade = isExactIn ? bestTradeExactIn : bestTradeExactOut
 
   const currencyBalances = {
-    [Field.INPUT]: relevantTokenBalances[0],
-    [Field.OUTPUT]: relevantTokenBalances[1]
+    [Field.INPUT]: relevantTokenBalance0[0],
+    [Field.OUTPUT]: relevantTokenBalance1[0]
   }
 
   const currencies: { [field in Field]?: Currency } = {
@@ -205,7 +219,7 @@ export function useDerivedSwapInfo(): {
   }
 
   // get link to trade on v1, if a better rate exists
-  const v1Trade = useV1Trade(isExactIn, currencies[Field.INPUT], currencies[Field.OUTPUT], parsedAmount)
+  const v1Trade = useV1Trade(isExactIn, currencies[Field.INPUT], currencies[Field.OUTPUT], parsedAmount, inputChainId, outputChainId)
 
   let inputError: string | undefined
   if (!account) {
@@ -312,10 +326,12 @@ export function queryParametersToSwapState(parsedQs: ParsedQs): SwapState {
 
   return {
     [Field.INPUT]: {
-      currencyId: inputCurrency
+      currencyId: inputCurrency,
+      chainId: ChainId.ARBITRUM_NOVA
     },
     [Field.OUTPUT]: {
-      currencyId: outputCurrency
+      currencyId: outputCurrency,
+      chainId: ChainId.ARBITRUM_NOVA
     },
     typedValue: parseTokenAmountURLParameter(parsedQs.exactAmount),
     independentField: parseIndependentFieldURLParameter(parsedQs.exactField),
@@ -348,7 +364,9 @@ export function useDefaultsFromURLSearch():
         outputCurrencyId: parsed[Field.OUTPUT].currencyId,
         recipient: parsed.recipient,
         swapMode: 1,
-        isUltra: false
+        isUltra: false,
+        inputChainId: ChainId.ARBITRUM_NOVA,
+        outputChainId: ChainId.ARBITRUM_NOVA
       })
     )
 
@@ -431,8 +449,8 @@ export function useXFusionSwap(): XFusionSwapType {
   const {
     typedValue,
     swapMode,
-    [Field.INPUT]: { currencyId: inputCurrencyId },
-    [Field.OUTPUT]: { currencyId: outputCurrencyId },
+    [Field.INPUT]: { currencyId: inputCurrencyId, chainId: inputChainId },
+    [Field.OUTPUT]: { currencyId: outputCurrencyId, chainId: outputChainId },
     isUltra,
     recipient
   } = useSwapState()
@@ -453,7 +471,7 @@ export function useXFusionSwap(): XFusionSwapType {
   }
 
   const { data: poolsCodeMap } = usePoolsCodeMap(inputToken ?? undefined, outputToken ?? undefined)
-  const gasPrice = useGasPrice()
+  const gasPrice = useGasPrice(ChainId.ARBITRUM_NOVA)
 
   const { isError, isFetching, data, isLoading } = useQuery({
     queryKey: [

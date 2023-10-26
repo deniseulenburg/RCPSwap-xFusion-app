@@ -7,7 +7,7 @@ import { PortisConnector } from '@web3-react/portis-connector'
 import { FortmaticConnector } from './Fortmatic'
 import { NetworkConnector } from './NetworkConnector'
 
-import { Blockchain, Currency } from '@rcpswap/sdk'
+import { Blockchain, ChainId, Currency } from '@rcpswap/sdk'
 
 import baseCurrencies from '../utils/baseCurrencies'
 import getBlockchain from '../utils/getBlockchain'
@@ -23,7 +23,11 @@ if (typeof NETWORK_URL === 'undefined') {
 }
 
 export const network = new NetworkConnector({
-  urls: { [NETWORK_CHAIN_ID]: NETWORK_URL }
+  urls: {
+    [ChainId.POLYGON]: 'https://polygon.llamarpc.com',
+    [ChainId.ARBITRUM_NOVA]: 'https://nova.arbitrum.io/rpc'
+  },
+  defaultChainId: ChainId.ARBITRUM_NOVA
 })
 
 const generatedBaseCurrencies = baseCurrencies(NETWORK_CHAIN_ID)
@@ -37,21 +41,7 @@ export function getNetworkLibrary(): Web3Provider {
   return (networkLibrary = networkLibrary ?? new Web3Provider(network.provider as any))
 }
 
-let supportedChainIds: number[]
-switch (BLOCKCHAIN) {
-  case Blockchain.BINANCE_SMART_CHAIN:
-    supportedChainIds = [56, 97]
-    break
-  case Blockchain.NOVA:
-    supportedChainIds = [42170]
-    break
-  case Blockchain.POLYGON:
-    supportedChainIds = [137]
-    break
-  default:
-    supportedChainIds = [1, 3, 4, 5, 42, 137, 42170]
-    break
-}
+const supportedChainIds: number[] = [ChainId.ARBITRUM_NOVA, ChainId.POLYGON]
 
 export const injected = new InjectedConnector({
   supportedChainIds: supportedChainIds

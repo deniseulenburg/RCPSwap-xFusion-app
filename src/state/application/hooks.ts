@@ -3,11 +3,14 @@ import { useDispatch, useSelector } from 'react-redux'
 import { useActiveWeb3React } from '../../hooks'
 import { AppDispatch, AppState } from '../index'
 import { addPopup, ApplicationModal, PopupContent, removePopup, setOpenModal } from './actions'
+import { ChainId } from '@rcpswap/sdk'
 
-export function useBlockNumber(): number | undefined {
-  const { chainId } = useActiveWeb3React()
+export function useBlockNumbers(): { [chainId: number]: number } {
+  return useSelector((state: AppState) => state.application.blockNumber)
+}
 
-  return useSelector((state: AppState) => state.application.blockNumber[chainId ?? -1])
+export function useBlockNumber(chainId?: ChainId): number | undefined {
+  return useSelector((state: AppState) => state.application.blockNumber[chainId ?? ChainId.ARBITRUM_NOVA])
 }
 
 export function useModalOpen(modal: ApplicationModal): boolean {

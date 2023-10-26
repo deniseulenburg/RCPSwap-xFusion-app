@@ -90,7 +90,7 @@ const InputPanel = styled.div<{ hideInput?: boolean }>`
   position: relative;
   border-radius: ${({ hideInput }) => (hideInput ? '8px' : '20px')};
   background-color: ${({ theme }) => theme.bg2};
-  z-index: 1;
+  z-index: 2;
 `
 
 const Container = styled.div<{ hideInput: boolean; disabled?: boolean }>`
@@ -136,7 +136,7 @@ interface CurrencyInputPanelProps {
   value: string
   onUserInput: (value: string) => void
   onMax?: () => void
-  showMaxButton: boolean
+  showMaxButton?: boolean
   label?: string
   onCurrencySelect?: (currency: Currency) => void
   currency?: Currency | null
@@ -191,7 +191,7 @@ export default function CurrencyInputPanel({
 
   const [modalOpen, setModalOpen] = useState(false)
   const { account } = useActiveWeb3React()
-  let selectedCurrencyBalance = useCurrencyBalance(account ?? undefined, currency ?? undefined)
+  let selectedCurrencyBalance = useCurrencyBalance(account ?? undefined, currency ?? undefined, chainId ?? undefined)
   if (overrideSelectedCurrencyBalance) {
     selectedCurrencyBalance = overrideSelectedCurrencyBalance
   }
@@ -203,7 +203,7 @@ export default function CurrencyInputPanel({
 
   const impact =
     inPrice && outPrice
-      ? outPrice.totalPrice.greaterThan(0)
+      ? outPrice.totalPrice.greaterThan(0n)
         ? parseFloat(inPrice.totalPrice.divide(outPrice.totalPrice).toFixed(6)) * 100 - 100
         : 0
       : null
@@ -302,6 +302,7 @@ export default function CurrencyInputPanel({
             {showPriceImpact &&
             outPrice.totalPrice?.greaterThan('0') &&
             inPrice.totalPrice.greaterThan('0') &&
+            impact &&
             impact <= -2 &&
             !loading ? (
               <PriceImpact impact={loading ? 0 : impact + (saving > 0 ? 1 : 0.3)}>
@@ -313,6 +314,7 @@ export default function CurrencyInputPanel({
       </Container>
       {!disableCurrencySelect && onCurrencySelect && (
         <CurrencySearchModal
+          chainId={chainId ?? undefined}
           isOpen={modalOpen}
           onDismiss={handleDismissSearch}
           onCurrencySelect={onCurrencySelect}

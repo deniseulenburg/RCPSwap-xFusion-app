@@ -26,6 +26,7 @@ import Loader from '../Loader'
 
 import { RowBetween } from '../Row'
 import WalletModal from '../WalletModal'
+import { ChainId } from '@rcpswap/sdk'
 
 const IconWrapper = styled.div<{ size?: number }>`
   ${({ theme }) => theme.flexColumnNoWrap};
@@ -169,7 +170,7 @@ function Web3StatusInner() {
 
   const { ENSName } = useENSName(account ?? undefined)
 
-  const allTransactions = useAllTransactions()
+  const allTransactions = useAllTransactions(ChainId.ARBITRUM_NOVA)
 
   const sortedRecentTransactions = useMemo(() => {
     const txs = Object.values(allTransactions)
@@ -202,7 +203,7 @@ function Web3StatusInner() {
     )
   } else if (error) {
     return (
-      <Web3StatusError onClick={setupNetwork}>
+      <Web3StatusError onClick={() => setupNetwork()}>
         <NetworkIcon />
         <Text>{error instanceof UnsupportedChainIdError ? `Connect to ${blockchainName}` : 'Error'}</Text>
       </Web3StatusError>
@@ -222,7 +223,7 @@ export default function Web3Status() {
 
   const { ENSName } = useENSName(account ?? undefined)
 
-  const allTransactions = useAllTransactions()
+  const allTransactions = useAllTransactions(ChainId.ARBITRUM_NOVA)
 
   const sortedRecentTransactions = useMemo(() => {
     const txs = Object.values(allTransactions)

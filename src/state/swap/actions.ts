@@ -1,3 +1,4 @@
+import { ChainId } from '@rcpswap/sdk';
 import { createAction } from '@reduxjs/toolkit'
 
 export enum Field {
@@ -6,6 +7,7 @@ export enum Field {
 }
 
 export const selectCurrency = createAction<{ field: Field; currencyId: string }>('swap/selectCurrency')
+export const selectChain = createAction<{ field: Field, chain: ChainId }>('swap/selectChain')
 export const switchCurrencies = createAction<{ mode: number | undefined; value: string | undefined }>(
   'swap/switchCurrencies'
 )
@@ -18,7 +20,9 @@ export const replaceSwapState = createAction<{
   typedValue: string
   inputCurrencyId?: string
   outputCurrencyId?: string
-  recipient: string | null
+  recipient: string | null,
+  inputChainId?: ChainId,
+  outputChainId?: ChainId,
 }>('swap/replaceSwapState')
 export const setRecipient = createAction<{ recipient: string | null }>('swap/setRecipient')
 export const switchUltraMode = createAction('swap/switchUltraMode')

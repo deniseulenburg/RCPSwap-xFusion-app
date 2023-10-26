@@ -8,6 +8,7 @@ import { RowBetween } from '../Row'
 import { getEtherscanLink } from '../../utils'
 import useBlockchain from '../../hooks/useBlockchain'
 import getExplorerName from '../../utils/getExplorerName'
+import { ChainId } from '@rcpswap/sdk'
 
 const InputPanel = styled.div`
   ${({ theme }) => theme.flexColumnNoWrap}
@@ -78,7 +79,8 @@ export default function AddressInputPanel({
   // triggers whenever the typed value changes
   onChange: (value: string) => void
 }) {
-  const { chainId } = useActiveWeb3React()
+  // const { chainId } = useActiveWeb3React()
+  const chainId = ChainId.ARBITRUM_NOVA
   const theme = useContext(ThemeContext)
   const blockChain = useBlockchain()
   const explorerName = getExplorerName(blockChain)

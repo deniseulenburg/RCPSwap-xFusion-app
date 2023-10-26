@@ -1,6 +1,6 @@
 import { BigNumber } from '@ethersproject/bignumber'
 import { TransactionResponse } from '@ethersproject/providers'
-import { Currency, currencyEquals, TokenAmount, WETH, DEFAULT_CURRENCIES } from '@rcpswap/sdk'
+import { Currency, currencyEquals, TokenAmount, WETH, DEFAULT_CURRENCIES, ChainId } from '@rcpswap/sdk'
 import React, { useCallback, useContext, useState } from 'react'
 import { Plus } from 'react-feather'
 import ReactGA from 'react-ga'
@@ -40,9 +40,10 @@ import { PoolPriceBar } from './PoolPriceBar'
 import { useIsTransactionUnsupported } from 'hooks/Trades'
 import UnsupportedCurrencyFooter from 'components/swap/UnsupportedCurrencyFooter'
 
-import { BASE_CURRENCY } from '../../connectors'
+import { BASE_CURRENCY, NETWORK_CHAIN_ID } from '../../connectors'
 
 import { useRouterContractAddress } from '../../utils'
+import setupNetwork from 'utils/setupNetwork'
 
 export default function AddLiquidity({
   match: {
@@ -122,13 +123,21 @@ export default function AddLiquidity({
     {}
   )
 
-  const v2RouterContractAddress = useRouterContractAddress()
+  const v2RouterContractAddress = useRouterContractAddress(ChainId.ARBITRUM_NOVA)
 
   // check whether the user has approved the router on the tokens
-  const [approvalA, approveACallback] = useApproveCallback(parsedAmounts[Field.CURRENCY_A], v2RouterContractAddress)
-  const [approvalB, approveBCallback] = useApproveCallback(parsedAmounts[Field.CURRENCY_B], v2RouterContractAddress)
+  const [approvalA, approveACallback] = useApproveCallback(
+    parsedAmounts[Field.CURRENCY_A],
+    v2RouterContractAddress,
+    ChainId.ARBITRUM_NOVA
+  )
+  const [approvalB, approveBCallback] = useApproveCallback(
+    parsedAmounts[Field.CURRENCY_B],
+    v2RouterContractAddress,
+    ChainId.ARBITRUM_NOVA
+  )
 
-  const addTransaction = useTransactionAdder()
+  const addTransaction = useTransactionAdder(ChainId.ARBITRUM_NOVA)
 
   async function onAdd() {
     if (!chainId || !library || !account) return
@@ -315,7 +324,13 @@ export default function AddLiquidity({
 
   const isCreate = history.location.pathname.includes('/create')
 
-  const addIsUnsupported = useIsTransactionUnsupported(currencies?.CURRENCY_A, currencies?.CURRENCY_B)
+  const addIsUnsupported = useIsTransactionUnsupported(
+    currencies?.CURRENCY_A,
+    currencies?.CURRENCY_B,
+    ChainId.ARBITRUM_NOVA
+  )
+
+  const isNetworkUnsupported = account && chainId !== NETWORK_CHAIN_ID
 
   return (
     <>
@@ -422,6 +437,8 @@ export default function AddLiquidity({
               </ButtonPrimary>
             ) : !account ? (
               <ButtonLight onClick={toggleWalletModal}>Connect Wallet</ButtonLight>
+            ) : isNetworkUnsupported ? (
+              <ButtonLight onClick={() => setupNetwork()}>Switch Network</ButtonLight>
             ) : (
               <AutoColumn gap={'md'}>
                 {(approvalA === ApprovalState.NOT_APPROVED ||
@@ -484,6 +501,7 @@ export default function AddLiquidity({
         <UnsupportedCurrencyFooter
           show={addIsUnsupported}
           currencies={[currencies.CURRENCY_A, currencies.CURRENCY_B]}
+          chainId={ChainId.ARBITRUM_NOVA}
         />
       )}
     </>

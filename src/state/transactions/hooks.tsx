@@ -6,13 +6,20 @@ import { useActiveWeb3React } from '../../hooks'
 import { AppDispatch, AppState } from '../index'
 import { addTransaction } from './actions'
 import { TransactionDetails } from './reducer'
+import { ChainId } from '@rcpswap/sdk'
 
 // helper that can take a ethers library transaction response and add it to the list of transactions
-export function useTransactionAdder(): (
+export function useTransactionAdder(
+  chainId?: ChainId
+): (
   response: TransactionResponse,
-  customData?: { summary?: string; approval?: { tokenAddress: string; spender: string }; claim?: { recipient: string } }
+  customData?: {
+    summary?: string
+    approval?: { tokenAddress: string; spender: string }
+    claim?: { recipient: string }
+  }
 ) => void {
-  const { chainId, account } = useActiveWeb3React()
+  const { account } = useActiveWeb3React()
   const dispatch = useDispatch<AppDispatch>()
 
   return useCallback(
@@ -38,16 +45,14 @@ export function useTransactionAdder(): (
 }
 
 // returns all the transactions for the current chain
-export function useAllTransactions(): { [txHash: string]: TransactionDetails } {
-  const { chainId } = useActiveWeb3React()
-
+export function useAllTransactions(chainId?: ChainId): { [txHash: string]: TransactionDetails } {
   const state = useSelector<AppState, AppState['transactions']>(state => state.transactions)
 
   return chainId ? state[chainId] ?? {} : {}
 }
 
 export function useIsTransactionPending(transactionHash?: string): boolean {
-  const transactions = useAllTransactions()
+  const transactions = useAllTransactions(ChainId.ARBITRUM_NOVA)
 
   if (!transactionHash || !transactions[transactionHash]) return false
 
@@ -63,8 +68,12 @@ export function isTransactionRecent(tx: TransactionDetails): boolean {
 }
 
 // returns whether a token has a pending approval transaction
-export function useHasPendingApproval(tokenAddress: string | undefined, spender: string | undefined): boolean {
-  const allTransactions = useAllTransactions()
+export function useHasPendingApproval(
+  tokenAddress: string | undefined,
+  spender: string | undefined,
+  chainId?: ChainId
+): boolean {
+  const allTransactions = useAllTransactions(chainId ?? ChainId.ARBITRUM_NOVA)
   return useMemo(
     () =>
       typeof tokenAddress === 'string' &&

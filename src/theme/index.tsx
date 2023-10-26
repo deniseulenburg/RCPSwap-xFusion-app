@@ -292,7 +292,7 @@ export function colors(blockchain: Blockchain, darkMode: boolean): Colors {
     case Blockchain.NOVA:
       return harmonyColors(darkMode)
     default:
-      return viperColors(darkMode)
+      return harmonyColors(darkMode)
   }
 }
 

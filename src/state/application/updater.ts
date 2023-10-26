@@ -1,57 +1,55 @@
 import { useCallback, useEffect, useState } from 'react'
+import { ChainId } from '@rcpswap/sdk'
 import { useActiveWeb3React } from '../../hooks'
 import useDebounce from '../../hooks/useDebounce'
 import useIsWindowVisible from '../../hooks/useIsWindowVisible'
 import { updateBlockNumber } from './actions'
 import { useDispatch } from 'react-redux'
+import { SUPPORTED_CHAIN_RPCS } from '../../constants'
+import { getProvider } from 'utils'
 
 export default function Updater(): null {
-  const { library, chainId } = useActiveWeb3React()
   const dispatch = useDispatch()
 
   const windowVisible = useIsWindowVisible()
 
-  const [state, setState] = useState<{ chainId: number | undefined; blockNumber: number | null }>({
-    chainId,
-    blockNumber: null
-  })
+  const [state, setState] = useState<{ [chainId in ChainId]: number | null }>(Object.keys(SUPPORTED_CHAIN_RPCS).reduce((prev, cur) => ({ ...prev, [Number(cur)]: null }), {} as any))
 
-  const blockNumberCallback = useCallback(
-    (blockNumber: number) => {
-      setState(state => {
-        if (chainId === state.chainId) {
-          if (typeof state.blockNumber !== 'number') return { chainId, blockNumber }
-          return { chainId, blockNumber: Math.max(blockNumber, state.blockNumber) }
-        }
-        return state
-      })
-    },
-    [chainId, setState]
+  const blockNumberCallback = useCallback((chainId: ChainId) => {
+    return (blockNumber: number) => {
+      setState(state => ({ ...state, [chainId]: Math.max(blockNumber, state?.[chainId] ?? 0) }))
+    }
+  },
+    [setState]
   )
 
   // attach/detach listeners
   useEffect(() => {
-    if (!library || !chainId || !windowVisible) return undefined
+    Object.keys(SUPPORTED_CHAIN_RPCS).forEach(chainId => {
+      const provider = getProvider(Number(chainId) as ChainId)
 
-    setState({ chainId, blockNumber: null })
+      provider?.getBlockNumber()
+        .then(blockNumberCallback)
+        .catch(error => console.error(`Failed to get block number for chainId: ${chainId}`, error))
 
-    library
-      .getBlockNumber()
-      .then(blockNumberCallback)
-      .catch(error => console.error(`Failed to get block number for chainId: ${chainId}`, error))
+      provider?.on('block', blockNumberCallback(Number(chainId)))
+    })
 
-    library.on('block', blockNumberCallback)
     return () => {
-      library.removeListener('block', blockNumberCallback)
+      Object.keys(SUPPORTED_CHAIN_RPCS).forEach(chainId => {
+        const provider = getProvider(Number(chainId) as ChainId)
+
+        provider?.removeListener('block', blockNumberCallback(Number(chainId)))
+      })
     }
-  }, [dispatch, chainId, library, blockNumberCallback, windowVisible])
+  }, [dispatch, blockNumberCallback, windowVisible, SUPPORTED_CHAIN_RPCS])
 
   const debouncedState = useDebounce(state, 100)
 
   useEffect(() => {
-    if (!debouncedState.chainId || !debouncedState.blockNumber || !windowVisible) return
-    dispatch(updateBlockNumber({ chainId: debouncedState.chainId, blockNumber: debouncedState.blockNumber }))
-  }, [windowVisible, dispatch, debouncedState.blockNumber, debouncedState.chainId])
+    if (!windowVisible) return
+    Object.keys(state).forEach(chainId => dispatch(updateBlockNumber({ chainId: Number(chainId), blockNumber: state?.[Number(chainId) as ChainId] ?? 0 })))
+  }, [windowVisible, dispatch, JSON.stringify(debouncedState)])
 
   return null
 }

@@ -65,9 +65,13 @@ export default function ClaimModal({ isOpen, onDismiss }: ClaimModalProps) {
     [blockchain, chainId, stakingPools]
   ).filter(address => address !== undefined)
 
-  const balanceResults = useMultipleContractSingleData(liquidityTokenAddresses, PAIR_INTERFACE, 'balanceOf', [
-    pitBreeder?.address
-  ])
+  const balanceResults = useMultipleContractSingleData(
+    liquidityTokenAddresses,
+    PAIR_INTERFACE,
+    'balanceOf',
+    undefined,
+    [pitBreeder?.address]
+  )
 
   const [claimFrom, claimTo] = useEligiblePitPools(stakingPools, balanceResults)
 

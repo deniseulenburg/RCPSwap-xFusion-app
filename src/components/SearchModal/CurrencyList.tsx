@@ -1,4 +1,4 @@
-import { Currency, CurrencyAmount, currencyEquals, Token } from '@rcpswap/sdk'
+import { ChainId, Currency, CurrencyAmount, currencyEquals, Token } from '@rcpswap/sdk'
 import React, { CSSProperties, MutableRefObject, useCallback, useMemo } from 'react'
 import { FixedSizeList } from 'react-window'
 import { Text } from 'rebass'
@@ -105,20 +105,22 @@ function CurrencyRow({
   onSelect,
   isSelected,
   otherSelected,
-  style
+  style,
+  chainId
 }: {
   currency: Currency
   onSelect: () => void
   isSelected: boolean
   otherSelected: boolean
   style: CSSProperties
+  chainId?: ChainId
 }) {
   const { account } = useActiveWeb3React()
   const key = currencyKey(currency)
   const selectedTokenList = useCombinedActiveList()
   const isOnSelectedList = isTokenOnList(selectedTokenList, currency)
-  const customAdded = useIsUserAddedToken(currency)
-  const balance = useCurrencyBalance(account ?? undefined, currency)
+  const customAdded = useIsUserAddedToken(currency, chainId)
+  const balance = useCurrencyBalance(account ?? undefined, currency, chainId)
 
   // only show add or remove buttons if not on selected list
   return (
@@ -156,7 +158,8 @@ export default function CurrencyList({
   showETH,
   showImportView,
   setImportToken,
-  breakIndex
+  breakIndex,
+  chainId
 }: {
   height: number
   currencies: Currency[]
@@ -168,9 +171,10 @@ export default function CurrencyList({
   showImportView: () => void
   setImportToken: (token: Token) => void
   breakIndex: number | undefined
+  chainId?: ChainId
 }) {
-  const { chainId } = useActiveWeb3React()
-  const baseCurrency = baseCurrencies(chainId)[0]
+  const chain = chainId ?? ChainId.ARBITRUM_NOVA
+  const baseCurrency = baseCurrencies(chain)[0]
 
   const itemData: (Currency | undefined)[] = useMemo(() => {
     let formatted: (Currency | undefined)[] = showETH ? [baseCurrency, ...currencies] : currencies
@@ -232,12 +236,13 @@ export default function CurrencyList({
             isSelected={isSelected}
             onSelect={handleSelect}
             otherSelected={otherSelected}
+            chainId={chainId}
           />
         )
       }
     },
     [
-      chainId,
+      chain,
       inactiveTokens,
       onCurrencySelect,
       otherCurrency,

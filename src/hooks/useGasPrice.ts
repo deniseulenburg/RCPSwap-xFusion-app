@@ -1,15 +1,15 @@
+import { ChainId } from '@rcpswap/sdk'
 import { useQuery } from '@tanstack/react-query'
-import { useActiveWeb3React } from 'hooks'
-import { useEffect, useState } from 'react'
 import { useBlockNumber } from 'state/application/hooks'
+import { getProvider } from 'utils'
 
-export function useGasPrice() {
-  const { library } = useActiveWeb3React()
-  const blockNumber = useBlockNumber()
+export function useGasPrice(chainId?: ChainId) {
+  const blockNumber = useBlockNumber(chainId)
+  const provider = getProvider(chainId)
 
-  const {data: gasPrice} = useQuery({
+  const { data: gasPrice } = useQuery({
     queryKey: ['useGasPrice', blockNumber],
-    queryFn: async () => parseInt((await library?.getGasPrice())?.toString() ?? '10000000')
+    queryFn: async () => parseInt((await provider?.getGasPrice())?.toString() ?? '10000000')
   })
 
   return gasPrice

@@ -109,7 +109,7 @@ export default function ConfirmSwapModal({
       : fusionSwap.currencies?.OUTPUT
       ? new TokenAmount(
           fusionSwap.currencies?.OUTPUT as Token,
-          ethers.BigNumber.from(fusionSwap?.result.route?.amountOutBN ?? '0')
+          ethers.BigNumber.from(fusionSwap?.result?.route?.amountOutBN ?? '0')
             .sub(fusionSwap.result?.route?.fee?.amountOutBN ?? '0')
             .toString()
         ).toSignificant(6)

@@ -4,6 +4,8 @@ import { BLOCKCHAIN_SETTINGS } from '@rcpswap/sdk-extra'
 export default function getNetworkSettings(chainId: ChainId, rpcUrls?: string[]): Record<string, any> {
   const settings = BLOCKCHAIN_SETTINGS[chainId]
 
+  console.log(BLOCKCHAIN_SETTINGS)
+
   return {
     chainId: settings.hexChainId(),
     chainName: settings.name,

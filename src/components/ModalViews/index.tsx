@@ -13,6 +13,7 @@ import { ExternalLink } from '../../theme/components'
 
 import useBlockchain from '../../hooks/useBlockchain'
 import getExplorerName from '../../utils/getExplorerName'
+import { ChainId } from '@rcpswap/sdk'
 
 const ConfirmOrLoadingWrapper = styled.div`
   width: 100%;
@@ -51,8 +52,9 @@ export function SubmittedView({
   hash: string | undefined
 }) {
   const theme = useContext(ThemeContext)
-  const { chainId } = useActiveWeb3React()
-  const blockchain = useBlockchain()
+  // const { chainId } = useActiveWeb3React()
+  const chainId = ChainId.ARBITRUM_NOVA
+  const blockchain = useBlockchain(chainId)
   const explorerName = getExplorerName(blockchain)
 
   return (

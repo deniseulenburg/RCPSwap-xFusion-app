@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Token, Currency } from '@rcpswap/sdk'
+import { Token, Currency, ChainId } from '@rcpswap/sdk'
 import styled from 'styled-components'
 import { TYPE, CloseIcon } from 'theme'
 import Card from 'components/Card'
@@ -41,15 +41,14 @@ const AddressText = styled(TYPE.blue)`
 
 interface ImportProps {
   tokens: Token[]
+  chainId?: ChainId
   onBack?: () => void
   onDismiss?: () => void
   handleCurrencySelect?: (currency: Currency) => void
 }
 
-export function ImportToken({ tokens, onBack, onDismiss, handleCurrencySelect }: ImportProps) {
+export function ImportToken({ tokens, onBack, onDismiss, handleCurrencySelect, chainId }: ImportProps) {
   const theme = useTheme()
-
-  const { chainId } = useActiveWeb3React()
 
   const [confirmed, setConfirmed] = useState(false)
 

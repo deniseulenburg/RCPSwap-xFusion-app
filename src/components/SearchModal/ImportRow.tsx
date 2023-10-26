@@ -12,6 +12,7 @@ import { ButtonPrimary } from 'components/Button'
 import styled from 'styled-components'
 import { useIsUserAddedToken, useIsTokenActive } from 'hooks/Tokens'
 import { CheckCircle } from 'react-feather'
+import { ChainId } from 'package/chain'
 
 const TokenSection = styled.div<{ dim?: boolean }>`
   padding: 4px 20px;
@@ -55,6 +56,7 @@ export default function ImportRow({
 }) {
   // gloabls
   const { chainId } = useActiveWeb3React()
+  // const chainId = ChainId.ARBITRUM_NOVA
   const theme = useTheme()
 
   // check if token comes from list
@@ -62,8 +64,8 @@ export default function ImportRow({
   const list = chainId && inactiveTokenList?.[chainId]?.[token.address]?.list
 
   // check if already active on list or local storage tokens
-  const isAdded = useIsUserAddedToken(token)
-  const isActive = useIsTokenActive(token)
+  const isAdded = useIsUserAddedToken(token, chainId)
+  const isActive = useIsTokenActive(token, chainId)
 
   return (
     <TokenSection style={style}>

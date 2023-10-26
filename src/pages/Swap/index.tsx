@@ -68,6 +68,8 @@ import StepSlider from 'components/StepSlider'
 import toFormat from 'toformat'
 import _Big from 'big.js'
 import useParsedTokenPrice from 'hooks/useParsedTokenPrice'
+import { NETWORK_CHAIN_ID } from 'connectors'
+import setupNetwork from 'utils/setupNetwork'
 // import AlertSound from '../../assets/sounds/alert.mp3'
 
 export default function Swap() {
@@ -96,7 +98,7 @@ export default function Swap() {
       return !Boolean(token.address in defaultTokens)
     })
 
-  const { account } = useActiveWeb3React()
+  const { account, chainId } = useActiveWeb3React()
   const theme = useContext(ThemeContext)
 
   // toggle wallet when disconnected
@@ -125,8 +127,8 @@ export default function Swap() {
     typedValue,
     recipient,
     swapMode,
-    INPUT: { currencyId: inputCurrencyId },
-    OUTPUT: { currencyId: outputCurrencyId },
+    INPUT: { currencyId: inputCurrencyId, chainId: inputChainId },
+    OUTPUT: { currencyId: outputCurrencyId, chainId: outputChainId },
     isUltra
   } = useSwapState()
   const {
@@ -173,6 +175,7 @@ export default function Swap() {
     onCurrencySelection,
     onUserInput,
     onChangeRecipient,
+    onChainSelection,
     onSwitchUltraMode
   } = useSwapActionHandlers()
   const isValid = !swapInputError
@@ -210,13 +213,13 @@ export default function Swap() {
   // const dexes = useDexList()
 
   // check whether the user has approved the router on the input token
-  const [approval, approveCallback] = useApproveCallbackFromTrade(trade, allowedSlippage)
+  const [approval, approveCallback] = useApproveCallbackFromTrade(trade, allowedSlippage, ChainId.ARBITRUM_NOVA)
   const [fusionApproval, fusionApproveCallback] = useFusionApproveCallback(fusionSwap)
 
   // check if user has gone through approval process, used to show two step buttons, reset on token change
   const [approvalSubmitted, setApprovalSubmitted] = useState<boolean>(false)
 
-  const addTransaction = useTransactionAdder()
+  const addTransaction = useTransactionAdder(ChainId.ARBITRUM_NOVA)
 
   // mark when a user has submitted an approval, reset onTokenSelection for input field
   useEffect(() => {
@@ -244,6 +247,9 @@ export default function Swap() {
       }
       if (!swapCallback) {
         return
+      }
+      if (chainId !== NETWORK_CHAIN_ID) {
+        await setupNetwork()
       }
       setSwapState({ attemptingTxn: true, tradeToConfirm, showConfirm, swapErrorMessage: undefined, txHash: undefined })
       swapCallback()
@@ -451,11 +457,15 @@ export default function Swap() {
 
   // token prices
   const inputTokenPrice = useParsedTokenPrice(
-    ChainId.ARBITRUM_NOVA,
+    swapMode === 0 ? ChainId.ARBITRUM_NOVA : inputChainId ?? ChainId.ARBITRUM_NOVA,
     currencies[Field.INPUT],
     formattedAmounts[Field.INPUT]
   )
-  const outputTokenPrice = useParsedTokenPrice(ChainId.ARBITRUM_NOVA, currencies[Field.OUTPUT], outputTokenValue)
+  const outputTokenPrice = useParsedTokenPrice(
+    swapMode === 0 ? ChainId.ARBITRUM_NOVA : outputChainId ?? ChainId.ARBITRUM_NOVA,
+    currencies[Field.OUTPUT],
+    outputTokenValue
+  )
 
   const handleConfirmDismiss = useCallback(() => {
     setSwapState({ showConfirm: false, tradeToConfirm, attemptingTxn, swapErrorMessage, txHash })
@@ -472,9 +482,40 @@ export default function Swap() {
   const handleInputSelect = useCallback(
     inputCurrency => {
       setApprovalSubmitted(false) // reset 2 step UI for approvals
-      onCurrencySelection(Field.INPUT, inputCurrency)
+      onCurrencySelection(Field.INPUT, inputCurrency, inputChainId ?? ChainId.ARBITRUM_NOVA)
     },
-    [onCurrencySelection]
+    [onCurrencySelection, inputChainId]
+  )
+
+  const handleOutputSelect = useCallback(
+    outputCurrency => {
+      onCurrencySelection(Field.OUTPUT, outputCurrency, outputChainId ?? ChainId.ARBITRUM_NOVA)
+    },
+    [onCurrencySelection, outputChainId]
+  )
+
+  const handleInputChainSelect = useCallback(
+    chainId => {
+      if (chainId !== inputChainId) {
+        onChainSelection(Field.INPUT, chainId)
+        if (chainId !== ChainId.POLYGON && outputChainId !== ChainId.POLYGON) {
+          onChainSelection(Field.OUTPUT, ChainId.ARBITRUM_NOVA)
+        }
+      }
+    },
+    [onChainSelection, inputChainId, outputChainId]
+  )
+
+  const handleOutputChainSelect = useCallback(
+    chainId => {
+      if (outputChainId !== chainId) {
+        onChainSelection(Field.OUTPUT, chainId)
+        if (chainId !== ChainId.POLYGON && inputChainId !== ChainId.POLYGON) {
+          onChainSelection(Field.INPUT, ChainId.ARBITRUM_NOVA)
+        }
+      }
+    },
+    [onChainSelection, inputChainId, outputChainId]
   )
 
   const slideTimerRef = useRef<number | null>(null)
@@ -540,13 +581,16 @@ export default function Swap() {
     [maxAmountInput?.toExact(), onUserInput]
   )
 
-  const handleOutputSelect = useCallback(outputCurrency => onCurrencySelection(Field.OUTPUT, outputCurrency), [
-    onCurrencySelection
-  ])
-
-  const swapIsUnsupported = useIsTransactionUnsupported(currencies?.INPUT, currencies?.OUTPUT)
+  const swapIsUnsupported = useIsTransactionUnsupported(
+    currencies?.INPUT,
+    currencies?.OUTPUT,
+    inputChainId,
+    outputChainId
+  )
 
   const isFusionFetching = swapMode === 1 && fusionSwap.loading && !account
+
+  const isNetworkError = swapMode === 0 && account && chainId !== NETWORK_CHAIN_ID
 
   const fusionSaving =
     swapMode === 1 &&
@@ -608,8 +652,8 @@ export default function Swap() {
               label={independentField === Field.OUTPUT && !showWrap && trade ? 'From (estimated)' : 'From'}
               value={percentageSliding ? tempInputValue.toString() : formattedAmounts[Field.INPUT]}
               currency={currencies[Field.INPUT]}
-              chainId={ChainId.ARBITRUM_NOVA}
-              onChainSelect={() => {}}
+              chainId={inputChainId}
+              onChainSelect={handleInputChainSelect}
               hideChain={swapMode === 0}
               onUserInput={handleTypeInput}
               onCurrencySelect={handleInputSelect}
@@ -663,8 +707,8 @@ export default function Swap() {
               currency={currencies[Field.OUTPUT]}
               onCurrencySelect={handleOutputSelect}
               hideChain={swapMode === 0}
-              chainId={ChainId.ARBITRUM_NOVA}
-              onChainSelect={() => {}}
+              chainId={outputChainId}
+              onChainSelect={handleOutputChainSelect}
               otherCurrency={currencies[Field.INPUT]}
               id="swap-currency-output"
               // disabled={swapMode === 1}
@@ -749,6 +793,8 @@ export default function Swap() {
               </ButtonPrimary>
             ) : !account ? (
               <ButtonLight onClick={toggleWalletModal}>Connect Wallet</ButtonLight>
+            ) : isNetworkError ? (
+              <ButtonLight onClick={() => setupNetwork()}>Switch Network</ButtonLight>
             ) : showWrap ? (
               <ButtonPrimary disabled={Boolean(wrapInputError)} onClick={onWrap}>
                 {wrapInputError ??
@@ -888,7 +934,11 @@ export default function Swap() {
         !swapIsUnsupported ? (
           <AdvancedSwapDetailsDropdown trade={trade} />
         ) : (
-          <UnsupportedCurrencyFooter show={swapIsUnsupported} currencies={[currencies.INPUT, currencies.OUTPUT]} />
+          <UnsupportedCurrencyFooter
+            show={swapIsUnsupported}
+            currencies={[currencies.INPUT, currencies.OUTPUT]}
+            chainId={ChainId.ARBITRUM_NOVA}
+          />
         )
       ) : swapMode === 1 ? (
         <AdvancedFusionDetailsDropdown swap={fusionSwap} currency={fusionSwap.currencies?.OUTPUT} />

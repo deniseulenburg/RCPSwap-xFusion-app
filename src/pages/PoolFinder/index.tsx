@@ -1,4 +1,4 @@
-import { Currency, JSBI, TokenAmount } from '@rcpswap/sdk'
+import { ChainId, Currency, JSBI, TokenAmount } from '@rcpswap/sdk'
 import React, { useCallback, useEffect, useState } from 'react'
 import { Plus } from 'react-feather'
 import { Text } from 'rebass'
@@ -36,7 +36,7 @@ export default function PoolFinder() {
   const [currency0, setCurrency0] = useState<Currency | null>(BASE_CURRENCY)
   const [currency1, setCurrency1] = useState<Currency | null>(null)
 
-  const [pairState, pair] = usePair(currency0 ?? undefined, currency1 ?? undefined)
+  const [pairState, pair] = usePair(currency0 ?? undefined, currency1 ?? undefined, ChainId.ARBITRUM_NOVA)
   const addPair = usePairAdder()
   useEffect(() => {
     if (pair) {
@@ -199,6 +199,7 @@ export default function PoolFinder() {
         onDismiss={handleSearchDismiss}
         showCommonBases
         selectedCurrency={(activeField === Fields.TOKEN0 ? currency1 : currency0) ?? undefined}
+        chainId={ChainId.ARBITRUM_NOVA}
       />
     </AppBody>
   )

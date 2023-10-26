@@ -1,13 +1,14 @@
 import { getTokenFallbackLogoURL } from './../components/CurrencyLogo/index'
 import { wrappedCurrency } from 'utils/wrappedCurrency'
-import { Currency, Token } from '@rcpswap/sdk'
+import { ChainId, Currency, Token } from '@rcpswap/sdk'
 import { useCallback, useState } from 'react'
 import { useActiveWeb3React } from 'hooks'
 
 export default function useAddTokenToMetamask(
-  currencyToAdd: Currency | undefined
+  currencyToAdd: Currency | undefined,
+  chainId: ChainId
 ): { addToken: () => void; success: boolean | undefined } {
-  const { library, chainId } = useActiveWeb3React()
+  const { library } = useActiveWeb3React()
 
   const token: Token | undefined = wrappedCurrency(currencyToAdd, chainId)
 

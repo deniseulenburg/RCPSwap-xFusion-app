@@ -1,3 +1,4 @@
+import { ChainId } from '@rcpswap/sdk'
 import { NETWORK_CHAIN_ID } from '../connectors'
 import getNetworkSettings from './getNetworkSettings'
 
@@ -6,8 +7,8 @@ import getNetworkSettings from './getNetworkSettings'
  * or switch to a given network if the wallet is on a different network
  * @returns {boolean} true if the setup succeeded, false otherwise
  */
-export default async function setupNetwork(): Promise<boolean> {
-  const settings = getNetworkSettings(NETWORK_CHAIN_ID)
+export default async function setupNetwork(chainId?: ChainId): Promise<boolean> {
+  const settings = getNetworkSettings(chainId ?? NETWORK_CHAIN_ID)
   const provider = (window as Window)?.ethereum
 
   if (provider) {

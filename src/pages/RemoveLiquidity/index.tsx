@@ -1,7 +1,7 @@
 import { splitSignature } from '@ethersproject/bytes'
 import { Contract } from '@ethersproject/contracts'
 import { TransactionResponse } from '@ethersproject/providers'
-import { Blockchain, Currency, currencyEquals, Percent, WETH, DEFAULT_CURRENCIES } from '@rcpswap/sdk'
+import { Blockchain, Currency, currencyEquals, Percent, WETH, DEFAULT_CURRENCIES, ChainId } from '@rcpswap/sdk'
 import React, { useCallback, useContext, useMemo, useState } from 'react'
 import { ArrowDown, Plus } from 'react-feather'
 import ReactGA from 'react-ga'
@@ -43,9 +43,10 @@ import { useWalletModalToggle } from '../../state/application/hooks'
 import { useUserSlippageTolerance } from '../../state/user/hooks'
 import { BigNumber } from '@ethersproject/bignumber'
 
-import { BASE_CURRENCY, BASE_WRAPPED_CURRENCY } from '../../connectors'
+import { BASE_CURRENCY, BASE_WRAPPED_CURRENCY, NETWORK_CHAIN_ID } from '../../connectors'
 import { useRouterContractAddress } from '../../utils'
 import useBlockchain from '../../hooks/useBlockchain'
+import setupNetwork from 'utils/setupNetwork'
 
 export default function RemoveLiquidity({
   history,
@@ -53,13 +54,15 @@ export default function RemoveLiquidity({
     params: { currencyIdA, currencyIdB }
   }
 }: RouteComponentProps<{ currencyIdA: string; currencyIdB: string }>) {
-  const [currencyA, currencyB] = [useCurrency(currencyIdA) ?? undefined, useCurrency(currencyIdB) ?? undefined]
+  const [currencyA, currencyB] = [
+    useCurrency(currencyIdA, ChainId.ARBITRUM_NOVA) ?? undefined,
+    useCurrency(currencyIdB, ChainId.ARBITRUM_NOVA) ?? undefined
+  ]
   const { account, chainId, library } = useActiveWeb3React()
-  const [tokenA, tokenB] = useMemo(() => [wrappedCurrency(currencyA, chainId), wrappedCurrency(currencyB, chainId)], [
-    currencyA,
-    currencyB,
-    chainId
-  ])
+  const [tokenA, tokenB] = useMemo(
+    () => [wrappedCurrency(currencyA, ChainId.ARBITRUM_NOVA), wrappedCurrency(currencyB, ChainId.ARBITRUM_NOVA)],
+    [currencyA, currencyB]
+  )
 
   const theme = useContext(ThemeContext)
 
@@ -99,15 +102,19 @@ export default function RemoveLiquidity({
   const atMaxAmount = parsedAmounts[Field.LIQUIDITY_PERCENT]?.equalTo(new Percent('1'))
 
   // pair contract
-  const pairContract: Contract | null = usePairContract(pair?.liquidityToken?.address)
+  const pairContract: Contract | null = usePairContract(pair?.liquidityToken?.address, undefined, ChainId.ARBITRUM_NOVA)
 
   // allowance handling
   const [signatureData, setSignatureData] = useState<{ v: number; r: string; s: string; deadline: number } | null>(null)
-  const v2RouterContractAddress = useRouterContractAddress()
-  const [approval, approveCallback] = useApproveCallback(parsedAmounts[Field.LIQUIDITY], v2RouterContractAddress)
+  const v2RouterContractAddress = useRouterContractAddress(ChainId.ARBITRUM_NOVA)
+  const [approval, approveCallback] = useApproveCallback(
+    parsedAmounts[Field.LIQUIDITY],
+    v2RouterContractAddress,
+    ChainId.ARBITRUM_NOVA
+  )
 
   const isArgentWallet = useIsArgentWallet()
-  const blockchain = useBlockchain()
+  const blockchain = useBlockchain(ChainId.ARBITRUM_NOVA)
 
   async function onAttemptToApprove() {
     if (!pairContract || !pair || !library || !deadline) throw new Error('missing dependencies')
@@ -206,7 +213,7 @@ export default function RemoveLiquidity({
   ])
 
   // tx sending
-  const addTransaction = useTransactionAdder()
+  const addTransaction = useTransactionAdder(ChainId.ARBITRUM_NOVA)
   async function onRemove() {
     if (!chainId || !library || !account || !deadline) throw new Error('missing dependencies')
     const { [Field.CURRENCY_A]: currencyAmountA, [Field.CURRENCY_B]: currencyAmountB } = parsedAmounts
@@ -446,9 +453,8 @@ export default function RemoveLiquidity({
   const oneCurrencyIsETH =
     (currencyA && DEFAULT_CURRENCIES.includes(currencyA)) || (currencyB && DEFAULT_CURRENCIES.includes(currencyB))
   const oneCurrencyIsWETH = Boolean(
-    chainId &&
-      ((currencyA && currencyEquals(WETH[chainId], currencyA)) ||
-        (currencyB && currencyEquals(WETH[chainId], currencyB)))
+    (currencyA && currencyEquals(WETH[ChainId.ARBITRUM_NOVA], currencyA)) ||
+      (currencyB && currencyEquals(WETH[ChainId.ARBITRUM_NOVA], currencyB))
   )
 
   const handleSelectCurrencyA = useCallback(
@@ -486,6 +492,8 @@ export default function RemoveLiquidity({
     Number.parseInt(parsedAmounts[Field.LIQUIDITY_PERCENT].toFixed(0)),
     liquidityPercentChangeCallback
   )
+
+  const isNetworkUnsupported = account && chainId !== NETWORK_CHAIN_ID
 
   return (
     <>
@@ -677,6 +685,8 @@ export default function RemoveLiquidity({
             <div style={{ position: 'relative' }}>
               {!account ? (
                 <ButtonLight onClick={toggleWalletModal}>Connect Wallet</ButtonLight>
+              ) : isNetworkUnsupported ? (
+                <ButtonLight onClick={() => setupNetwork()}>Switch Network</ButtonLight>
               ) : (
                 <RowBetween>
                   <ButtonConfirmed

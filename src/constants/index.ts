@@ -427,3 +427,8 @@ export const SUPPORTED_CROSS_CHAIN_NETWORKS = [
     icon: Polygon
   }
 ]
+
+export const SUPPORTED_CHAIN_RPCS: { [chainId in ChainId]?: string } = {
+  [ChainId.ARBITRUM_NOVA]: 'https://nova.arbitrum.io/rpc',
+  [ChainId.POLYGON]: 'https://polygon.llamarpc.com'
+}

@@ -8,6 +8,7 @@ import { ExternalLink } from '../../theme'
 import { useAllTransactions } from '../../state/transactions/hooks'
 import { RowFixed } from '../Row'
 import Loader from '../Loader'
+import { ChainId } from '@rcpswap/sdk'
 
 const TransactionWrapper = styled.div``
 
@@ -37,8 +38,9 @@ const IconWrapper = styled.div<{ pending: boolean; success?: boolean }>`
 `
 
 export default function Transaction({ hash }: { hash: string }) {
-  const { chainId } = useActiveWeb3React()
-  const allTransactions = useAllTransactions()
+  // const { chainId } = useActiveWeb3React()
+  const chainId = ChainId.ARBITRUM_NOVA
+  const allTransactions = useAllTransactions(chainId)
 
   const tx = allTransactions?.[hash]
   const summary = tx?.summary

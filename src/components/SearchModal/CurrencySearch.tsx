@@ -1,9 +1,8 @@
-import { Currency, ETHER, BINANCE_COIN, Token } from '@rcpswap/sdk'
+import { Currency, ETHER, BINANCE_COIN, Token, ChainId, MATIC_TOKEN } from '@rcpswap/sdk'
 import React, { KeyboardEvent, RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import ReactGA from 'react-ga'
 import { useTranslation } from 'react-i18next'
 import { FixedSizeList } from 'react-window'
-import { Text } from 'rebass'
 import { useActiveWeb3React } from '../../hooks'
 import { useAllTokens, useToken, useIsUserAddedToken, useFoundOnInactiveList } from '../../hooks/Tokens'
 import { CloseIcon, TYPE, ButtonText, IconWrapper } from '../../theme'
@@ -44,6 +43,7 @@ interface CurrencySearchProps {
   isOpen: boolean
   onDismiss: () => void
   selectedCurrency?: Currency | null
+  chainId?: ChainId
   onCurrencySelect: (currency: Currency) => void
   otherSelectedCurrency?: Currency | null
   showCommonBases?: boolean
@@ -57,6 +57,7 @@ export function CurrencySearch({
   onCurrencySelect,
   otherSelectedCurrency,
   showCommonBases,
+  chainId,
   onDismiss,
   isOpen,
   showManageView,
@@ -64,7 +65,6 @@ export function CurrencySearch({
   setImportToken
 }: CurrencySearchProps) {
   const { t } = useTranslation()
-  const { chainId } = useActiveWeb3React()
   const theme = useTheme()
 
   // refs for fixed size lists
@@ -75,12 +75,12 @@ export function CurrencySearch({
 
   const [invertSearchOrder] = useState<boolean>(false)
 
-  const allTokens = useAllTokens()
+  const allTokens = useAllTokens(chainId)
 
   // if they input an address, use it
   const isAddressSearch = isAddress(debouncedQuery)
-  const searchToken = useToken(debouncedQuery)
-  const searchTokenIsAdded = useIsUserAddedToken(searchToken)
+  const searchToken = useToken(debouncedQuery, chainId)
+  const searchTokenIsAdded = useIsUserAddedToken(searchToken, chainId)
 
   useEffect(() => {
     if (isAddressSearch) {
@@ -141,6 +141,8 @@ export function CurrencySearch({
           //   handleCurrencySelect(ETHER)
         } else if (s === 'bnb') {
           handleCurrencySelect(BINANCE_COIN)
+        } else if (s === 'matic') {
+          handleCurrencySelect(MATIC_TOKEN)
         } else if (filteredSortedTokens.length > 0) {
           if (
             filteredSortedTokens[0].symbol?.toLowerCase() === debouncedQuery.trim().toLowerCase() ||
@@ -167,9 +169,9 @@ export function CurrencySearch({
     <ContentWrapper>
       <PaddedColumn gap="16px">
         <RowBetween>
-          <Text fontWeight={500} fontSize={16}>
+          <TYPE.main fontWeight={500} fontSize={16}>
             Select a token
-          </Text>
+          </TYPE.main>
           <CloseIcon onClick={onDismiss} />
         </RowBetween>
         <Row>
@@ -185,7 +187,11 @@ export function CurrencySearch({
           />
         </Row>
         {showCommonBases && (
-          <CommonBases chainId={chainId} onSelect={handleCurrencySelect} selectedCurrency={selectedCurrency} />
+          <CommonBases
+            chainId={chainId ?? ChainId.ARBITRUM_NOVA}
+            onSelect={handleCurrencySelect}
+            selectedCurrency={selectedCurrency}
+          />
         )}
       </PaddedColumn>
       <Separator />
@@ -210,6 +216,7 @@ export function CurrencySearch({
                 fixedListRef={fixedList}
                 showImportView={showImportView}
                 setImportToken={setImportToken}
+                chainId={chainId}
               />
             )}
           </AutoSizer>

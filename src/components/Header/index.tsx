@@ -310,7 +310,8 @@ const NETWORK_LABELS: { [chainId in ChainId]?: string } = {
 }
 
 export default function Header() {
-  const { account, chainId } = useActiveWeb3React()
+  const { account } = useActiveWeb3React()
+  const chainId = ChainId.ARBITRUM_NOVA
   const { t } = useTranslation()
 
   const govToken = useGovernanceToken()

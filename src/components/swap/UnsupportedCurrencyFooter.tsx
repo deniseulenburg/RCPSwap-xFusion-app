@@ -9,7 +9,7 @@ import { AutoColumn } from 'components/Column'
 import CurrencyLogo from 'components/CurrencyLogo'
 import { useActiveWeb3React } from 'hooks'
 import { getEtherscanLink } from 'utils'
-import { Currency, Token } from '@rcpswap/sdk'
+import { ChainId, Currency, Token } from '@rcpswap/sdk'
 import { wrappedCurrency } from 'utils/wrappedCurrency'
 import { useUnsupportedTokens } from '../../hooks/Tokens'
 
@@ -40,12 +40,13 @@ const AddressText = styled(TYPE.blue)`
 
 export default function UnsupportedCurrencyFooter({
   show,
-  currencies
+  currencies,
+  chainId
 }: {
   show: boolean
   currencies: (Currency | undefined)[]
+  chainId?: ChainId
 }) {
-  const { chainId } = useActiveWeb3React()
   const [showDetails, setShowDetails] = useState(false)
 
   const tokens =

@@ -1,6 +1,6 @@
 import { MaxUint256 } from '@ethersproject/constants'
 import { TransactionResponse } from '@ethersproject/providers'
-import { Trade, TokenAmount, CurrencyAmount, DEFAULT_CURRENCIES } from '@rcpswap/sdk'
+import { Trade, TokenAmount, CurrencyAmount, DEFAULT_CURRENCIES, ChainId } from '@rcpswap/sdk'
 import { useCallback, useMemo } from 'react'
 import { useTokenAllowance } from '../data/Allowances'
 import { getTradeVersion, useV1TradeExchangeAddress } from '../data/V1'
@@ -25,12 +25,13 @@ export enum ApprovalState {
 // returns a variable indicating the state of the approval and a function which approves if necessary or early returns
 export function useApproveCallback(
   amountToApprove?: CurrencyAmount,
-  spender?: string
+  spender?: string,
+  chainId?: ChainId
 ): [ApprovalState, () => Promise<void>] {
   const { account } = useActiveWeb3React()
   const token = amountToApprove instanceof TokenAmount ? amountToApprove.token : undefined
-  const currentAllowance = useTokenAllowance(token, account ?? undefined, spender)
-  const pendingApproval = useHasPendingApproval(token?.address, spender)
+  const currentAllowance = useTokenAllowance(token, account ?? undefined, spender, chainId)
+  const pendingApproval = useHasPendingApproval(token?.address, spender, chainId)
 
   // check the current approval status
   const approvalState: ApprovalState = useMemo(() => {
@@ -47,8 +48,8 @@ export function useApproveCallback(
       : ApprovalState.APPROVED
   }, [amountToApprove, currentAllowance, pendingApproval, spender])
 
-  const tokenContract = useTokenContract(token?.address)
-  const addTransaction = useTransactionAdder()
+  const tokenContract = useTokenContract(token?.address, undefined, chainId)
+  const addTransaction = useTransactionAdder(chainId)
 
   const approve = useCallback(async (): Promise<void> => {
     if (approvalState !== ApprovalState.NOT_APPROVED) {
@@ -102,15 +103,15 @@ export function useApproveCallback(
 }
 
 // wraps useApproveCallback in the context of a swap
-export function useApproveCallbackFromTrade(trade?: Trade, allowedSlippage = 0) {
+export function useApproveCallbackFromTrade(trade?: Trade, allowedSlippage = 0, chainId?: ChainId) {
   const amountToApprove = useMemo(
     () => (trade ? computeSlippageAdjustedAmounts(trade, allowedSlippage)[Field.INPUT] : undefined),
     [trade, allowedSlippage]
   )
   const tradeIsV1 = getTradeVersion(trade) === Version.v1
   const v1ExchangeAddress = useV1TradeExchangeAddress(trade)
-  const v2RouterAddress = useRouterContractAddress()
-  return useApproveCallback(amountToApprove, tradeIsV1 ? v1ExchangeAddress : v2RouterAddress)
+  const v2RouterAddress = useRouterContractAddress(chainId)
+  return useApproveCallback(amountToApprove, tradeIsV1 ? v1ExchangeAddress : v2RouterAddress, chainId)
 }
 
 export function useFusionApproveCallback(fusionSwap: XFusionSwapType) {

@@ -6,7 +6,7 @@ import { TYPE, ExternalLinkIcon, TrashIcon, ButtonText, ExternalLink } from 'the
 import { useToken } from 'hooks/Tokens'
 import styled from 'styled-components'
 import { useUserAddedTokens, useRemoveUserAddedToken } from 'state/user/hooks'
-import { Token } from '@rcpswap/sdk'
+import { ChainId, Token } from '@rcpswap/sdk'
 import CurrencyLogo from 'components/CurrencyLogo'
 import { getEtherscanLink, isAddress } from 'utils'
 import { useActiveWeb3React } from 'hooks'
@@ -37,13 +37,13 @@ const Footer = styled.div`
 
 export default function ManageTokens({
   setModalView,
-  setImportToken
+  setImportToken,
+  chainId
 }: {
   setModalView: (view: CurrencyModalView) => void
   setImportToken: (token: Token) => void
+  chainId?: ChainId
 }) {
-  const { chainId } = useActiveWeb3React()
-
   const [searchQuery, setSearchQuery] = useState<string>('')
   const theme = useTheme()
 
@@ -57,10 +57,10 @@ export default function ManageTokens({
 
   // if they input an address, use it
   const isAddressSearch = isAddress(searchQuery)
-  const searchToken = useToken(searchQuery)
+  const searchToken = useToken(searchQuery, chainId)
 
   // all tokens for local lisr
-  const userAddedTokens: Token[] = useUserAddedTokens()
+  const userAddedTokens: Token[] = useUserAddedTokens(chainId)
   const removeToken = useRemoveUserAddedToken()
 
   const handleRemoveAll = useCallback(() => {

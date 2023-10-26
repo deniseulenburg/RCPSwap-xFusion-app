@@ -6,6 +6,7 @@ import { useURLWarningToggle, useURLWarningVisible } from '../../state/user/hook
 import { isMobile } from 'react-device-detect'
 import { useActiveWeb3React } from '../../hooks'
 import { WEB_INTERFACES } from '../../constants'
+import { ChainId } from '@rcpswap/sdk'
 
 const PhishAlert = styled.div<{ isActive: any }>`
   width: 100%;
@@ -27,7 +28,8 @@ export const StyledClose = styled(X)`
 export default function URLWarning() {
   const toggleURLWarning = useURLWarningToggle()
   const showURLWarning = useURLWarningVisible()
-  const { chainId } = useActiveWeb3React()
+  // const { chainId } = useActiveWeb3React()
+  const chainId = ChainId.ARBITRUM_NOVA
   const webInterfaces = chainId && WEB_INTERFACES[chainId]
   const defaultHostname = webInterfaces?.[0]
   const currentHostname = window.location.hostname

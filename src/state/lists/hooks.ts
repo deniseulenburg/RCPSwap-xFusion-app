@@ -44,6 +44,7 @@ const EMPTY_LIST: TokenAddressMap = {
   [ChainId.MAINNET]: {},
   [ChainId.BSC_MAINNET]: {},
   [ChainId.BSC_TESTNET]: {},
+  [ChainId.POLYGON]: {},
   [ChainId.ARBITRUM_NOVA]: {},
   [ChainId.HARMONY_TESTNET]: {}
 }

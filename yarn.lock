@@ -2305,23 +2305,23 @@
   resolved "https://registry.yarnpkg.com/@rcpswap/core/-/core-1.1.0.tgz#c3714abe37a946d61d5a6c931c8c1355d841e4f3"
   integrity sha512-fTd97xTIKUw45J4Bk+lbzHedIb3gb9l2nudPslKXRFCHvVIQFKn0+FQH9PErBhGtWOhl+IpZe/5d2THb4nYw1Q==
 
-"@rcpswap/sdk-extra@^1.2.0":
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/@rcpswap/sdk-extra/-/sdk-extra-1.2.0.tgz#2c5226a7b6abe90d00f4f30ba93b1cc339528d23"
-  integrity sha512-Bx2DkIVkuR4xHRDszEQP6c3/Gr3JBhUi/zim9+5k8X1ZrHSqLbSvGKjM9AQMVTOQlTRX19dMHpbA/I8ML0uxqQ==
+"@rcpswap/sdk-extra@^1.2.1":
+  version "1.2.1"
+  resolved "https://registry.yarnpkg.com/@rcpswap/sdk-extra/-/sdk-extra-1.2.1.tgz#ec35422733e8708516b628a1c3147b34183634b0"
+  integrity sha512-3b7YA2lfbST8m6NSJUC6THmidFfnIhWDuKH4KkkvS45HF03huO9X+ZexsT0+mqJFnEBYXoDx/l2XjgRFs3ykiQ==
   dependencies:
     "@ethersproject/address" "^5.1.0"
     "@ethersproject/contracts" "^5.1.1"
     "@ethersproject/providers" "^5.1.2"
     "@ethersproject/solidity" "^5.1.0"
-    "@rcpswap/sdk" "^1.2.0"
+    "@rcpswap/sdk" "^1.2.1"
     "@types/lodash.random" "^3.2.6"
     lodash.random "^3.2.0"
 
-"@rcpswap/sdk@^1.2.0":
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/@rcpswap/sdk/-/sdk-1.2.0.tgz#1d26755e3c7b269a6e7db706c7d5d72ae823945e"
-  integrity sha512-8yr/cIaplvdHO0qKX+A5yxmb5ouE3Nvz+JSioxZn7+qCCrm9yKLwWjWOwNufuTBxhR3LP3kf3tUe3rq+GD2/wA==
+"@rcpswap/sdk@^1.2.1":
+  version "1.2.1"
+  resolved "https://registry.yarnpkg.com/@rcpswap/sdk/-/sdk-1.2.1.tgz#bb7249c751c8e917ff25b90683552f785f0ef3db"
+  integrity sha512-XfPksIZpwNEfkDgzXDOeL7rLWpHUXe5XtKqjPMDNB403rwOSaJVgDCUzE6gis2psgwCh0i6DdNdlup8N5CDWVw==
   dependencies:
     "@rcpswap/core" "^1.1.0"
     big.js "^5.2.2"

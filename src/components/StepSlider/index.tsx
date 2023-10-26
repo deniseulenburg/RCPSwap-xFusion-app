@@ -6,7 +6,8 @@ import 'react-bootstrap-range-slider/dist/react-bootstrap-range-slider.css'
 import { useIsDarkMode } from 'state/user/hooks'
 
 const StepSliderGroup = styled.div`
-  margin-bottom: -10px;
+  margin-top: 12px;
+  margin-bottom: -8px;
 `
 
 const StepSliderWrapper = styled.div`
@@ -36,11 +37,14 @@ const StepSliderContent = styled.div`
 const StyledRangeSlider = styled<any>(RangeSlider)`
   &::-webkit-slider-runnable-track {
     height: 4px;
-    background: linear-gradient(
+    background: ${props =>
+      props?.disabled
+        ? props.theme.bg5
+        : `linear-gradient(
       90deg,
-      ${props => (props?.dark === 'true' ? props.theme.primary1 : props.theme.primary3)} ${props => `${props.value}%`},
-      ${props => (props?.dark === 'true' ? props.theme.bg6 : props.theme.bg5)} ${props => `${props.value}%`}
-    ) !important;
+      ${props?.dark === 'true' ? props.theme.primary1 : props.theme.primary3} ${`${props.value}%`},
+      ${props?.dark === 'true' ? props.theme.bg6 : props.theme.bg5} ${`${props.value}%`}
+    ) !important`};
   }
   &::-webkit-slider-thumb {
     background: ${props =>
@@ -60,6 +64,7 @@ const StyledRangeSlider = styled<any>(RangeSlider)`
   }
 
   & + .range-slider__tooltip {
+    transform: translateX(${({ value }) => 7 - value / 10}px);
     & > .range-slider__tooltip__label {
       background-color: ${props => props.theme.bg6} !important;
       color: ${props => props.theme.text6} !important;

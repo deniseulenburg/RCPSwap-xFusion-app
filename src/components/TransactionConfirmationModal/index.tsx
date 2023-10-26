@@ -83,10 +83,10 @@ function TransactionSubmittedContent({
 }) {
   const theme = useContext(ThemeContext)
   const { library } = useActiveWeb3React()
-  const blockchain = useBlockchain()
+  const blockchain = useBlockchain(chainId)
   const explorerName = getExplorerName(blockchain)
   const currencyToAddAdjusted = getBlockchainAdjustedCurrency(blockchain, currencyToAdd)
-  const { addToken, success } = useAddTokenToMetamask(currencyToAddAdjusted)
+  const { addToken, success } = useAddTokenToMetamask(currencyToAddAdjusted, chainId)
 
   return (
     <Wrapper>
@@ -205,7 +205,8 @@ export default function TransactionConfirmationModal({
   content,
   currencyToAdd
 }: ConfirmationModalProps) {
-  const { chainId } = useActiveWeb3React()
+  // const { chainId } = useActiveWeb3React()
+  const chainId = ChainId.ARBITRUM_NOVA
 
   if (!chainId) return null
 

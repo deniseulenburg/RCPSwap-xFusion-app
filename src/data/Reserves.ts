@@ -1,4 +1,4 @@
-import { TokenAmount, Pair, Currency } from '@rcpswap/sdk'
+import { TokenAmount, Pair, Currency, ChainId } from '@rcpswap/sdk'
 import { useMemo } from 'react'
 import { abi as IUniswapV2PairABI } from '@rcpswap/core/build/IRCPswapV2Pair.json'
 import { Interface } from '@ethersproject/abi'
@@ -16,8 +16,7 @@ export enum PairState {
   INVALID
 }
 
-export function usePairs(currencies: [Currency | undefined, Currency | undefined][]): [PairState, Pair | null][] {
-  const { chainId } = useActiveWeb3React()
+export function usePairs(currencies: [Currency | undefined, Currency | undefined][], chainId?: ChainId): [PairState, Pair | null][] {
 
   const tokens = useMemo(
     () =>
@@ -36,7 +35,7 @@ export function usePairs(currencies: [Currency | undefined, Currency | undefined
     [tokens]
   )
 
-  const results = useMultipleContractSingleData(pairAddresses, PAIR_INTERFACE, 'getReserves')
+  const results = useMultipleContractSingleData(pairAddresses, PAIR_INTERFACE, 'getReserves', chainId)
 
   return useMemo(() => {
     return results.map((result, i) => {
@@ -57,6 +56,6 @@ export function usePairs(currencies: [Currency | undefined, Currency | undefined
   }, [results, tokens])
 }
 
-export function usePair(tokenA?: Currency, tokenB?: Currency): [PairState, Pair | null] {
-  return usePairs([[tokenA, tokenB]])[0]
+export function usePair(tokenA?: Currency, tokenB?: Currency, chainId?: ChainId): [PairState, Pair | null] {
+  return usePairs([[tokenA, tokenB]], chainId)[0]
 }

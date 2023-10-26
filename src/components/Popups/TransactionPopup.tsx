@@ -9,6 +9,7 @@ import { AutoColumn } from '../Column'
 import { AutoRow } from '../Row'
 import useBlockchain from '../../hooks/useBlockchain'
 import getExplorerName from '../../utils/getExplorerName'
+import { ChainId } from '@rcpswap/sdk'
 
 const RowNoFlex = styled(AutoRow)`
   flex-wrap: nowrap;
@@ -23,9 +24,10 @@ export default function TransactionPopup({
   success?: boolean
   summary?: string
 }) {
-  const { chainId } = useActiveWeb3React()
+  // const { chainId } = useActiveWeb3React()
+  const chainId = ChainId.ARBITRUM_NOVA
   const theme = useContext(ThemeContext)
-  const blockchain = useBlockchain()
+  const blockchain = useBlockchain(chainId)
   const explorerName = getExplorerName(blockchain)
 
   return (

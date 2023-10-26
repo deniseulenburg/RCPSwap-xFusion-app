@@ -5,6 +5,7 @@ import { TYPE, ExternalLink } from '../../theme'
 import { useBlockNumber } from '../../state/application/hooks'
 import { getEtherscanLink } from '../../utils'
 import { useActiveWeb3React } from '../../hooks'
+import { ChainId } from '@rcpswap/sdk'
 
 const StyledPolling = styled.div`
   position: fixed;
@@ -63,9 +64,9 @@ const Spinner = styled.div`
 `
 
 export default function Polling() {
-  const { chainId } = useActiveWeb3React()
+  const chainId = ChainId.ARBITRUM_NOVA
 
-  const blockNumber = useBlockNumber()
+  const blockNumber = useBlockNumber(chainId)
 
   const [isMounted, setIsMounted] = useState(true)
 

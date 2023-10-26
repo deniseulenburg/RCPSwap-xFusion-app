@@ -1,10 +1,12 @@
 import { AddressZero } from '@ethersproject/constants'
 import {
   BigintIsh,
+  ChainId,
   Currency,
   CurrencyAmount,
   ETHER,
   JSBI,
+  MATIC_TOKEN,
   Pair,
   Route,
   Token,
@@ -21,11 +23,11 @@ import { Version } from '../hooks/useToggledVersion'
 import { NEVER_RELOAD, useSingleCallResult, useSingleContractMultipleData } from '../state/multicall/hooks'
 import { useETHBalances, useTokenBalance, useTokenBalances } from '../state/wallet/hooks'
 
-export function useV1ExchangeAddress(tokenAddress?: string): string | undefined {
-  const contract = useV1FactoryContract()
+export function useV1ExchangeAddress(tokenAddress?: string, chainId?: ChainId): string | undefined {
+  const contract = useV1FactoryContract(chainId)
 
-  const inputs = useMemo(() => [tokenAddress], [tokenAddress])
-  return useSingleCallResult(contract, 'getExchange', inputs)?.result?.[0]
+  const inputs = useMemo(() => [tokenAddress], [tokenAddress, chainId])
+  return useSingleCallResult(contract, 'getExchange', inputs, chainId)?.result?.[0]
 }
 
 export class MockV1Pair extends Pair {
@@ -34,28 +36,28 @@ export class MockV1Pair extends Pair {
   }
 }
 
-function useMockV1Pair(inputCurrency?: Currency): MockV1Pair | undefined {
+function useMockV1Pair(inputCurrency?: Currency, chainId?: ChainId): MockV1Pair | undefined {
   const token = inputCurrency instanceof Token ? inputCurrency : undefined
 
   const isWETH = Boolean(token && token.equals(WETH[token.chainId]))
-  const v1PairAddress = useV1ExchangeAddress(isWETH ? undefined : token?.address)
-  const tokenBalance = useTokenBalance(v1PairAddress, token)
-  const ETHBalance = useETHBalances([v1PairAddress])[v1PairAddress ?? '']
+  const v1PairAddress = useV1ExchangeAddress(isWETH ? undefined : token?.address, chainId)
+  const tokenBalance = useTokenBalance(v1PairAddress, token, chainId)
+  const ETHBalance = useETHBalances([v1PairAddress], chainId)[v1PairAddress ?? '']
 
   return useMemo(
     () =>
       token && tokenBalance && ETHBalance && inputCurrency ? new MockV1Pair(ETHBalance.raw, tokenBalance) : undefined,
-    [ETHBalance, inputCurrency, token, tokenBalance]
+    [ETHBalance, inputCurrency, token, tokenBalance, chainId]
   )
 }
 
 // returns all v1 exchange addresses in the user's token list
-export function useAllTokenV1Exchanges(): { [exchangeAddress: string]: Token } {
-  const allTokens = useAllTokens()
-  const factory = useV1FactoryContract()
+export function useAllTokenV1Exchanges(chainId?: ChainId): { [exchangeAddress: string]: Token } {
+  const allTokens = useAllTokens(chainId)
+  const factory = useV1FactoryContract(chainId)
   const args = useMemo(() => Object.keys(allTokens).map(tokenAddress => [tokenAddress]), [allTokens])
 
-  const data = useSingleContractMultipleData(factory, 'getExchange', args, NEVER_RELOAD)
+  const data = useSingleContractMultipleData(factory, 'getExchange', args, chainId, NEVER_RELOAD)
 
   return useMemo(
     () =>
@@ -70,10 +72,10 @@ export function useAllTokenV1Exchanges(): { [exchangeAddress: string]: Token } {
 }
 
 // returns whether any of the tokens in the user's token list have liquidity on v1
-export function useUserHasLiquidityInAllTokens(): boolean | undefined {
-  const { account, chainId } = useActiveWeb3React()
+export function useUserHasLiquidityInAllTokens(chainId?: ChainId): boolean | undefined {
+  const { account } = useActiveWeb3React()
 
-  const exchanges = useAllTokenV1Exchanges()
+  const exchanges = useAllTokenV1Exchanges(chainId)
 
   const v1ExchangeLiquidityTokens = useMemo(
     () =>
@@ -81,7 +83,7 @@ export function useUserHasLiquidityInAllTokens(): boolean | undefined {
     [chainId, exchanges]
   )
 
-  const balances = useTokenBalances(account ?? undefined, v1ExchangeLiquidityTokens)
+  const balances = useTokenBalances(account ?? undefined, v1ExchangeLiquidityTokens, chainId)
 
   return useMemo(
     () =>
@@ -100,14 +102,16 @@ export function useV1Trade(
   isExactIn?: boolean,
   inputCurrency?: Currency,
   outputCurrency?: Currency,
-  exactAmount?: CurrencyAmount
+  exactAmount?: CurrencyAmount,
+  inputChainId?: ChainId,
+  outputChainId?: ChainId
 ): Trade | undefined {
   // get the mock v1 pairs
-  const inputPair = useMockV1Pair(inputCurrency)
-  const outputPair = useMockV1Pair(outputCurrency)
+  const inputPair = useMockV1Pair(inputCurrency, inputChainId)
+  const outputPair = useMockV1Pair(outputCurrency, outputChainId)
 
-  const inputIsETH = inputCurrency === ETHER
-  const outputIsETH = outputCurrency === ETHER
+  const inputIsETH = inputCurrency === ETHER || inputCurrency === MATIC_TOKEN
+  const outputIsETH = outputCurrency === ETHER || outputCurrency === MATIC_TOKEN
 
   // construct a direct or through ETH v1 route
   let pairs: Pair[] = []
@@ -150,8 +154,8 @@ export function useV1TradeExchangeAddress(trade: Trade | undefined): string | un
     return trade.inputAmount instanceof TokenAmount
       ? trade.inputAmount.token.address
       : trade.outputAmount instanceof TokenAmount
-      ? trade.outputAmount.token.address
-      : undefined
+        ? trade.outputAmount.token.address
+        : undefined
   }, [trade])
   return useV1ExchangeAddress(tokenAddress)
 }
