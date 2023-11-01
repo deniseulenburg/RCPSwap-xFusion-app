@@ -2,7 +2,7 @@ import useENS from '../../hooks/useENS'
 import { Version } from '../../hooks/useToggledVersion'
 import { parseUnits } from '@ethersproject/units'
 import { useQuery } from '@tanstack/react-query'
-import { Currency, CurrencyAmount, JSBI, Token, TokenAmount, Trade, DEFAULT_CURRENCIES, Fraction, ChainId } from '@rcpswap/sdk'
+import { Currency, CurrencyAmount, JSBI, Token, TokenAmount, Trade, DEFAULT_CURRENCIES, Fraction, ChainId, WETH, ETHER } from '@rcpswap/sdk'
 import { ParsedQs } from 'qs'
 import { useCallback, useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
@@ -14,6 +14,7 @@ import useParsedQueryString from '../../hooks/useParsedQueryString'
 import { isAddress } from '../../utils'
 import { AppDispatch, AppState } from '../index'
 import { useCurrencyBalances } from '../wallet/hooks'
+import { Symbiosis, TokenAmount as SymbiosisTokenAmount, Token as SymbiosisToken, Chain } from 'symbiosis-js-sdk'
 
 import {
   Field,
@@ -42,9 +43,11 @@ import { BigNumber } from 'ethers'
 import { LiquidityProviders } from 'package/router/liquidity-providers'
 import { RToken, RouteLeg, RouteStatus, getBetterRoute } from 'package/tines'
 import { routeProcessor3Address } from 'package/route-processor'
-import { Native } from 'package/currency'
+import { Native, Type, USDC, WETH9, amountSchema } from 'package/currency'
 import { PoolCode } from 'package/router/pools/PoolCode'
 import baseCurrencies from 'utils/baseCurrencies'
+import { wrappedCurrency } from 'utils/wrappedCurrency'
+import { USDC as USDC_NOVA } from 'constants/index'
 
 export function useSwapState(): AppState['swap'] {
   return useSelector<AppState, AppState['swap']>(state => state.swap)
@@ -64,7 +67,6 @@ export function useSwapActionHandlers(): {
     (field: Field, currency: Currency, chainId: ChainId) => {
       const baseCurrency = baseCurrencies(chainId)[0]
       const symbol: string = baseCurrency && baseCurrency.symbol ? baseCurrency.symbol : 'ETH'
-      console.log(symbol)
       dispatch(
         selectCurrency({
           field,
@@ -182,7 +184,8 @@ export function useDerivedSwapInfo(): {
     typedValue,
     [Field.INPUT]: { currencyId: inputCurrencyId, chainId: inputChainId },
     [Field.OUTPUT]: { currencyId: outputCurrencyId, chainId: outputChainId },
-    recipient
+    recipient,
+    swapMode
   } = useSwapState()
 
   const inputCurrency = useCurrency(inputCurrencyId, inputChainId)
@@ -203,8 +206,8 @@ export function useDerivedSwapInfo(): {
   const isExactIn: boolean = independentField === Field.INPUT
   const parsedAmount = tryParseAmount(typedValue, (isExactIn ? inputCurrency : outputCurrency) ?? undefined)
 
-  const bestTradeExactIn = useTradeExactIn(isExactIn ? parsedAmount : undefined, outputCurrency ?? undefined, ChainId.ARBITRUM_NOVA)
-  const bestTradeExactOut = useTradeExactOut(inputCurrency ?? undefined, !isExactIn ? parsedAmount : undefined, ChainId.ARBITRUM_NOVA)
+  const bestTradeExactIn = useTradeExactIn(swapMode === 0 ? isExactIn ? parsedAmount : undefined : undefined, swapMode === 0 ? outputCurrency ?? undefined : undefined, ChainId.ARBITRUM_NOVA)
+  const bestTradeExactOut = useTradeExactOut(swapMode === 0 ? inputCurrency ?? undefined : undefined, swapMode === 0 ? !isExactIn ? parsedAmount : undefined : undefined, ChainId.ARBITRUM_NOVA)
 
   const v2Trade = isExactIn ? bestTradeExactIn : bestTradeExactOut
 
@@ -219,7 +222,7 @@ export function useDerivedSwapInfo(): {
   }
 
   // get link to trade on v1, if a better rate exists
-  const v1Trade = useV1Trade(isExactIn, currencies[Field.INPUT], currencies[Field.OUTPUT], parsedAmount, inputChainId, outputChainId)
+  const v1Trade = useV1Trade(isExactIn, swapMode === 0 ? currencies[Field.INPUT] : undefined, swapMode === 0 ? currencies[Field.OUTPUT] : undefined, swapMode === 0 ? parsedAmount : undefined, ChainId.ARBITRUM_NOVA, ChainId.ARBITRUM_NOVA)
 
   let inputError: string | undefined
   if (!account) {
@@ -269,6 +272,10 @@ export function useDerivedSwapInfo(): {
   if (balanceIn && amountIn && balanceIn.lessThan(amountIn)) {
     const amountInCurrency = getBlockchainAdjustedCurrency(blockchain, amountIn?.currency)
     inputError = 'Insufficient ' + amountInCurrency?.symbol + ' balance'
+  }
+
+  if (swapMode === 1 && parsedAmount && currencyBalances[Field.INPUT] && parsedAmount.greaterThan(currencyBalances[Field.INPUT])) {
+    inputError = 'Insufficient ' + currencies[Field.INPUT]?.symbol + ' balance'
   }
 
   return {
@@ -409,8 +416,9 @@ export type XFusionSwapType = {
         isFusion: boolean
       }
     }
-    args?: RPParams
+    tx?: RPParams
   }
+  swapType: number
 }
 
 function useUpdate() {
@@ -430,6 +438,7 @@ function useUpdate() {
 
   useEffect(() => {
     if (typedValue.length > 0 && +typedValue > 0) {
+      setUpdate(0)
       setLoading(true)
       updater()
     } else {
@@ -443,50 +452,65 @@ function useUpdate() {
   return { update, loading }
 }
 
-export function useXFusionSwap(): XFusionSwapType {
-  const { account } = useActiveWeb3React()
+const symbiosis = new Symbiosis('mainnet', 'rcpswap-cross-chain')
+const symbiosisSywapping = symbiosis.bestPoolSwapping()
 
-  const {
-    typedValue,
-    swapMode,
-    [Field.INPUT]: { currencyId: inputCurrencyId, chainId: inputChainId },
-    [Field.OUTPUT]: { currencyId: outputCurrencyId, chainId: outputChainId },
-    isUltra,
-    recipient
-  } = useSwapState()
+export function useSymbiosis(account: string | undefined, inputCurrency: Currency | undefined, outputCurrency: Currency | undefined, inputChainId: ChainId | undefined, outputChainId: ChainId | undefined, parsedAmount: string | undefined, recipient: string | undefined, enabled?: boolean) {
+  return useQuery({
+    queryKey: ['useSymbiosisSwap', account, inputCurrency, outputCurrency, inputChainId, outputChainId, parsedAmount, enabled],
+    queryFn: async () => {
+      console.log('---fetching')
+      const res = await symbiosisSywapping.exactIn({
+        tokenAmountIn: new SymbiosisTokenAmount(new SymbiosisToken({
+          address: inputCurrency instanceof Token ? inputCurrency.address : '',
+          chainId: inputChainId as number,
+          decimals: inputCurrency?.decimals ?? 18,
+          name: inputCurrency?.name ?? '',
+          symbol: inputCurrency?.symbol ?? '',
+          isNative: inputCurrency instanceof Token ? false : true
+        }), parsedAmount ?? '0'),
+        tokenOut: new SymbiosisToken({
+          address: outputCurrency instanceof Token ? outputCurrency.address : '',
+          chainId: outputChainId as number,
+          decimals: outputCurrency?.decimals ?? 18,
+          name: outputCurrency?.name ?? '',
+          symbol: outputCurrency?.symbol ?? '',
+          isNative: outputCurrency instanceof Token ? false : true
+        }),
+        from: account ?? '0xd52c556ecbd260cf3bf5b78f3f94d6878939adf7',
+        to: recipient ?? account ?? '0xd52c556ecbd260cf3bf5b78f3f94d6878939adf7',
+        revertableAddress: account ?? '0xd52c556ecbd260cf3bf5b78f3f94d6878939adf7',
+        deadline: Math.floor(Date.now() / 1e3) + 604800,
+        slippage: 300
+      });
+      console.log(res)
+      return {
+        route: {
+          amountOut: res?.tokenAmountOutMin?.toExact(),
+          amountOutBN: res?.tokenAmountOutMin?.raw?.toString(),
+        },
+        args: res?.transactionRequest
+      }
+    },
+    enabled: Boolean(enabled && inputChainId !== undefined && outputChainId !== undefined && inputCurrency && outputCurrency && parsedAmount)
+  })
+}
 
-  const { update, loading: isInputLoading } = useUpdate()
-
-  const inputCurrency = useCurrency(inputCurrencyId)
-  const outputCurrency = useCurrency(outputCurrencyId)
-
-  const parsedAmount = tryParseAmount(typedValue, inputCurrency ?? undefined)
-
-  const { data: inputToken } = useToken(inputCurrencyId)
-  const { data: outputToken } = useToken(outputCurrencyId)
-
-  const currencies: { [field in Field]?: Currency } = {
-    [Field.INPUT]: inputCurrency ?? undefined,
-    [Field.OUTPUT]: outputCurrency ?? undefined
-  }
-
-  const { data: poolsCodeMap } = usePoolsCodeMap(inputToken ?? undefined, outputToken ?? undefined)
+export function useXFusion(account: string | undefined, inputToken: Type | undefined, outputToken: Type | undefined, amount: string | undefined, enabled: boolean | undefined, poolsCodeMap: Map<string, PoolCode> | undefined, isUltra: boolean | undefined, recipient: string | undefined) {
   const gasPrice = useGasPrice(ChainId.ARBITRUM_NOVA)
 
-  const { isError, isFetching, data, isLoading } = useQuery({
+  return useQuery({
     queryKey: [
       'useTrade',
-      { currencyA: inputCurrencyId, currencyB: outputCurrencyId, poolsCodeMap, isUltra, recipient, swapMode, update }
+      { inputToken, outputToken, isUltra, recipient, poolsCodeMap, amount, account }
     ],
     queryFn: async () => {
       if (
         !poolsCodeMap ||
         !inputToken ||
-        !outputToken ||
-        typedValue.length === 0 ||
-        +typedValue === 0 ||
-        swapMode === 0 ||
-        update === 0
+        !outputToken || !amount ||
+        amount.length === 0 ||
+        +amount === 0
       ) {
         return {}
       }
@@ -495,7 +519,7 @@ export function useXFusionSwap(): XFusionSwapType {
         poolsCodeMap,
         ChainId.ARBITRUM_NOVA,
         inputToken,
-        BigNumber.from(parsedAmount?.raw.toString() ?? '0'),
+        BigNumber.from(amount),
         outputToken,
         gasPrice ?? 10000000,
         isUltra ? 1500 : 100
@@ -518,7 +542,7 @@ export function useXFusionSwap(): XFusionSwapType {
         sushiPoolsCodeMap,
         ChainId.ARBITRUM_NOVA,
         inputToken,
-        BigNumber.from(parsedAmount?.raw.toString() ?? '0'),
+        BigNumber.from(amount),
         outputToken,
         gasPrice ?? 10000000,
         100,
@@ -529,7 +553,7 @@ export function useXFusionSwap(): XFusionSwapType {
         poolsCodeMap,
         ChainId.ARBITRUM_NOVA,
         inputToken,
-        BigNumber.from(parsedAmount?.raw.toString() ?? '0'),
+        BigNumber.from(amount),
         outputToken,
         gasPrice ?? 10000000,
         1,
@@ -540,7 +564,7 @@ export function useXFusionSwap(): XFusionSwapType {
         poolsCodeMap,
         ChainId.ARBITRUM_NOVA,
         inputToken,
-        BigNumber.from(parsedAmount?.raw.toString() ?? '0'),
+        BigNumber.from(amount),
         outputToken,
         gasPrice ?? 10000000,
         1,
@@ -549,8 +573,6 @@ export function useXFusionSwap(): XFusionSwapType {
 
       const bestSingleProviderRoute = getBetterRoute(sushiBestRoute, getBetterRoute(arbBestRoute, rcpBestRoute))
       const FEE_BP = parseInt(process.env?.REACT_APP_FEE_BP ?? '100')
-
-      console.log(bestSingleProviderRoute)
 
       const feeAmountOut =
         (bestRoute?.amountOut ?? 0) >= 0
@@ -626,46 +648,132 @@ export function useXFusionSwap(): XFusionSwapType {
     },
     refetchInterval: 15000,
     refetchOnWindowFocus: false,
-    enabled: Boolean(poolsCodeMap && inputToken && outputToken && update > 0)
+    enabled: Boolean(poolsCodeMap && inputToken && outputToken && amount && enabled)
   })
+}
 
-  // const { isError, data, isFetching } = useQuery({
-  //   queryKey: ['xFusion', update],
-  //   queryFn: async () => {
-  //     try {
-  //       if (inputCurrencyId && outputCurrencyId && typedValue && swapMode === 1) {
-  //         const gasPrice = parseInt((await library?.getGasPrice())?.toString() ?? '10000000')
+export function useLocalFusion(account: string | undefined, inputCurrency: Currency | undefined, outputCurrency: Currency | undefined, inputCurrencyId: string | undefined, outputCurrencyId: string | undefined, inputChainId: ChainId | undefined, outputChainId: ChainId | undefined, parsedAmount: CurrencyAmount | undefined, isUltra: boolean | undefined, recipient: string | undefined, enabled: boolean | undefined, update: number) {
+  const { data: inputToken } = useToken(inputCurrencyId, inputChainId, enabled)
+  const { data: outputToken } = useToken(outputCurrencyId, outputChainId, enabled)
 
-  //         const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/swap`, {
-  //           params: {
-  //             fromTokenId: inputCurrencyId,
-  //             toTokenId: outputCurrencyId,
-  //             amount: parsedAmount?.raw.toString() ?? '0',
-  //             gasPrice: gasPrice,
-  //             to: account,
-  //             isUltra
-  //           }
-  //         })
-  //         console.log(res.data)
+  const { data: poolsCodeMap } = usePoolsCodeMap(inputToken ?? undefined, outputToken ?? undefined, enabled)
 
-  //         return res.data
-  //       } else {
-  //         return {}
-  //       }
-  //     } catch (err) {
-  //       throw new Error('Failed to fetch xFusion router')
-  //     }
-  //   },
-  //   initialData: {},
-  //   refetchInterval: 30000,
-  //   retry: false
-  // })
+  const { isFetching, data, error, isLoading } = useXFusion(account, inputToken ?? undefined, outputToken ?? undefined, parsedAmount?.raw.toString(), enabled && update > 0, poolsCodeMap, isUltra, recipient)
 
   return {
-    error: isError,
-    loading: isFetching || Boolean(isLoading && inputCurrencyId && outputCurrencyId && typedValue.length > 0 && +typedValue > 0) || Boolean(isInputLoading && inputCurrencyId && outputCurrencyId && typedValue.length > 0 && +typedValue > 0),
+    isLoading: isFetching || Boolean(isLoading && inputCurrencyId && outputCurrencyId && parsedAmount),
+    data: {
+      route: (data as any)?.route,
+      tx: [(data as any)?.args ? {
+        ...(data as any).args,
+        chainId: ChainId.ARBITRUM_NOVA,
+        address: routeProcessor3Address[ChainId.ARBITRUM_NOVA]
+      } : undefined]
+    },
+    error
+  }
+}
+
+export function useCrossInFusion(account: string | undefined, inputCurrency: Currency | undefined, outputCurrency: Currency | undefined, inputCurrencyId: string | undefined, outputCurrencyId: string | undefined, inputChainId: ChainId | undefined, outputChainId: ChainId | undefined, parsedAmount: CurrencyAmount | undefined, isUltra: boolean | undefined, recipient: string | undefined, enabled: boolean | undefined, update: number) {
+  const isUSDC = inputCurrencyId?.toLowerCase() === USDC_NOVA.address.toLowerCase()
+
+  const { data: inputToken } = useToken(inputCurrencyId, inputChainId, enabled && !isUSDC)
+  const outputToken = WETH9[ChainId.ARBITRUM_NOVA]
+
+  const { data: poolsCodeMap } = usePoolsCodeMap(inputToken ?? undefined, outputToken ?? undefined, enabled && !isUSDC)
+
+  const { isFetching: isFusionFetching, data: fusionData, isLoading: isFusionLoading, error: fusionError } = useXFusion(account, inputToken ?? undefined, outputToken, parsedAmount?.raw.toString(), enabled && update > 0 && !isUSDC, poolsCodeMap, isUltra, recipient)
+
+  const amountOut = isUSDC ? parsedAmount?.raw?.toString() : (fusionData as any) && (fusionData as any).route && (fusionData as any).route.amountOutBN ? BigNumber.from((fusionData as any).route.amountOutBN).sub(BigNumber.from((fusionData as any)?.fee?.amountOutBN ?? '0')) : undefined
+
+  const { isFetching: isSymbiosisFetching, data: symbiosisData, isLoading: isSymbiosisLoading, error: symbiosisError } = useSymbiosis(account, ETHER, outputCurrency ?? undefined, inputChainId, outputChainId, amountOut?.toString(), recipient, enabled && update > 0)
+
+  return {
+    data: {
+      route: (symbiosisData as any)?.route,
+      tx: [!isUSDC ? (fusionData as any)?.args ? {
+        ...(fusionData as any).args,
+        chainId: ChainId.ARBITRUM_NOVA,
+        address: routeProcessor3Address[ChainId.ARBITRUM_NOVA]
+      } : undefined : undefined, (symbiosisData as any)?.args ? { ...(symbiosisData as any)?.args, bridge: 0 } : undefined]
+    },
+    isLoading: isFusionFetching || isSymbiosisFetching || Boolean(!isUSDC && isFusionLoading && inputCurrencyId && outputCurrencyId && parsedAmount) || Boolean(isSymbiosisLoading && inputCurrencyId && outputCurrencyId && parsedAmount),
+    error: fusionError ?? symbiosisError
+  }
+}
+
+export function useCrossOutFusion(account: string | undefined, inputCurrency: Currency | undefined, outputCurrency: Currency | undefined, inputCurrencyId: string | undefined, outputCurrencyId: string | undefined, inputChainId: ChainId | undefined, outputChainId: ChainId | undefined, parsedAmount: CurrencyAmount | undefined, isUltra: boolean | undefined, recipient: string | undefined, enabled: boolean | undefined, update: number) {
+  const isUSDC = outputCurrencyId?.toLowerCase() === USDC_NOVA.address.toLowerCase()
+
+  const inputToken = WETH9[ChainId.ARBITRUM_NOVA]
+  const { data: outputToken } = useToken(outputCurrencyId, outputChainId, enabled && !isUSDC)
+
+  const { data: poolsCodeMap } = usePoolsCodeMap(inputToken ?? undefined, outputToken ?? undefined, enabled && !isUSDC)
+
+  const { isFetching: isSymbiosisFetching, data: symbiosisData, isLoading: isSymbiosisLoading, error: symbiosisError } = useSymbiosis(account, inputCurrency ?? undefined, ETHER, inputChainId, outputChainId, parsedAmount?.raw?.toString(), undefined, enabled && update > 0)
+
+  const amountOut = symbiosisData?.route?.amountOutBN;
+
+  const { isFetching: isFusionFetching, data: fusionData, isLoading: isFusionLoading, error: fusionError } = useXFusion(account, inputToken ?? undefined, outputToken ?? undefined, amountOut, enabled && update > 0 && !isUSDC, poolsCodeMap, isUltra, recipient)
+
+  const data = (isUSDC ? symbiosisData : fusionData) as any
+
+  return {
+    data: {
+      route: data?.route,
+      tx: [(symbiosisData as any)?.args ? { ...(symbiosisData as any)?.args, bridge: 1 } : undefined, !isUSDC ? (fusionData as any)?.args ? {
+        ...(fusionData as any).args,
+        chainId: ChainId.ARBITRUM_NOVA,
+        address: routeProcessor3Address[ChainId.ARBITRUM_NOVA]
+      } : undefined : undefined]
+    },
+    isLoading: isFusionFetching || isSymbiosisFetching || Boolean(!isUSDC && isFusionLoading && inputCurrencyId && outputCurrencyId && parsedAmount) || Boolean(isSymbiosisLoading && inputCurrencyId && outputCurrencyId && parsedAmount),
+    error: symbiosisError ?? fusionError
+  }
+}
+
+export function useXFusionSwap(): XFusionSwapType {
+  const { account } = useActiveWeb3React()
+
+  const {
+    typedValue,
+    swapMode,
+    [Field.INPUT]: { currencyId: inputCurrencyId, chainId: inputChainId },
+    [Field.OUTPUT]: { currencyId: outputCurrencyId, chainId: outputChainId },
+    isUltra,
+    recipient
+  } = useSwapState()
+
+  const { update, loading: isInputLoading } = useUpdate()
+
+  const crossChainMode = inputChainId === ChainId.ARBITRUM_NOVA && outputChainId === ChainId.ARBITRUM_NOVA ? 0 : outputChainId === ChainId.POLYGON ? 1 : 2;
+
+  const inputCurrency = useCurrency(inputCurrencyId, inputChainId)
+  const outputCurrency = useCurrency(outputCurrencyId, outputChainId)
+
+  const currencies: { [field in Field]?: Currency } = {
+    [Field.INPUT]: inputCurrency ?? undefined,
+    [Field.OUTPUT]: outputCurrency ?? undefined
+  }
+
+  const parsedAmount = tryParseAmount(typedValue, inputCurrency ?? undefined)
+
+  const localFusion = useLocalFusion(account ?? undefined, inputCurrency ?? undefined, outputCurrency ?? undefined, inputCurrencyId, outputCurrencyId, inputChainId, outputChainId, parsedAmount, isUltra, recipient ?? undefined, crossChainMode === 0 && swapMode === 1, update)
+
+  const crossInFusion = useCrossInFusion(account ?? undefined, inputCurrency ?? undefined, outputCurrency ?? undefined, inputCurrencyId, outputCurrencyId, inputChainId, outputChainId, parsedAmount, isUltra, recipient ?? undefined, crossChainMode === 1 && swapMode === 1, update)
+
+  const crossOutFusion = useCrossOutFusion(account ?? undefined, inputCurrency ?? undefined, outputCurrency ?? undefined, inputCurrencyId, outputCurrencyId, inputChainId, outputChainId, parsedAmount, isUltra, recipient ?? undefined, crossChainMode === 2 && swapMode === 1, update)
+
+  const swapResult = crossChainMode === 0 ? localFusion : crossChainMode === 1 ? crossInFusion : crossChainMode === 2 ? crossOutFusion : null
+
+  console.log(swapResult?.data)
+
+  return {
+    error: Boolean(swapResult?.error ?? true),
+    loading: swapResult?.isLoading || Boolean(isInputLoading && inputCurrencyId && outputCurrencyId && typedValue.length > 0 && +typedValue > 0),
     currencies,
     parsedAmount,
-    result: (data ?? {}) as any
+    result: (swapResult?.data ?? {}) as any,
+    swapType: crossChainMode
   }
 }

@@ -87,11 +87,10 @@ export default createReducer<SwapState>(initialState, builder =>
       }
     })
     .addCase(selectChain, (state, { payload: { field, chain } }) => {
-      const baseCurrency = baseCurrencies(chain)[0];
       return {
         ...state,
-        [field]: { chainId: chain, currencyId: baseCurrency.symbol },
-        typedValue: ''
+        [field]: { chainId: chain, currencyId: undefined },
+        typedValue: state.independentField === field ? '' : state.typedValue
       }
     })
     .addCase(switchCurrencies, (state, { payload: { mode, value } }) => {

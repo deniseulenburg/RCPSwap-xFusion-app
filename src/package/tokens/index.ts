@@ -95,9 +95,10 @@ export async function getToken(chainId: ChainId, tokenId: string) {
   })
 }
 
-export function useToken(tokenId: string | undefined) {
+export function useToken(tokenId: string | undefined, chainId?: ChainId, enabled?: boolean) {
   return useQuery({
     queryKey: ['useToken', tokenId],
-    queryFn: async () => await getToken(ChainId.ARBITRUM_NOVA, tokenId ?? '')
+    queryFn: async () => await getToken(chainId ?? ChainId.ARBITRUM_NOVA, tokenId ?? ''),
+    enabled: enabled ?? true
   })
 }

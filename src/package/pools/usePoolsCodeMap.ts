@@ -14,10 +14,11 @@ const getPoolsCodeMap = async (currencyA: Type | undefined, currencyB: Type | un
   return dataFetcher.getCurrentPoolCodeMap(currencyA, currencyB)
 }
 
-export function usePoolsCodeMap(currencyA: Type | undefined, currencyB: Type | undefined,) {
+export function usePoolsCodeMap(currencyA: Type | undefined, currencyB: Type | undefined, enabled?: boolean | undefined) {
   return useQuery({
     queryKey: ['usePoolsCodeMap', currencyA, currencyB],
     queryFn: async () => await getPoolsCodeMap(currencyA, currencyB),
-    refetchInterval: 10000
+    refetchInterval: 10000,
+    enabled: enabled ?? true
   })
 }

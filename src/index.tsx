@@ -27,6 +27,8 @@ const Web3ProviderNetwork = createWeb3ReactRoot(NetworkContextName)
 
 if (!!window.ethereum) {
   window.ethereum.autoRefreshOnNetworkChange = false
+
+  console.log(window.ethereum)
 }
 
 const GOOGLE_ANALYTICS_ID: string | undefined = process.env.REACT_APP_GOOGLE_ANALYTICS_ID

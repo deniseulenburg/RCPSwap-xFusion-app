@@ -70,6 +70,7 @@ import _Big from 'big.js'
 import useParsedTokenPrice from 'hooks/useParsedTokenPrice'
 import { NETWORK_CHAIN_ID } from 'connectors'
 import setupNetwork from 'utils/setupNetwork'
+import SwapProgressModal from 'components/swap/SwapProgressModal'
 // import AlertSound from '../../assets/sounds/alert.mp3'
 
 export default function Swap() {
@@ -287,7 +288,8 @@ export default function Swap() {
         })
     } else {
       try {
-        if (!fusionSwap.result || !fusionSwap.result.args) return
+        if (!fusionSwap.result || !fusionSwap.result.tx) return
+        await setupNetwork(ChainId.ARBITRUM_NOVA)
         setSwapState({
           attemptingTxn: true,
           tradeToConfirm,
@@ -302,24 +304,24 @@ export default function Swap() {
         )
 
         const tx = await fusionContract.processRoute(
-          fusionSwap.result.args?.tokenIn,
-          ethers.BigNumber.from(fusionSwap.result.args.amountIn ?? '0'),
-          fusionSwap.result.args.tokenOut,
+          fusionSwap.result.tx?.tokenIn,
+          ethers.BigNumber.from(fusionSwap.result.tx.amountIn ?? '0'),
+          fusionSwap.result.tx.tokenOut,
           new TokenAmount(
             currencies.OUTPUT as Token,
             calculateSlippageAmount(
               new TokenAmount(
                 currencies.OUTPUT as Token,
-                BigNumber.from(fusionSwap.result.args.amountOutMin ?? '0').toString()
+                BigNumber.from(fusionSwap.result.tx.amountOutMin ?? '0').toString()
               ),
               allowedSlippage
             )[0]
           ).raw.toString(),
           fusionSwap.result.route?.fee?.amountOutBN ?? '0',
-          fusionSwap.result.args.to,
-          fusionSwap.result.args.routeCode,
-          fusionSwap.result.route?.fromToken?.isNative && fusionSwap.result.args.amountIn
-            ? { value: BigNumber.from(fusionSwap.result.args.amountIn) }
+          fusionSwap.result.tx.to,
+          fusionSwap.result.tx.routeCode,
+          fusionSwap.result.route?.fromToken?.isNative && fusionSwap.result.tx.amountIn
+            ? { value: BigNumber.from(fusionSwap.result.tx.amountIn) }
             : {}
         )
 
@@ -498,7 +500,7 @@ export default function Swap() {
     chainId => {
       if (chainId !== inputChainId) {
         onChainSelection(Field.INPUT, chainId)
-        if (chainId !== ChainId.POLYGON && outputChainId !== ChainId.POLYGON) {
+        if (chainId !== ChainId.ARBITRUM_NOVA && outputChainId !== ChainId.ARBITRUM_NOVA) {
           onChainSelection(Field.OUTPUT, ChainId.ARBITRUM_NOVA)
         }
       }
@@ -510,7 +512,7 @@ export default function Swap() {
     chainId => {
       if (outputChainId !== chainId) {
         onChainSelection(Field.OUTPUT, chainId)
-        if (chainId !== ChainId.POLYGON && inputChainId !== ChainId.POLYGON) {
+        if (chainId !== ChainId.ARBITRUM_NOVA && inputChainId !== ChainId.ARBITRUM_NOVA) {
           onChainSelection(Field.INPUT, ChainId.ARBITRUM_NOVA)
         }
       }
@@ -646,7 +648,6 @@ export default function Swap() {
             swapErrorMessage={swapErrorMessage}
             onDismiss={handleConfirmDismiss}
           />
-
           <AutoColumn gap={'md'}>
             <CurrencyInputPanel
               label={independentField === Field.OUTPUT && !showWrap && trade ? 'From (estimated)' : 'From'}

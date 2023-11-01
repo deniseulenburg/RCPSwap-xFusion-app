@@ -92,7 +92,7 @@ const StepSliderTick = styled.svg`
     props.disabled
       ? props?.dark
         ? props.theme.bg6
-        : props.theme.bg5
+        : props.theme.bg3
       : props?.ticked
       ? props?.dark
         ? props.theme.primary1
