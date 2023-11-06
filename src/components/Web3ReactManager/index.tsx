@@ -49,28 +49,28 @@ export default function Web3ReactManager({ children }: { children: JSX.Element }
     }
   }, [])
 
-  // on page load, do nothing until we've tried to connect to the injected connector
-  if (!triedEager) {
-    return null
-  }
+  // // on page load, do nothing until we've tried to connect to the injected connector
+  // if (!triedEager) {
+  //   return null
+  // }
 
-  // if the account context isn't active, and there's an error on the network context, it's an irrecoverable error
-  if (!active && networkError) {
-    return (
-      <MessageWrapper>
-        <Message>{t('unknownError')}</Message>
-      </MessageWrapper>
-    )
-  }
+  // // if the account context isn't active, and there's an error on the network context, it's an irrecoverable error
+  // if (!active && networkError) {
+  //   return (
+  //     <MessageWrapper>
+  //       <Message>{t('unknownError')}</Message>
+  //     </MessageWrapper>
+  //   )
+  // }
 
-  // if neither context is active, spin
-  if (!active && !networkActive) {
-    return showLoader ? (
-      <MessageWrapper>
-        <Loader />
-      </MessageWrapper>
-    ) : null
-  }
+  // // if neither context is active, spin
+  // if (!active && !networkActive) {
+  //   return showLoader ? (
+  //     <MessageWrapper>
+  //       <Loader />
+  //     </MessageWrapper>
+  //   ) : null
+  // }
 
   return children
 }

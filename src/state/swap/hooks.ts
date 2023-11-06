@@ -14,7 +14,7 @@ import useParsedQueryString from '../../hooks/useParsedQueryString'
 import { isAddress } from '../../utils'
 import { AppDispatch, AppState } from '../index'
 import { useCurrencyBalances } from '../wallet/hooks'
-import { Symbiosis, TokenAmount as SymbiosisTokenAmount, Token as SymbiosisToken, Chain } from 'symbiosis-js-sdk'
+import { Symbiosis, TokenAmount as SymbiosisTokenAmount, Token as SymbiosisToken } from '../../package/symbiosis'
 
 import {
   Field,
@@ -385,7 +385,7 @@ export function useDefaultsFromURLSearch():
 }
 
 export type XFusionSwapType = {
-  error: boolean
+  error: string | undefined
   loading: boolean
   currencies?: { [field in Field]?: Currency }
   parsedAmount?: CurrencyAmount
@@ -455,9 +455,9 @@ function useUpdate() {
 const symbiosis = new Symbiosis('mainnet', 'rcpswap-cross-chain')
 const symbiosisSywapping = symbiosis.bestPoolSwapping()
 
-export function useSymbiosis(account: string | undefined, inputCurrency: Currency | undefined, outputCurrency: Currency | undefined, inputChainId: ChainId | undefined, outputChainId: ChainId | undefined, parsedAmount: string | undefined, recipient: string | undefined, enabled?: boolean) {
+export function useSymbiosis(account: string | undefined, inputCurrency: Currency | undefined, outputCurrency: Currency | undefined, inputCurrencyId: string | undefined, outputCurrencyId: string | undefined, inputChainId: ChainId | undefined, outputChainId: ChainId | undefined, parsedAmount: string | undefined, recipient: string | undefined, enabled?: boolean) {
   return useQuery({
-    queryKey: ['useSymbiosisSwap', account, inputCurrency, outputCurrency, inputChainId, outputChainId, parsedAmount, enabled],
+    queryKey: ['useSymbiosisSwap', account, inputCurrencyId, outputCurrencyId, inputChainId, outputChainId, parsedAmount, enabled],
     queryFn: async () => {
       console.log('---fetching')
       const res = await symbiosisSywapping.exactIn({
@@ -479,20 +479,20 @@ export function useSymbiosis(account: string | undefined, inputCurrency: Currenc
         }),
         from: account ?? '0xd52c556ecbd260cf3bf5b78f3f94d6878939adf7',
         to: recipient ?? account ?? '0xd52c556ecbd260cf3bf5b78f3f94d6878939adf7',
-        revertableAddress: account ?? '0xd52c556ecbd260cf3bf5b78f3f94d6878939adf7',
         deadline: Math.floor(Date.now() / 1e3) + 604800,
         slippage: 300
       });
-      console.log(res)
       return {
         route: {
-          amountOut: res?.tokenAmountOutMin?.toExact(),
-          amountOutBN: res?.tokenAmountOutMin?.raw?.toString(),
+          amountOut: res?.tokenAmountOut?.toExact(),
+          amountOutBN: res?.tokenAmountOut?.raw?.toString(),
         },
         args: res?.transactionRequest
       }
     },
-    enabled: Boolean(enabled && inputChainId !== undefined && outputChainId !== undefined && inputCurrency && outputCurrency && parsedAmount)
+    enabled: Boolean(enabled && inputChainId !== undefined && outputChainId !== undefined && inputCurrency && outputCurrency && parsedAmount),
+    refetchInterval: 30000,
+    refetchOnWindowFocus: false,
   })
 }
 
@@ -646,7 +646,7 @@ export function useXFusion(account: string | undefined, inputToken: Type | undef
         )
       )
     },
-    refetchInterval: 15000,
+    refetchInterval: 20000,
     refetchOnWindowFocus: false,
     enabled: Boolean(poolsCodeMap && inputToken && outputToken && amount && enabled)
   })
@@ -664,71 +664,55 @@ export function useLocalFusion(account: string | undefined, inputCurrency: Curre
     isLoading: isFetching || Boolean(isLoading && inputCurrencyId && outputCurrencyId && parsedAmount),
     data: {
       route: (data as any)?.route,
-      tx: [(data as any)?.args ? {
+      tx: (data as any)?.args ? {
         ...(data as any).args,
         chainId: ChainId.ARBITRUM_NOVA,
         address: routeProcessor3Address[ChainId.ARBITRUM_NOVA]
-      } : undefined]
+      } : undefined
     },
     error
   }
 }
 
-export function useCrossInFusion(account: string | undefined, inputCurrency: Currency | undefined, outputCurrency: Currency | undefined, inputCurrencyId: string | undefined, outputCurrencyId: string | undefined, inputChainId: ChainId | undefined, outputChainId: ChainId | undefined, parsedAmount: CurrencyAmount | undefined, isUltra: boolean | undefined, recipient: string | undefined, enabled: boolean | undefined, update: number) {
-  const isUSDC = inputCurrencyId?.toLowerCase() === USDC_NOVA.address.toLowerCase()
+// export function useCrossInFusion(account: string | undefined, inputCurrency: Currency | undefined, outputCurrency: Currency | undefined, inputCurrencyId: string | undefined, outputCurrencyId: string | undefined, inputChainId: ChainId | undefined, outputChainId: ChainId | undefined, parsedAmount: CurrencyAmount | undefined, isUltra: boolean | undefined, recipient: string | undefined, enabled: boolean | undefined, update: number) {
+//   const isUSDC = inputCurrencyId?.toLowerCase() === USDC_NOVA.address.toLowerCase()
 
-  const { data: inputToken } = useToken(inputCurrencyId, inputChainId, enabled && !isUSDC)
-  const outputToken = WETH9[ChainId.ARBITRUM_NOVA]
+//   const { data: inputToken } = useToken(inputCurrencyId, inputChainId, enabled && !isUSDC)
+//   const outputToken = WETH9[ChainId.ARBITRUM_NOVA]
 
-  const { data: poolsCodeMap } = usePoolsCodeMap(inputToken ?? undefined, outputToken ?? undefined, enabled && !isUSDC)
+//   const { data: poolsCodeMap } = usePoolsCodeMap(inputToken ?? undefined, outputToken ?? undefined, enabled && !isUSDC)
 
-  const { isFetching: isFusionFetching, data: fusionData, isLoading: isFusionLoading, error: fusionError } = useXFusion(account, inputToken ?? undefined, outputToken, parsedAmount?.raw.toString(), enabled && update > 0 && !isUSDC, poolsCodeMap, isUltra, recipient)
+//   const { isFetching: isFusionFetching, data: fusionData, isLoading: isFusionLoading, error: fusionError } = useXFusion(account, inputToken ?? undefined, outputToken, parsedAmount?.raw.toString(), enabled && update > 0 && !isUSDC, poolsCodeMap, isUltra, recipient)
 
-  const amountOut = isUSDC ? parsedAmount?.raw?.toString() : (fusionData as any) && (fusionData as any).route && (fusionData as any).route.amountOutBN ? BigNumber.from((fusionData as any).route.amountOutBN).sub(BigNumber.from((fusionData as any)?.fee?.amountOutBN ?? '0')) : undefined
+//   const amountOut = isUSDC ? parsedAmount?.raw?.toString() : (fusionData as any) && (fusionData as any).route && (fusionData as any).route.amountOutBN ? BigNumber.from((fusionData as any).route.amountOutBN).sub(BigNumber.from((fusionData as any)?.fee?.amountOutBN ?? '0')) : undefined
 
-  const { isFetching: isSymbiosisFetching, data: symbiosisData, isLoading: isSymbiosisLoading, error: symbiosisError } = useSymbiosis(account, ETHER, outputCurrency ?? undefined, inputChainId, outputChainId, amountOut?.toString(), recipient, enabled && update > 0)
+//   const { isFetching: isSymbiosisFetching, data: symbiosisData, isLoading: isSymbiosisLoading, error: symbiosisError } = useSymbiosis(account, ETHER, outputCurrency ?? undefined, inputChainId, outputChainId, amountOut?.toString(), recipient, enabled && update > 0)
 
-  return {
-    data: {
-      route: (symbiosisData as any)?.route,
-      tx: [!isUSDC ? (fusionData as any)?.args ? {
-        ...(fusionData as any).args,
-        chainId: ChainId.ARBITRUM_NOVA,
-        address: routeProcessor3Address[ChainId.ARBITRUM_NOVA]
-      } : undefined : undefined, (symbiosisData as any)?.args ? { ...(symbiosisData as any)?.args, bridge: 0 } : undefined]
-    },
-    isLoading: isFusionFetching || isSymbiosisFetching || Boolean(!isUSDC && isFusionLoading && inputCurrencyId && outputCurrencyId && parsedAmount) || Boolean(isSymbiosisLoading && inputCurrencyId && outputCurrencyId && parsedAmount),
-    error: fusionError ?? symbiosisError
-  }
-}
+//   return {
+//     data: {
+//       route: (symbiosisData as any)?.route,
+//       tx: [!isUSDC ? (fusionData as any)?.args ? {
+//         ...(fusionData as any).args,
+//         chainId: ChainId.ARBITRUM_NOVA,
+//         address: routeProcessor3Address[ChainId.ARBITRUM_NOVA]
+//       } : undefined : undefined, (symbiosisData as any)?.args ? { ...(symbiosisData as any)?.args, bridge: 0 } : undefined]
+//     },
+//     isLoading: isFusionFetching || isSymbiosisFetching || Boolean(!isUSDC && isFusionLoading && inputCurrencyId && outputCurrencyId && parsedAmount) || Boolean(isSymbiosisLoading && inputCurrencyId && outputCurrencyId && parsedAmount),
+//     error: fusionError ?? symbiosisError
+//   }
+// }
 
-export function useCrossOutFusion(account: string | undefined, inputCurrency: Currency | undefined, outputCurrency: Currency | undefined, inputCurrencyId: string | undefined, outputCurrencyId: string | undefined, inputChainId: ChainId | undefined, outputChainId: ChainId | undefined, parsedAmount: CurrencyAmount | undefined, isUltra: boolean | undefined, recipient: string | undefined, enabled: boolean | undefined, update: number) {
-  const isUSDC = outputCurrencyId?.toLowerCase() === USDC_NOVA.address.toLowerCase()
+export function useCrossFusion(account: string | undefined, inputCurrency: Currency | undefined, outputCurrency: Currency | undefined, inputCurrencyId: string | undefined, outputCurrencyId: string | undefined, inputChainId: ChainId | undefined, outputChainId: ChainId | undefined, parsedAmount: CurrencyAmount | undefined, isUltra: boolean | undefined, recipient: string | undefined, enabled: boolean | undefined, update: number) {
 
-  const inputToken = WETH9[ChainId.ARBITRUM_NOVA]
-  const { data: outputToken } = useToken(outputCurrencyId, outputChainId, enabled && !isUSDC)
-
-  const { data: poolsCodeMap } = usePoolsCodeMap(inputToken ?? undefined, outputToken ?? undefined, enabled && !isUSDC)
-
-  const { isFetching: isSymbiosisFetching, data: symbiosisData, isLoading: isSymbiosisLoading, error: symbiosisError } = useSymbiosis(account, inputCurrency ?? undefined, ETHER, inputChainId, outputChainId, parsedAmount?.raw?.toString(), undefined, enabled && update > 0)
-
-  const amountOut = symbiosisData?.route?.amountOutBN;
-
-  const { isFetching: isFusionFetching, data: fusionData, isLoading: isFusionLoading, error: fusionError } = useXFusion(account, inputToken ?? undefined, outputToken ?? undefined, amountOut, enabled && update > 0 && !isUSDC, poolsCodeMap, isUltra, recipient)
-
-  const data = (isUSDC ? symbiosisData : fusionData) as any
+  const { isFetching: isSymbiosisFetching, data: symbiosisData, isLoading: isSymbiosisLoading, error: symbiosisError } = useSymbiosis(account, inputCurrency ?? undefined, outputCurrency ?? undefined, inputCurrencyId, outputCurrencyId, inputChainId, outputChainId, parsedAmount?.raw?.toString(), recipient, enabled && update > 0)
 
   return {
     data: {
-      route: data?.route,
-      tx: [(symbiosisData as any)?.args ? { ...(symbiosisData as any)?.args, bridge: 1 } : undefined, !isUSDC ? (fusionData as any)?.args ? {
-        ...(fusionData as any).args,
-        chainId: ChainId.ARBITRUM_NOVA,
-        address: routeProcessor3Address[ChainId.ARBITRUM_NOVA]
-      } : undefined : undefined]
+      route: symbiosisData?.route,
+      tx: (symbiosisData as any)?.args
     },
-    isLoading: isFusionFetching || isSymbiosisFetching || Boolean(!isUSDC && isFusionLoading && inputCurrencyId && outputCurrencyId && parsedAmount) || Boolean(isSymbiosisLoading && inputCurrencyId && outputCurrencyId && parsedAmount),
-    error: symbiosisError ?? fusionError
+    isLoading: isSymbiosisFetching || Boolean(isSymbiosisLoading && inputCurrencyId && outputCurrencyId && parsedAmount),
+    error: symbiosisError
   }
 }
 
@@ -746,7 +730,7 @@ export function useXFusionSwap(): XFusionSwapType {
 
   const { update, loading: isInputLoading } = useUpdate()
 
-  const crossChainMode = inputChainId === ChainId.ARBITRUM_NOVA && outputChainId === ChainId.ARBITRUM_NOVA ? 0 : outputChainId === ChainId.POLYGON ? 1 : 2;
+  const crossChainMode = inputChainId === ChainId.ARBITRUM_NOVA && outputChainId === ChainId.ARBITRUM_NOVA ? 0 : 1;
 
   const inputCurrency = useCurrency(inputCurrencyId, inputChainId)
   const outputCurrency = useCurrency(outputCurrencyId, outputChainId)
@@ -760,16 +744,19 @@ export function useXFusionSwap(): XFusionSwapType {
 
   const localFusion = useLocalFusion(account ?? undefined, inputCurrency ?? undefined, outputCurrency ?? undefined, inputCurrencyId, outputCurrencyId, inputChainId, outputChainId, parsedAmount, isUltra, recipient ?? undefined, crossChainMode === 0 && swapMode === 1, update)
 
-  const crossInFusion = useCrossInFusion(account ?? undefined, inputCurrency ?? undefined, outputCurrency ?? undefined, inputCurrencyId, outputCurrencyId, inputChainId, outputChainId, parsedAmount, isUltra, recipient ?? undefined, crossChainMode === 1 && swapMode === 1, update)
+  // const crossInFusion = useCrossInFusion(account ?? undefined, inputCurrency ?? undefined, outputCurrency ?? undefined, inputCurrencyId, outputCurrencyId, inputChainId, outputChainId, parsedAmount, isUltra, recipient ?? undefined, crossChainMode === 1 && swapMode === 1, update)
 
-  const crossOutFusion = useCrossOutFusion(account ?? undefined, inputCurrency ?? undefined, outputCurrency ?? undefined, inputCurrencyId, outputCurrencyId, inputChainId, outputChainId, parsedAmount, isUltra, recipient ?? undefined, crossChainMode === 2 && swapMode === 1, update)
+  const crossFusion = useCrossFusion(account ?? undefined, inputCurrency ?? undefined, outputCurrency ?? undefined, inputCurrencyId, outputCurrencyId, inputChainId, outputChainId, parsedAmount, isUltra, recipient ?? undefined, crossChainMode === 1 && swapMode === 1, update)
 
-  const swapResult = crossChainMode === 0 ? localFusion : crossChainMode === 1 ? crossInFusion : crossChainMode === 2 ? crossOutFusion : null
+  const swapResult = crossChainMode === 0 ? localFusion : crossFusion
 
-  console.log(swapResult?.data)
-
+  let error;
+  if (swapResult.error) {
+    if ((swapResult.error as any)?.code === 0) error = 'Swap will be reverted'
+    if ((swapResult.error as any)?.code === 2) error = 'The amount is too low'
+  }
   return {
-    error: Boolean(swapResult?.error ?? true),
+    error: error,
     loading: swapResult?.isLoading || Boolean(isInputLoading && inputCurrencyId && outputCurrencyId && typedValue.length > 0 && +typedValue > 0),
     currencies,
     parsedAmount,

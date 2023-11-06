@@ -240,7 +240,6 @@ export const BASES_TO_CHECK_TRADES_AGAINST: ChainTokenList = {
   [ChainId.ARBITRUM_NOVA]: [
     ...WETH_ONLY[ChainId.ARBITRUM_NOVA],
     DAI,
-    USDT,
     USDC,
     MOON,
     BRICK,

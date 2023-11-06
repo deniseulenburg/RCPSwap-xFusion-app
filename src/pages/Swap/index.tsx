@@ -31,7 +31,12 @@ import { INITIAL_ALLOWED_SLIPPAGE, ROUTER_ADDRESSES } from '../../constants'
 import { getTradeVersion } from '../../data/V1'
 import { useActiveWeb3React } from '../../hooks'
 import { useCurrency, useAllTokens } from '../../hooks/Tokens'
-import { ApprovalState, useApproveCallbackFromTrade, useFusionApproveCallback } from '../../hooks/useApproveCallback'
+import {
+  ApprovalState,
+  useApproveCallback,
+  useApproveCallbackFromTrade,
+  useFusionApproveCallback
+} from '../../hooks/useApproveCallback'
 import useENSAddress from '../../hooks/useENSAddress'
 import { useSwapCallback } from '../../hooks/useSwapCallback'
 import useToggledVersion, { DEFAULT_VERSION, Version } from '../../hooks/useToggledVersion'
@@ -70,7 +75,6 @@ import _Big from 'big.js'
 import useParsedTokenPrice from 'hooks/useParsedTokenPrice'
 import { NETWORK_CHAIN_ID } from 'connectors'
 import setupNetwork from 'utils/setupNetwork'
-import SwapProgressModal from 'components/swap/SwapProgressModal'
 // import AlertSound from '../../assets/sounds/alert.mp3'
 
 export default function Swap() {
@@ -215,12 +219,19 @@ export default function Swap() {
 
   // check whether the user has approved the router on the input token
   const [approval, approveCallback] = useApproveCallbackFromTrade(trade, allowedSlippage, ChainId.ARBITRUM_NOVA)
-  const [fusionApproval, fusionApproveCallback] = useFusionApproveCallback(fusionSwap)
+  const [fusionApproval, fusionApproveCallback] = useApproveCallback(
+    fusionSwap.parsedAmount,
+    fusionSwap.swapType === 0 ? FUSION_CONTRACT.address : fusionSwap.result?.tx?.to,
+    inputChainId
+  )
 
   // check if user has gone through approval process, used to show two step buttons, reset on token change
   const [approvalSubmitted, setApprovalSubmitted] = useState<boolean>(false)
 
-  const addTransaction = useTransactionAdder(ChainId.ARBITRUM_NOVA)
+  const addTransaction = {
+    [ChainId.ARBITRUM_NOVA]: useTransactionAdder(ChainId.ARBITRUM_NOVA),
+    [ChainId.POLYGON]: useTransactionAdder(ChainId.POLYGON)
+  }
 
   // mark when a user has submitted an approval, reset onTokenSelection for input field
   useEffect(() => {
@@ -288,8 +299,8 @@ export default function Swap() {
         })
     } else {
       try {
-        if (!fusionSwap.result || !fusionSwap.result.tx) return
-        await setupNetwork(ChainId.ARBITRUM_NOVA)
+        const signer = library?.getSigner(account ?? undefined)
+        if (!fusionSwap.result || !fusionSwap.result.tx || !signer) return
         setSwapState({
           attemptingTxn: true,
           tradeToConfirm,
@@ -297,35 +308,42 @@ export default function Swap() {
           swapErrorMessage: undefined,
           txHash: undefined
         })
-        const fusionContract = new ethers.Contract(
-          FUSION_CONTRACT.address,
-          FUSION_CONTRACT.abi,
-          library?.getSigner(account ?? undefined)
-        )
+        let tx
+        if (fusionSwap.swapType === 0) {
+          const fusionContract = new ethers.Contract(FUSION_CONTRACT.address, FUSION_CONTRACT.abi, signer)
 
-        const tx = await fusionContract.processRoute(
-          fusionSwap.result.tx?.tokenIn,
-          ethers.BigNumber.from(fusionSwap.result.tx.amountIn ?? '0'),
-          fusionSwap.result.tx.tokenOut,
-          new TokenAmount(
-            currencies.OUTPUT as Token,
-            calculateSlippageAmount(
-              new TokenAmount(
-                currencies.OUTPUT as Token,
-                BigNumber.from(fusionSwap.result.tx.amountOutMin ?? '0').toString()
-              ),
-              allowedSlippage
-            )[0]
-          ).raw.toString(),
-          fusionSwap.result.route?.fee?.amountOutBN ?? '0',
-          fusionSwap.result.tx.to,
-          fusionSwap.result.tx.routeCode,
-          fusionSwap.result.route?.fromToken?.isNative && fusionSwap.result.tx.amountIn
-            ? { value: BigNumber.from(fusionSwap.result.tx.amountIn) }
-            : {}
-        )
+          tx = await fusionContract.processRoute(
+            fusionSwap.result.tx?.tokenIn,
+            ethers.BigNumber.from(fusionSwap.result.tx.amountIn ?? '0'),
+            fusionSwap.result.tx.tokenOut,
+            new TokenAmount(
+              currencies.OUTPUT as Token,
+              calculateSlippageAmount(
+                new TokenAmount(
+                  currencies.OUTPUT as Token,
+                  BigNumber.from(fusionSwap.result.tx.amountOutMin ?? '0').toString()
+                ),
+                allowedSlippage
+              )[0]
+            ).raw.toString(),
+            fusionSwap.result.route?.fee?.amountOutBN ?? '0',
+            fusionSwap.result.tx.to,
+            fusionSwap.result.tx.routeCode,
+            fusionSwap.result.route?.fromToken?.isNative && fusionSwap.result.tx.amountIn
+              ? { value: BigNumber.from(fusionSwap.result.tx.amountIn) }
+              : {}
+          )
 
-        await tx.wait()
+          await tx.wait()
+        } else if (fusionSwap.swapType === 1) {
+          tx = await signer.sendTransaction({
+            to: fusionSwap.result.tx.to,
+            data: fusionSwap.result.tx.data,
+            value: fusionSwap.result.tx.value
+          })
+
+          await tx.wait()
+        }
 
         const inputAmount = parsedAmount?.toSignificant(3)
         const outputAmount = new TokenAmount(
@@ -342,9 +360,9 @@ export default function Swap() {
             : `${base} to ${
                 recipientAddress && isAddress(recipientAddress) ? shortenAddress(recipientAddress) : recipientAddress
               }`
-        const withVersion = `${withRecipient} on xFusion`
+        const withVersion = `${withRecipient} on ${fusionSwap.swapType === 0 ? 'xFusion' : 'Cross-Chain'}`
 
-        addTransaction(tx, { summary: withVersion })
+        addTransaction[inputChainId as ChainId.ARBITRUM_NOVA | ChainId.POLYGON](tx, { summary: withVersion })
 
         setSwapState({
           attemptingTxn: false,
@@ -592,7 +610,9 @@ export default function Swap() {
 
   const isFusionFetching = swapMode === 1 && fusionSwap.loading && !account
 
-  const isNetworkError = swapMode === 0 && account && chainId !== NETWORK_CHAIN_ID
+  const isNetworkError =
+    (swapMode === 0 && account && chainId !== NETWORK_CHAIN_ID) ||
+    (swapMode === 1 && account && chainId !== inputChainId)
 
   const fusionSaving =
     swapMode === 1 &&
@@ -795,7 +815,11 @@ export default function Swap() {
             ) : !account ? (
               <ButtonLight onClick={toggleWalletModal}>Connect Wallet</ButtonLight>
             ) : isNetworkError ? (
-              <ButtonLight onClick={() => setupNetwork()}>Switch Network</ButtonLight>
+              <ButtonLight onClick={() => setupNetwork(inputChainId)}>Switch Network</ButtonLight>
+            ) : fusionSwap.error && swapMode === 1 ? (
+              <ButtonPrimary disabled={true}>
+                <TYPE.main mb="4px">{fusionSwap.error}</TYPE.main>
+              </ButtonPrimary>
             ) : showWrap ? (
               <ButtonPrimary disabled={Boolean(wrapInputError)} onClick={onWrap}>
                 {wrapInputError ??

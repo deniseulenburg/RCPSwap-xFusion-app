@@ -20,7 +20,6 @@ import {
 import Earn from './Earn'
 import EarnArchived from './Earn/Archived'
 import Manage from './Earn/Manage'
-import Pit from './Pit'
 import MigrateV1 from './MigrateV1'
 import MigrateV1Exchange from './MigrateV1/MigrateV1Exchange'
 import RemoveV1Exchange from './MigrateV1/RemoveV1Exchange'
@@ -113,7 +112,6 @@ export default function App() {
               <Route exact strict path="/pool" component={Pool} />
               <Route exact strict path="/staking" component={Earn} />
               <Route exact strict path="/staking/archived" component={EarnArchived} />
-              <Route exact strict path={pitSettings?.path} component={Pit} />
               {blockchain === Blockchain.ETHEREUM && <Route exact strict path="/vote" component={Vote} />}
               <Route exact strict path="/create" component={RedirectToAddLiquidity} />
               <Route exact path="/add" component={AddLiquidity} />

@@ -29,6 +29,7 @@ export interface RPParams {
   to: string
   routeCode: string
   value?: BigNumber
+  data?: string
 }
 
 export type PoolFilter = (list: RPool) => boolean

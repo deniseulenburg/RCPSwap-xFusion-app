@@ -20,7 +20,7 @@ import { MULTICALL_ABI, MULTICALL_NETWORKS } from 'constants/multicall'
 import { ChainId } from '@rcpswap/sdk'
 
 // chunk calls so we do not exceed the gas limit
-const CALL_CHUNK_SIZE = 500
+const CALL_CHUNK_SIZE = 2500
 
 /**
  * Fetches a chunk of calls, enforcing a minimum block number constraint
